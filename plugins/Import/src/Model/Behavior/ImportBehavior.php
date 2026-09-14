@@ -660,7 +660,25 @@ class ImportBehavior extends Behavior
                             ->select([$AcademicPeriods->aliasField('end_date')])
                             ->where([$AcademicPeriods->aliasField('id') => $academic_period_id])
                             ->first();
-                        $tempRow['end_date'] = $AcademicPeriodsData->end_date->format('d/m/Y');
+                        // POCOR-9796: $academic_period_id can be a raw, unresolved Academic Period
+                        // code (e.g. a blank/invalid cell value that the earlier per-column lookup
+                        // couldn't match to a real record) rather than an actual id, in which case
+                        // this find() returns null. Calling ->end_date on that used to throw
+                        // "Attempt to read property on null" - caught below, but only after
+                        // discarding the entire patchEntity() call, which left $tableEntity as a
+                        // completely empty, never-patched entity for the rest of this row. An empty
+                        // entity's validator only flags fields with an *unconditional*
+                        // requirePresence rule (e.g. Username, or any belongsTo foreign key like
+                        // Gender, auto-required by DefaultValidationBehavior) since their key is
+                        // genuinely absent from `[]` - every other field's rules (a blank Last Name,
+                        // Date of Birth, etc.) are silently skipped entirely, since CakePHP doesn't
+                        // evaluate a field's rules at all when its key is completely missing and
+                        // presence isn't required. That produced exactly backwards results: fields
+                        // that actually had a valid value (e.g. Gender) got a false "This field is
+                        // required", while fields that were genuinely blank (e.g. Date of Birth)
+                        // reported nothing. Guard against the null here instead, so patchEntity()
+                        // always runs against this row's real, complete data.
+                        $tempRow['end_date'] = $AcademicPeriodsData ? $AcademicPeriodsData->end_date->format('d/m/Y') : null;
                     } //POCOR-9417[END]
                     //POCOR-9394[END]
 
@@ -2207,9 +2225,25 @@ class ImportBehavior extends Behavior
             $tempRow['superAdmin'] = $superAdmin;
         }
 
-        if ($rowPass) {
+        // POCOR-9796: this used to only dispatch onImportModelSpecificValidation when $rowPass
+        // was still true - so a single earlier per-column problem (e.g. an invalid Guardian
+        // Gender code) skipped every model-specific check for the rest of the row, including an
+        // invalid/blank Institution Code, required-field checks, etc. That hid real problems
+        // instead of reporting them: the row was always going to fail either way (rowPass was
+        // already false), so there was nothing to protect by skipping this. Dispatch
+        // unconditionally now, and only let the result make $rowPass MORE false, never less -
+        // a row already known to be bad can't be "passed" by this. Wrapped in try/catch: some of
+        // the 30+ other import models implementing this event may not be written to tolerate
+        // already-partial row data, so catch and log rather than letting one abort the entire
+        // import; falls back to the pre-existing $rowPass either way.
+        try {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
-            $rowPass = $rowPassEvent->getResult();
+            $modelSpecificPass = $rowPassEvent->getResult();
+            if ($modelSpecificPass === false) {
+                $rowPass = false;
+            }
+        } catch (\Throwable $e) {
+            Log::error('@ImportBehavior::_extractRecord onImportModelSpecificValidation threw for row=' . ($references['row'] ?? '?') . ': ' . $e->getMessage());
         }
 
         return $rowPass;

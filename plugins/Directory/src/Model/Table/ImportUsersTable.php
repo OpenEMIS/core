@@ -28,6 +28,11 @@ class ImportUsersTable extends AppTable
     private $accountTypes;
     private $generatedUsername; // POCOR-9364
     private $generatedPassword; // POCOR-9364
+    // POCOR-9796: per-tier cache for getRequiredColumnsByTier() - must be declared explicitly,
+    // otherwise an access to $this->requiredColumnsByTier is intercepted by Table::__get()'s
+    // magic method (which tries to resolve it as an association) instead of behaving as a plain
+    // property.
+    private $requiredColumnsByTier = [];
     public function initialize(array $config): void
     {
         $this->setTable('import_mapping');
@@ -428,36 +433,63 @@ class ImportUsersTable extends AppTable
         $identity_type_id = $tempRow['identity_type_id'] ??  false;
         $identity_number = $tempRow['identity_number'] ?? false;
         $contact_type = $tempRow['contact_type'];
-        $have_error = false;
+
+        // POCOR-9796: ImportBehavior::_extractRecord() now dispatches this event even when an
+        // earlier per-column check (an invalid Account Type/Guardian Gender/etc. code) already
+        // recorded a problem elsewhere in $rowInvalidCodeCols - previously this whole function
+        // was skipped whenever that happened, hiding every other check it performs for the rest
+        // of the row (an invalid Institution Code, required-field checks, ...). Seed $have_error
+        // from that pre-existing state so every actual save/create step below (checkAdmission,
+        // checkCreateNewStudent, checkCreateNewGuardian) still correctly refuses to run for a row
+        // already known to be broken - a real student/guardian record must never be created for
+        // a row that's going to be reported as failed anyway. The validation checks themselves
+        // are not gated by $have_error and still run regardless, so as many of the row's real
+        // problems as possible are surfaced together.
+        $have_error = $rowInvalidCodeCols->count() > 0;
+
+        // POCOR-9796: Last Name, Gender and Date of Birth are marked "*" (mandatory for User
+        // Import) in the template, but only First Name actually had a "required" rule wired up
+        // (User.UsersTable::validationDefault()); Gender/Date of Birth had no required-field
+        // check anywhere, and Last Name was only checked for its pattern, not for being blank.
+        // Check all three here, unconditionally, so a blank mandatory User field is always
+        // reported regardless of what else is right or wrong on the row.
+        $have_error = $this->checkUserRequiredFields($tempRow, $rowInvalidCodeCols) || $have_error;
+
         // identity number mandatory
         if ($isStaff) {
             $tempRow['staff_id'] = $tempRow['security_user_id'] ?? null;
-            $have_error = $have_error || $this->checkStaffIdentityNationality($tempRow, $rowInvalidCodeCols);
+            // POCOR-9796 fix: was `$have_error || $this->check...(...)` - PHP's || short-circuits,
+            // so once $have_error was already true (e.g. a blank Date of Birth caught above), every
+            // check below was silently skipped entirely instead of just not affecting the final
+            // flag - hiding real problems (like an invalid Institution Code) whenever any other
+            // error already existed on the row. Put the side-effecting call first so it always runs.
+            $have_error = $this->checkStaffIdentityNationality($tempRow, $rowInvalidCodeCols) || $have_error;
             // POCOR-9796: Institution Code was only ever validated for Student rows - an invalid
             // code on a Staff row produced no error at all. Validate it here too (skipping the
             // gender-restriction rule, which is a Student-admission concern only). This only
             // confirms the code resolves to a real institution and records institution_id on
             // the row; it does not create any staff-institution assignment record.
-            $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols, true);
+            $have_error = $this->checkInstitution($tempRow, $rowInvalidCodeCols, true) || $have_error;
         }
 
         if ($isStudent) {
+            $have_error = $this->checkInstitution($tempRow, $rowInvalidCodeCols) || $have_error;
             $tempRow['student_id'] = $tempRow['security_user_id'] ?? null;
-            $have_error = $have_error || $this->checkStudentIdentityNationality($tempRow, $rowInvalidCodeCols);
+            $have_error = $this->checkStudentIdentityNationality($tempRow, $rowInvalidCodeCols) || $have_error;
 
         }
 
         //if identity type selected, then need to specify identity number
         if ($identity_type_id) {
-            $have_error = $have_error ||  $this->checkIdentityNumber($tempRow, $rowInvalidCodeCols);
+            $have_error = $this->checkIdentityNumber($tempRow, $rowInvalidCodeCols) || $have_error;
         }
 
         //if identity number is not empty, need to ensure it has identity type selected, it has to be unique and following the validation patter (if there is)
         if ($identity_number) {
-            $have_error = $have_error ||  $this->checkIdentityTypeId($tempRow, $rowInvalidCodeCols);
+            $have_error = $this->checkIdentityTypeId($tempRow, $rowInvalidCodeCols) || $have_error;
         }
         if (isset($contact_type)) {
-            $have_error = $have_error ||  $this->checkContact($tempRow, $rowInvalidCodeCols);
+            $have_error = $this->checkContact($tempRow, $rowInvalidCodeCols) || $have_error;
         }
 
         $tempRow['record_source'] = 'import_user';
@@ -1406,7 +1438,15 @@ class ImportUsersTable extends AppTable
             $tempRow['start_date'] = null;
             return true;
         }
-        $academic_period_id = $tempRow['academic_period_id'];
+        $academic_period_id = $tempRow['academic_period_id'] ?? null;
+        // POCOR-9796: checkStartDate() can now run before Academic Period has resolved (see
+        // checkNewAdmission) so a blank/invalid Start Date is always reported on its own. When
+        // that's the case there's nothing meaningful to compare against here - Academic Period
+        // already reported its own error - so stop rather than raising a confusing "not within
+        // given Academic Period" error that isn't really about Start Date.
+        if (empty($academic_period_id)) {
+            return false;
+        }
         if($academic_period_id != $academicPeriodId){
             $this->addError($rowInvalidCodeCols, 'start_date', __('The Date is not within given Academic Period'));
             $tempRow['start_date'] = null;
@@ -1690,16 +1730,120 @@ class ImportUsersTable extends AppTable
             // No valid guardian data at all, return false (no error added)
             return array($tempRow, $rowInvalidCodeCols, $have_error);
         }
-        $have_error = $have_error || $this->checkGuardianRelationId($tempRow, $rowInvalidCodeCols);
-        if ($have_error) {
-            return array($tempRow, $rowInvalidCodeCols, $have_error);
-        }
-        $have_error = $have_error || $this->checkGuardianOpenemisID($tempRow, $rowInvalidCodeCols);
+        // POCOR-9796: these three used to short-circuit on each other - a blank Guardian
+        // Relation (checked first) returned immediately, so a blank Guardian First/Last Name,
+        // Gender or Date of Birth on the same row was never even looked at, let alone reported.
+        // checkGuardianOpenemisID() runs first because it's the one that resolves guardian_id
+        // from Guardian Openemis No/Identity Number when an existing guardian is being linked -
+        // checkGuardianRequiredFields() needs that result to know whether this row is creating a
+        // brand new guardian (whose Name/Gender/Date of Birth are mandatory) or linking an
+        // existing one (where they don't apply at all). Neither of the other two depends on
+        // order, so all three now run unconditionally and every blank/invalid mandatory Guardian
+        // field on the row is reported together.
+        $openemisIdHasError = $this->checkGuardianOpenemisID($tempRow, $rowInvalidCodeCols);
+        $relationHasError = $this->checkGuardianRelationId($tempRow, $rowInvalidCodeCols);
+        $requiredFieldsHasError = $this->checkGuardianRequiredFields($tempRow, $rowInvalidCodeCols);
+        $have_error = $have_error || $openemisIdHasError || $relationHasError || $requiredFieldsHasError;
         if ($have_error) {
             return array($tempRow, $rowInvalidCodeCols, $have_error);
         }
         $have_error = $have_error || $this->checkNewRelationship($tempRow, $rowInvalidCodeCols);
         return array($tempRow, $rowInvalidCodeCols, $have_error);
+    }
+
+    /**
+     * POCOR-9796: which columns count as mandatory for a given "*" tier is defined entirely by
+     * the import_mapping table's own `description` column - the exact same text
+     * ImportBehavior::getHeader() appends to build "Last Name *", "Guardian Date Of Birth ***",
+     * etc. in the generated template. Reading it from there (instead of a hard-coded field list)
+     * means renaming a column, moving it between tiers, or adding a brand new mandatory column
+     * in import_mapping is picked up automatically, with no code change needed here.
+     *
+     * @param int $tier 1 for "*", 2 for "**", 3 for "***"
+     * @return string[] column_name values, deduplicated
+     */
+    private function getRequiredColumnsByTier(int $tier): array
+    {
+        if (isset($this->requiredColumnsByTier[$tier])) {
+            return $this->requiredColumnsByTier[$tier];
+        }
+
+        $rows = $this->find()
+            ->select(['column_name', 'description'])
+            ->where(['model' => 'User.Users'])
+            ->disableHydration()
+            ->toArray();
+
+        $columns = [];
+        foreach ($rows as $row) {
+            $columnName = trim((string)($row['column_name'] ?? ''));
+            $description = trim((string)($row['description'] ?? ''));
+            // exactly $tier leading asterisks - the negative lookahead stops "**"/"***" from
+            // also matching tier 1, and "*"/"***" from matching tier 2, etc.
+            if ($columnName !== '' && preg_match('/^\*{' . $tier . '}(?!\*)/', $description)) {
+                $columns[] = $columnName;
+            }
+        }
+
+        return $this->requiredColumnsByTier[$tier] = array_unique($columns);
+    }
+
+    /**
+     * POCOR-9796: checks every column import_mapping marks "*" (mandatory for User Import,
+     * tier 1) for blankness, except Username and Password - both are auto-generated when left
+     * blank (see the Username re-assertion above and ConfigItems::getAutoGeneratedPassword() at
+     * the top of this class), so despite the "*" they are not actually mandatory to fill in.
+     * Before this, only First Name actually had a required check (a `notBlank` rule in
+     * User.UsersTable::validationDefault()) - Last Name there only checked its pattern (not
+     * blankness), and fields like Gender/Date of Birth had no required check anywhere at all.
+     */
+    private function checkUserRequiredFields(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        $requiredFields = array_diff($this->getRequiredColumnsByTier(1), ['username', 'password']);
+
+        $have_error = false;
+        foreach ($requiredFields as $field) {
+            $value = $tempRow[$field] ?? null;
+            if ($value === null || (is_string($value) && trim($value) === '')) {
+                $this->addError($rowInvalidCodeCols, $field, __('This field is required'));
+                $have_error = true;
+            }
+        }
+        return $have_error;
+    }
+
+    /**
+     * POCOR-9796: checks every column import_mapping marks "***" (mandatory for Guardian
+     * Import, tier 3) for blankness, except Guardian Relation - it already has its own dedicated
+     * lookup-validity check (checkGuardianRelationId()) with a more specific message than the
+     * generic one here, so it's excluded to avoid one overwriting the other. Before this, these
+     * fields were only ever validated deep inside checkCreateNewGuardian() - reached only once
+     * Guardian Relation AND Guardian Openemis No had both already passed, and only for the
+     * "create a new guardian" path (an existing guardian resolved via Guardian Openemis
+     * No/Identity Number doesn't need these fields at all, since no new record is created for
+     * them). Checking them here, independently and up front, means a blank mandatory Guardian
+     * field is always reported alongside any other Guardian problem on the same row rather than
+     * being hidden behind it.
+     */
+    private function checkGuardianRequiredFields(&$tempRow, &$rowInvalidCodeCols): bool
+    {
+        // an existing guardian was already resolved (by Guardian Openemis No/Identity Number) -
+        // these fields describe a *new* guardian and don't apply
+        if (!empty($tempRow['guardian_id'])) {
+            return false;
+        }
+
+        $requiredFields = array_diff($this->getRequiredColumnsByTier(3), ['guardian_relation_id']);
+
+        $have_error = false;
+        foreach ($requiredFields as $field) {
+            $value = $tempRow[$field] ?? null;
+            if ($value === null || (is_string($value) && trim($value) === '')) {
+                $this->addError($rowInvalidCodeCols, $field, __('This field is required'));
+                $have_error = true;
+            }
+        }
+        return $have_error;
     }
     /**
      * @param bool $have_error
@@ -1710,7 +1854,12 @@ class ImportUsersTable extends AppTable
     private function checkNewAdmission(bool $have_error, $tempRow, ArrayObject $rowInvalidCodeCols, ArrayObject $originalRow): array
     {
 
-        $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols);
+        // POCOR-9796 fix: was `$have_error || $this->checkInstitution(...)` - since $have_error
+        // may already be true here (from checks earlier in onImportModelSpecificValidation), the
+        // old order let PHP's || short-circuit and skip calling checkInstitution() entirely,
+        // silently dropping an invalid Institution Code error whenever any other error already
+        // existed on the row. Side-effecting call goes first so it always runs.
+        $have_error = $this->checkInstitution($tempRow, $rowInvalidCodeCols) || $have_error;
 
 
         $institution_id = $tempRow['institution_id'] ?? null;
@@ -1720,15 +1869,26 @@ class ImportUsersTable extends AppTable
         $columns = $tempRow['columns'];
         $keys = array_flip($columns);
         $education_grade_key = $keys['education_grade_id'];
-        $have_error = $have_error || $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols);
+        $have_error = $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols) || $have_error;
 
+        // POCOR-9796: checkClassName/checkStartDate used to only run once Academic Period AND
+        // Education Grade had BOTH already resolved successfully (they were nested three levels
+        // deep below those checks). That meant a blank/invalid Academic Period or Education
+        // Grade silently hid a blank/invalid Start Date on the same row - the report only ever
+        // showed the Academic Period error and the user never learned Start Date was missing
+        // too. Both are pure validation (no DB writes) and each degrades gracefully when
+        // Academic Period isn't resolved, so call them here, right after Academic Period is
+        // checked, so they always report their own problems independently.
+        $classNameHasError = $this->checkClassName($tempRow, $rowInvalidCodeCols);
+        $startDateHasError = $this->checkStartDate($tempRow, $rowInvalidCodeCols);
+        $have_error = $have_error || $classNameHasError || $startDateHasError;
 
         $academic_period_id = $tempRow['academic_period_id'] ?? null;
 //                Log::debug(print_r(['$academic_period_id' => $tempRow], true));
         if (!empty($academic_period_id)) {
             $education_grade_code = $originalRow[$education_grade_key];
             $tempRow['education_grade_code'] = $education_grade_code;
-            $have_error = $have_error || $this->checkEducationGrade($tempRow, $rowInvalidCodeCols);
+            $have_error = $this->checkEducationGrade($tempRow, $rowInvalidCodeCols) || $have_error;
 
 
             $education_grade_id = $tempRow['education_grade_id'] ?? null;
@@ -1746,15 +1906,6 @@ class ImportUsersTable extends AppTable
                     return array($tempRow, $rowInvalidCodeCols, true);
                 }
                 //POCOR-9385: end — student creation restriction check with institution-aware grade context
-
-                // POCOR-9796: checkClassName/checkStartDate are pure validation (no DB writes) -
-                // call both unconditionally so a Class Name problem doesn't hide behind a Start
-                // Date problem or vice versa (the old `$have_error || $this->check...()` chain
-                // short-circuited: as soon as one check failed, `||` never even called the next
-                // one, so only the first blank/invalid mandatory field on a row ever got reported).
-                $classNameHasError = $this->checkClassName($tempRow, $rowInvalidCodeCols);
-                $startDateHasError = $this->checkStartDate($tempRow, $rowInvalidCodeCols);
-                $have_error = $have_error || $classNameHasError || $startDateHasError;
 
                 $tempRow['assignee_id'] = $this->Auth->user('id'); // Assignee as current user
 
