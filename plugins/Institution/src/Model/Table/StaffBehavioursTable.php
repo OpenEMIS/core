@@ -631,7 +631,11 @@ class StaffBehavioursTable extends ControllerActionTable
         $title = '';
         $title .= $recordEntity->staff->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->staff_behaviour_category->name;
 
-        return [$title, true];
+        // POCOR-7626: autoLinkRecordWithCases() does `$title = $event->getResult();` with no
+        // unwrapping - it expects a plain string (see InstitutionStudentAbsencesTable's working
+        // onSetCustomCaseTitle for the same event). Returning [$title, true] here made the case's
+        // title the literal 2-element array instead of the string, leaving it blank/mangled.
+        return $title;
     }
 
     public function onSetCustomCaseSummary(EventInterface $event, $id = null)

@@ -3,6 +3,7 @@ namespace App\Shell;
 
 use Cake\Console\Shell;
 use Cake\I18n\FrozenTime;
+use Workflow\Model\Behavior\WorkflowBehavior;
 use Exception;
 
 class GenerateStudentAttendanceCasesShell extends Shell
@@ -19,6 +20,14 @@ class GenerateStudentAttendanceCasesShell extends Shell
         $this->InstitutionStudentAbsences = $this->fetchTable('Institution.InstitutionStudentAbsences');
         $this->InstitutionCaseRecords = $this->fetchTable('Cases.InstitutionCaseRecords');
         $this->InstitutionCases = $this->fetchTable('Cases.InstitutionCases');
+        // POCOR-7626: fallback source when a student has no formal institution_student_absences
+        // record - the daily Attendance grid writes here instead (see generateCases() below).
+        $this->InstitutionStudentAbsenceDetails = $this->fetchTable('institution_student_absence_details');
+        $this->CaseTypes = $this->fetchTable('Cases.CaseTypes');
+        $this->CasePriorities = $this->fetchTable('Cases.CasePriorities');
+        $this->Users = $this->fetchTable('Security.Users');
+        $this->Institutions = $this->fetchTable('Institution.Institutions');
+        $this->AbsenceTypes = $this->fetchTable('Institution.AbsenceTypes');
     }
 
     public function main()
@@ -102,8 +111,110 @@ class GenerateStudentAttendanceCasesShell extends Shell
                 $this->InstitutionCases->autoLinkRecordWithCases($absenceEntity);
                 $processed++;
             }
+
+            $processed += $this->generateCasesFromAttendanceDetails($feature, $absenceTypeId, $daysAbsent, $sinceDate, $workflowRule['id']);
         }
 
         return $processed;
+    }
+
+    // POCOR-7626: fallback pass - institution_student_absences (the formal "Student Absences"
+    // screen) is a separate, rarely-used table from the daily Attendance grid staff actually
+    // mark absences in day to day (which writes institution_student_absence_details instead, one
+    // row per class period). Only runs for a student when they have no formal absence record at
+    // all for this type in range, so it never double-counts against the primary pass above.
+    // Confirmed with user: any period absent that day counts the whole day; fallback only, does
+    // not replace the primary institution_student_absences source.
+    private function generateCasesFromAttendanceDetails($feature, $absenceTypeId, $daysAbsent, $sinceDate, $workflowRuleId)
+    {
+        $processed = 0;
+        $dateField = $this->InstitutionStudentAbsenceDetails->aliasField('date');
+
+        // institution_student_absence_details has no single-column id - it's keyed by the
+        // composite (student_id, institution_id, academic_period_id, institution_class_id,
+        // date, period, subject_id). We aggregate per student anyway, so there's nothing to
+        // anchor a record_id to beyond the student themselves.
+        $detailCandidates = $this->InstitutionStudentAbsenceDetails->find()
+            ->select([
+                'student_id' => $this->InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                'institution_id' => $this->InstitutionStudentAbsenceDetails->aliasField('institution_id'),
+                'days_absent' => "COUNT(DISTINCT {$dateField})"
+            ])
+            ->where([
+                $this->InstitutionStudentAbsenceDetails->aliasField('absence_type_id') => $absenceTypeId,
+                $dateField . ' >=' => $sinceDate
+            ])
+            ->group([
+                $this->InstitutionStudentAbsenceDetails->aliasField('student_id'),
+                $this->InstitutionStudentAbsenceDetails->aliasField('institution_id')
+            ])
+            ->having(['days_absent >=' => $daysAbsent])
+            ->enableHydration(false)
+            ->all();
+
+        foreach ($detailCandidates as $detail) {
+            $hasFormalRecord = $this->InstitutionStudentAbsences->find()
+                ->where([
+                    $this->InstitutionStudentAbsences->aliasField('student_id') => $detail['student_id'],
+                    $this->InstitutionStudentAbsences->aliasField('absence_type_id') => $absenceTypeId,
+                    $this->InstitutionStudentAbsences->aliasField('date') . ' >=' => $sinceDate
+                ])
+                ->count();
+            if ($hasFormalRecord > 0) {
+                continue;
+            }
+
+            // Anchor record_id on -student_id (never positive, so it can never collide with a
+            // real institution_student_absences.id used by the primary pass above under the
+            // same feature) - this both dedupes future runs and identifies "this student's
+            // fallback attendance case" without needing a row id this table doesn't have.
+            $recordId = -1 * (int)$detail['student_id'];
+
+            $alreadyLinked = $this->InstitutionCaseRecords->find()
+                ->where(['record_id' => $recordId, 'feature' => $feature])
+                ->count();
+            if ($alreadyLinked > 0) {
+                continue;
+            }
+
+            if ($this->createCaseFromAttendanceDetail($feature, $detail, $recordId, $absenceTypeId, $workflowRuleId)) {
+                $processed++;
+            }
+        }
+
+        return $processed;
+    }
+
+    private function createCaseFromAttendanceDetail($feature, $detail, $recordId, $absenceTypeId, $workflowRuleId)
+    {
+        $student = $this->Users->get($detail['student_id']);
+        $institution = $this->Institutions->get($detail['institution_id']);
+        $absenceType = $this->AbsenceTypes->get($absenceTypeId);
+
+        $title = $student->name . ' ' . __('from') . ' ' . $institution->code_name . ' ' . __('with') . ' ' . $absenceType->name;
+
+        $defaultCaseTypeId = $this->CaseTypes->find()->where(['name' => 'Students'])->first();
+        $defaultCasePriorityId = $this->CasePriorities->find()->where(['name' => 'Medium'])->first();
+
+        $caseData = [
+            'case_number' => '',
+            'title' => $title,
+            'description' => $title,
+            'case_type_id' => $defaultCaseTypeId ? $defaultCaseTypeId->id : null,
+            'case_priority_id' => $defaultCasePriorityId ? $defaultCasePriorityId->id : null,
+            'status_id' => WorkflowBehavior::STATUS_OPEN,
+            'assignee_id' => WorkflowBehavior::AUTO_ASSIGN,
+            'institution_id' => $detail['institution_id'],
+            'workflow_rule_id' => $workflowRuleId,
+            'linked_records' => [[
+                'record_id' => $recordId,
+                'feature' => $feature
+            ]]
+        ];
+
+        $newEntity = $this->InstitutionCases->newEntity([]);
+        $newEntity = $this->InstitutionCases->patchEntity($newEntity, $caseData, ['validate' => false]);
+
+        return (bool)$this->InstitutionCases->save($newEntity);
     }
 }

@@ -38,6 +38,20 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
     {
         $mypid = getmypid();
 
+        // POCOR-7626: mirrors UpdateStudentStatusShell's stale-process recovery - without this,
+        // any crash that leaves a system_processes row stuck at RUNNING (as the newEntity()
+        // ArgumentCountError below did, before it was fixed) blocks every future run forever,
+        // since this shell previously had no expiry check at all.
+        $runningProcesses = $this->SystemProcesses->getRunningProcesses(self::PROCESS_NAME);
+        foreach ($runningProcesses as $processData) {
+            $expiryDate = clone($processData['created']);
+            $expiryDate = $expiryDate->addMinutes(30);
+            if ($expiryDate < FrozenTime::now()) {
+                $this->SystemProcesses->updateProcess($processData['id'], FrozenTime::now(), $this->SystemProcesses::COMPLETED);
+                $this->SystemProcesses->killProcess(!empty($processData['process_id']) ? $processData['process_id'] : 0);
+            }
+        }
+
         if (!empty($this->SystemProcesses->getRunningProcesses(self::PROCESS_NAME))) {
             $this->out('A previous run of ' . self::PROCESS_NAME . ' is still marked as running. Skipping this run (' . FrozenTime::now() . ')');
             return;
@@ -49,7 +63,10 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
         try {
             $this->generateCases();
             $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::COMPLETED);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
+            // POCOR-7626: catch \Throwable, not just \Exception - a PHP Error (e.g. the
+            // ArgumentCountError this shell used to throw) is not an Exception subclass and
+            // would otherwise skip this block entirely, leaving the process stuck at RUNNING.
             $this->out('Error in ' . self::PROCESS_NAME . ': ' . $e->getMessage());
             $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::ERROR);
         }
