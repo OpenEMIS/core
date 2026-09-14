@@ -370,16 +370,16 @@ class AppTable extends Table
             }
             switch ($field) {
                 case "modified_user_id":
-                    $label = "Modified By";
+                    $label = "Modified User";
                     break;
                 case "modified":
-                    $label = "Modified On";
+                    $label = "Modified";
                     break;
                 case "created_user_id":
-                    $label = "Created By";
+                    $label = "Created User";
                     break;
                 case "created":
-                    $label = "Created On";
+                    $label = "Created";
                     break;
             }
             $label = __($label);

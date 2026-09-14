@@ -343,13 +343,13 @@ class AppraisalCriteriasTable extends ControllerActionTable
         }else if ($field == 'field_type_id') {
             return __('Field Type');//POCOR-8864
         }else if ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         }else if ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         }else if ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         }else if ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         }
         else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);

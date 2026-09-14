@@ -539,16 +539,16 @@ class WebhooksTable extends ControllerActionTable //POCOR-9257
 //            ]);
 //    }
 
-    public function onGetFieldLabel(EventInterface  $event, $module, $field, $language, $autoHumanize=true)
-    {
-        if ($field == 'external_data_source_id') {
-            return __('External Server');
-        } elseif ($field == 'event_key') {
-            return __('Triggered Event');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
+    // public function onGetFieldLabel(EventInterface  $event, $module, $field, $language, $autoHumanize=true)
+    // {
+    //     if ($field == 'external_data_source_id') {
+    //         return __('External Server');
+    //     } elseif ($field == 'event_key') {
+    //         return __('Triggered Event');
+    //     } else {
+    //         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    //     }
+    // }
     public function addEditAfterAction(EventInterface  $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
@@ -1365,5 +1365,26 @@ class WebhooksTable extends ControllerActionTable //POCOR-9257
         $body = $record->toArray();
 
         return $body;
+    }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'external_data_source_id':
+                return __('External Server');
+            case 'event_key':
+                return __('Triggered Event');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified User');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

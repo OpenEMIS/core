@@ -223,13 +223,13 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
         }elseif ($field == 'date_enabled') {
             return __('Date Enabled');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         }elseif ($field == 'academic_period_id') {
             return __('Academic Period');
         }elseif ($field == 'education_grades') {

@@ -652,14 +652,14 @@ class AreasTable extends ControllerActionTable
     }
 
     // POCOR-9351
-    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true){
+    // public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true){
 
-        if ($field == 'zero_code') {
-            return __('Code');
-        }else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
+    //     if ($field == 'zero_code') {
+    //         return __('Code');
+    //     }else {
+    //         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    //     }
+    // }
 
     public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
@@ -843,5 +843,24 @@ class AreasTable extends ControllerActionTable
     public function getAreas()
     {
         return $this->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])->order([$this->aliasField('order')])->toArray();
+    }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'zero_code':
+                return __('Code');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified User');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
