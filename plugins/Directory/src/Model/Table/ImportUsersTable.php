@@ -473,7 +473,11 @@ class ImportUsersTable extends AppTable
         }
 
         if ($isStudent) {
-            $have_error = $this->checkInstitution($tempRow, $rowInvalidCodeCols) || $have_error;
+            // POCOR-9796: checkInstitution() is NOT called here - checkNewAdmission() below
+            // (always invoked for every Student row) calls it itself with identical arguments
+            // ($tempRow, $rowInvalidCodeCols), so calling it here too ran the same institution
+            // lookup query twice per row for no behavioral difference. checkNewAdmission()'s own
+            // $admissionHasError result already folds back into $have_error further down.
             $tempRow['student_id'] = $tempRow['security_user_id'] ?? null;
             $have_error = $this->checkStudentIdentityNationality($tempRow, $rowInvalidCodeCols) || $have_error;
 
@@ -1733,14 +1737,14 @@ class ImportUsersTable extends AppTable
         // POCOR-9796: these three used to short-circuit on each other - a blank Guardian
         // Relation (checked first) returned immediately, so a blank Guardian First/Last Name,
         // Gender or Date of Birth on the same row was never even looked at, let alone reported.
-        // checkGuardianOpenemisID() runs first because it's the one that resolves guardian_id
+        // checkGuardianOpenemisId() runs first because it's the one that resolves guardian_id
         // from Guardian Openemis No/Identity Number when an existing guardian is being linked -
         // checkGuardianRequiredFields() needs that result to know whether this row is creating a
         // brand new guardian (whose Name/Gender/Date of Birth are mandatory) or linking an
         // existing one (where they don't apply at all). Neither of the other two depends on
         // order, so all three now run unconditionally and every blank/invalid mandatory Guardian
         // field on the row is reported together.
-        $openemisIdHasError = $this->checkGuardianOpenemisID($tempRow, $rowInvalidCodeCols);
+        $openemisIdHasError = $this->checkGuardianOpenemisId($tempRow, $rowInvalidCodeCols);
         $relationHasError = $this->checkGuardianRelationId($tempRow, $rowInvalidCodeCols);
         $requiredFieldsHasError = $this->checkGuardianRequiredFields($tempRow, $rowInvalidCodeCols);
         $have_error = $have_error || $openemisIdHasError || $relationHasError || $requiredFieldsHasError;
@@ -1843,6 +1847,26 @@ class ImportUsersTable extends AppTable
                 $have_error = true;
             }
         }
+
+        // POCOR-9796: guardian_date_of_birth is a virtual field (User.Users has no such column,
+        // only "date_of_birth"), so ImportBehavior::_extractRecord()'s generic dd/mm/yyyy format
+        // check - keyed off $activeModel->getSchema()->getColumn($columnName)['type'] == 'date' -
+        // silently never runs for it (the schema lookup finds nothing to match against). A
+        // malformed value (e.g. "01/01.2010") was previously passed straight through to
+        // Users->newEntity()/save() unvalidated: Cake's date marshaller silently nulls an
+        // unparseable string rather than raising a validation error, so the only failure was a
+        // raw "SQLSTATE[23000]... Column 'date_of_birth' cannot be null" from checkCreateNewGuardian()'s
+        // save() call - a confusing DB error under the wrong field label instead of a normal
+        // per-field validation message. Validate the format here, same pattern the generic check
+        // uses for real date columns, before this row ever reaches that save.
+        if (!$have_error && !empty($tempRow['guardian_date_of_birth'])) {
+            $dob = trim((string) $tempRow['guardian_date_of_birth']);
+            if (!preg_match('/^(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/[0-9]{4}$/', $dob)) {
+                $this->addError($rowInvalidCodeCols, 'guardian_date_of_birth', __('This field value is invalid'));
+                $have_error = true;
+            }
+        }
+
         return $have_error;
     }
     /**
@@ -1871,17 +1895,14 @@ class ImportUsersTable extends AppTable
         $education_grade_key = $keys['education_grade_id'];
         $have_error = $this->checkAcademicPeriodId($tempRow, $rowInvalidCodeCols) || $have_error;
 
-        // POCOR-9796: checkClassName/checkStartDate used to only run once Academic Period AND
-        // Education Grade had BOTH already resolved successfully (they were nested three levels
-        // deep below those checks). That meant a blank/invalid Academic Period or Education
-        // Grade silently hid a blank/invalid Start Date on the same row - the report only ever
-        // showed the Academic Period error and the user never learned Start Date was missing
-        // too. Both are pure validation (no DB writes) and each degrades gracefully when
-        // Academic Period isn't resolved, so call them here, right after Academic Period is
-        // checked, so they always report their own problems independently.
-        $classNameHasError = $this->checkClassName($tempRow, $rowInvalidCodeCols);
+        // POCOR-9796: checkStartDate() used to only run once Academic Period AND Education Grade
+        // had BOTH already resolved successfully (nested three levels deep below those checks).
+        // That meant a blank/invalid Academic Period or Education Grade silently hid a blank/
+        // invalid Start Date on the same row. It's pure validation (no DB writes) and degrades
+        // gracefully when Academic Period isn't resolved, so call it here, right after Academic
+        // Period is checked, so it always reports its own problem independently.
         $startDateHasError = $this->checkStartDate($tempRow, $rowInvalidCodeCols);
-        $have_error = $have_error || $classNameHasError || $startDateHasError;
+        $have_error = $have_error || $startDateHasError;
 
         $academic_period_id = $tempRow['academic_period_id'] ?? null;
 //                Log::debug(print_r(['$academic_period_id' => $tempRow], true));
@@ -1889,8 +1910,22 @@ class ImportUsersTable extends AppTable
             $education_grade_code = $originalRow[$education_grade_key];
             $tempRow['education_grade_code'] = $education_grade_code;
             $have_error = $this->checkEducationGrade($tempRow, $rowInvalidCodeCols) || $have_error;
+        }
 
+        // POCOR-9796 fix: checkClassName() reads $tempRow['education_grade_id'] and must run
+        // AFTER checkEducationGrade() above, not before - checkEducationGrade() is what rescopes
+        // that id from the raw, globally code-matched grade (set by ImportBehavior's generic
+        // column lookup, which knows nothing about institution/academic period) to the correct
+        // institution/period-scoped one. education_grades.code is not unique across education
+        // programmes, so validating a Class Name against the wrong (unscoped) grade id could
+        // wrongly reject an otherwise entirely valid row with "Institution class not found/full".
+        // Still called unconditionally (even when Academic Period didn't resolve, i.e. $tempRow
+        // still holds whatever raw education_grade_id the generic lookup set), matching the prior
+        // "always report Class Name's own problem independently" behaviour.
+        $classNameHasError = $this->checkClassName($tempRow, $rowInvalidCodeCols);
+        $have_error = $have_error || $classNameHasError;
 
+        if (!empty($academic_period_id)) {
             $education_grade_id = $tempRow['education_grade_id'] ?? null;
 //                    Log::debug(print_r(['$education_grade_id' => $tempRow], true));
 
