@@ -2626,10 +2626,19 @@ class WorkflowCaseBehavior extends Behavior
         $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $assigneeId = $SecurityGroupUsers->getFirstAssignee($params);
 
-        if($entity->assignee_id == -1){ //POCOR-7025
-            $entity->assignee_id = -1;
-        }else{
+        // POCOR-7626: this was inverted (POCOR-7025) - beforeSave() only ever calls this method
+        // when assignee_id is the -1 "Auto Assign" sentinel, so the branch below always matched
+        // and threw away the resolved $assigneeId, permanently leaving assignee_id at -1. -1 is
+        // never a valid security_users.id, so any save against a schema that FK-constrains
+        // assignee_id (e.g. institution_cases.insti_cases_fk_ass_id) failed outright. Use the
+        // resolved assignee; if none was found, fall back to the entity's own created_user_id
+        // (a real, already-valid security_users row) instead of persisting -1 or an unproven 0.
+        if (!empty($assigneeId)) {
             $entity->assignee_id = $assigneeId;
+        } elseif (!empty($entity->created_user_id)) {
+            $entity->assignee_id = $entity->created_user_id;
+        } else {
+            $entity->assignee_id = 0;
         }
     }
 

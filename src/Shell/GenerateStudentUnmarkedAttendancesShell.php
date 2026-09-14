@@ -176,14 +176,17 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 
 					$patchOptions = ['validate' => false];
 
-					$newEntity = $this->InstitutionCases->newEntity();
+					// CakePHP 5: Table::newEntity() requires its $data argument (no more default
+					// empty-array signature) - the old no-arg call fatal'd with ArgumentCountError
+					// the first time this code path actually ran (POCOR-7626 re-enabled this shell).
+					$newEntity = $this->InstitutionCases->newEntity([]);
 					$newEntity = $this->InstitutionCases->patchEntity($newEntity, $caseData, $patchOptions);
 					$alreadyExistsCount = $this->InstitutionCaseRecords->find()->where(['record_id' => $recordId, 'feature' => $feature])->count();
 					if ($alreadyExistsCount === 0) {
 						$result = $this->InstitutionCases->save($newEntity);
 
 						$linkedRecords['institution_case_id'] = $result->id;
-						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->newEntity();
+						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->newEntity([]);
 						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->patchEntity($newEntityInstitutionCaseRecord, $linkedRecords, $patchOptions);
 						$this->InstitutionCaseRecords->save($newEntityInstitutionCaseRecord);
 						$this->sendEmail($rule['where']['security_role_id'], $institutionId, $daysUnmarked,$mailed_data);//6023 add param $mailed_data
