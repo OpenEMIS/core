@@ -11,6 +11,7 @@ import {
 import { ApiService } from '../api.service';
 import { TABLE_COLUMN_LIST } from '../config';
 import { DEFAULT_TEMPLATE_THEME } from '../shared/config.default-val';
+import { applyThemeFromResponse } from '../shared/theme.utils';
 
 @Component({
   selector: 'app-comments',
@@ -176,20 +177,7 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
   setTheme() {
     this.Rest.getWithToken('themes').subscribe({
       next: (response: any) => {
-        console.log(response?.data[3].default_value, "response");
-        let selectedThemeData = '';
-        if (response?.data[3].value) {
-          selectedThemeData = response?.data[3].value;
-          selectedThemeData = `#${selectedThemeData}`;
-        } else {
-          selectedThemeData = response?.data[3].default_value;
-          selectedThemeData = `#${selectedThemeData}`;
-        }
-        this.themeArray.btnGroup[0].dropdownContent.forEach((element: any) => {
-          if (element.text == selectedThemeData) {
-            document.body.className = element.theme + ' fuelux';
-          }
-        });
+        applyThemeFromResponse(response, this.themeArray.btnGroup[0].dropdownContent);
       },
       error: (error: any) => {
         if (error) {

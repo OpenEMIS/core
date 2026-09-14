@@ -7,6 +7,7 @@ import { ApiService } from '../api.service';
 import { StudentMealsCacheService } from './student-meals-cache.service'; //POCOR-9594: caching service
 import { ActivatedRoute, Router } from '@angular/router';
 import { DEFAULT_TEMPLATE_THEME } from '../shared/config.default-val';
+import { applyThemeFromResponse } from '../shared/theme.utils';
 import { saveAs } from 'file-saver'
 
 @Component({
@@ -555,20 +556,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   setTheme() {
     this.Rest.getWithToken('themes').subscribe({
       next: (response: any) => {
-        // console.log(response?.data[3].default_value, "response");
-        let selectedThemeData = '';
-        if (response?.data[3].value) {
-          selectedThemeData = response?.data[3].value;
-          selectedThemeData = `#${selectedThemeData}`;
-        } else {
-          selectedThemeData = response?.data[3].default_value;
-          selectedThemeData = `#${selectedThemeData}`;
-        }
-        this.themeArray.btnGroup[0].dropdownContent.forEach((element: any) => {
-          if (element.text == selectedThemeData) {
-            document.body.className = element.theme + ' fuelux';
-          }
-        });
+        applyThemeFromResponse(response, this.themeArray.btnGroup[0].dropdownContent);
       },
       error: (error: any) => {
 

@@ -100,7 +100,10 @@ class UsersMergeCommand extends Command
         $conn = ConnectionManager::get('default');
         try {
             // One transaction for the whole merge (locks + saves + FK repoints + deactivate)
-            $conn->transactional(function ($conn) use ($SystemProcesses) {
+            //POCOR-9794: capture repointForeignKeys()'s return value via the closure's
+            // return - Connection::transactional() passes through whatever the callback
+            // returns, so this survives outside the closure without needing a by-ref use().
+            $skippedDuplicates = $conn->transactional(function ($conn) use ($SystemProcesses) {
 
                 //MERGE-DEBUG --start
                 $this->dlog('entered transaction, about to lock base/merge rows');
@@ -125,12 +128,11 @@ class UsersMergeCommand extends Command
                 $this->dlog('locked merge row id=' . $this->mergeId);
                 //MERGE-DEBUG --end
 
-                //NEW: validate user types
-                $this->assertSameUserType($base, $merge);
-
-                //MERGE-DEBUG --start
-                $this->dlog('user type check passed');
-                //MERGE-DEBUG --end
+                //POCOR-9794: merging users of different types (Student/Staff/Guardian) is
+                // now explicitly allowed per product decision - the merged person may hold
+                // more than one role rather than being forced into a single type. The
+                // previous type-match guard (assertSameUserType) blocked exactly this case
+                // and has been removed; see buildMovePlan()'s role-union step below.
 
                 // 2) Compute move plan according to your rule: "if base is empty → take merge"
                 $plan = $this->buildMovePlan($Users, $base, $merge);
@@ -173,7 +175,11 @@ class UsersMergeCommand extends Command
                 //MERGE-DEBUG --end
 
                 // 7) Repoint foreign keys referencing the MERGE user → BASE user
-                $this->repointForeignKeys($conn, $this->baseId, $this->mergeId, $SystemProcesses, $this->systemProcessId);
+                //POCOR-9794: a duplicate here means base already has the equivalent
+                // record - base's row wins, merge's is left untouched (not deleted,
+                // not a failure). Recorded below for traceability, doesn't block
+                // deactivation.
+                $skippedDuplicates = $this->repointForeignKeys($conn, $this->baseId, $this->mergeId, $SystemProcesses, $this->systemProcessId);
 
                 //MERGE-DEBUG --start
                 $this->dlog('repointForeignKeys returned');
@@ -196,11 +202,27 @@ class UsersMergeCommand extends Command
                 ]);
                 */
 
+                //POCOR-9794: pass the skip report out through the closure's return value.
+                return $skippedDuplicates;
             });
 
             //MERGE-DEBUG --start
             $this->dlog('transaction committed, about to deactivate merge user');
             //MERGE-DEBUG --end
+
+            //POCOR-9794: record what got left behind as duplicate-resolved (base's
+            // existing row wins) against this merge run, so it's answerable later
+            // without grepping log files. This is informational only - it does not
+            // block deactivation, since a resolved duplicate is not a failure.
+            if (!empty($skippedDuplicates)) {
+                Log::write('info', sprintf(
+                    '[UsersMergeCommand] base_id=%d merge_id=%d: %d record(s) left unrepointed as duplicate-resolved (base already had equivalent data): %s',
+                    $this->baseId,
+                    $this->mergeId,
+                    count($skippedDuplicates),
+                    json_encode($skippedDuplicates)
+                ));
+            }
 
             $conn->execute(
                 "UPDATE `security_users`
@@ -229,38 +251,6 @@ class UsersMergeCommand extends Command
         }
     }
 
-    private function assertSameUserType(Entity $base, Entity $merge): void
-    {
-        $types = [
-            'is_student',
-            'is_staff',
-            'is_guardian',
-        ];
-
-        foreach ($types as $type) {
-            if ((int)$base->get($type) !== (int)$merge->get($type)) {
-                throw new \RuntimeException(sprintf(
-                    'Invalid merge: base user (%d) and merge user (%d) have different user types (%s mismatch).',
-                    $base->get('id'),
-                    $merge->get('id'),
-                    $type
-                ));
-            }
-        }
-
-        // Optional strict check: ensure exactly ONE role is true
-        $baseRoles = array_sum(array_map(fn($t) => (int)$base->get($t), $types));
-        $mergeRoles = array_sum(array_map(fn($t) => (int)$merge->get($t), $types));
-
-        if ($baseRoles !== 1 || $mergeRoles !== 1) {
-            throw new \RuntimeException(sprintf(
-                'Invalid merge: users must have exactly one role. base=%d roles, merge=%d roles.',
-                $baseRoles,
-                $mergeRoles
-            ));
-        }
-    }
-
     /**
      * Build the move plan:
      *  - Only move when base is "empty-ish" (null or ''), keep base otherwise
@@ -271,7 +261,13 @@ class UsersMergeCommand extends Command
         $exclude = [
             'id','password','status','created_user_id','created',
             'modified_user_id','modified','name','name_with_id',
-            'name_with_id_role','default_identity_type','has_special_needs'
+            'name_with_id_role','default_identity_type','has_special_needs',
+            //POCOR-9794 --start
+            // Handled separately below via role-union logic, not the generic
+            // "copy if base is empty" rule - these are 0/1 flags, never
+            // null/'', so the generic rule below would never touch them anyway.
+            'is_student','is_staff','is_guardian',
+            //POCOR-9794 --end
         ];
 
         $schema = $Users->getSchema();
@@ -293,6 +289,21 @@ class UsersMergeCommand extends Command
                 $plan[$field] = $mergeNorm;
             }
         }
+
+        //POCOR-9794 --start
+        // Umairah Yusoff (POCOR-9794): merging users of different types (e.g.
+        // Student + Staff) is now allowed - the merged person may hold both
+        // roles rather than being forced into one. Union the role flags onto
+        // base: turn a role ON if merge has it and base doesn't; never turn one
+        // off. This is the one exception to "base wins on conflict" above,
+        // since roles are additive, not a single value to pick between.
+        foreach (['is_student', 'is_staff', 'is_guardian'] as $roleField) {
+            if ((int)$merge->get($roleField) === 1 && (int)$base->get($roleField) !== 1) {
+                $plan[$roleField] = 1;
+            }
+        }
+        //POCOR-9794 --end
+
         return $plan;
     }
 
@@ -423,7 +434,7 @@ class UsersMergeCommand extends Command
         int $mergeId,
         Table $SystemProcesses,
         int $systemProcessId
-    ): void {
+    ): array {
 
         $db = $conn->config()['database'];
 
@@ -454,6 +465,7 @@ class UsersMergeCommand extends Command
 
         $progress = 0;
         $errors   = [];
+        $skipped  = []; //POCOR-9794: structured duplicate-skip report, returned below
 
         //MERGE-DEBUG --start
         $this->dlog('repointForeignKeys: scanning ' . count($columns) . ' table/column pairs');
@@ -519,6 +531,15 @@ class UsersMergeCommand extends Command
                             $baseId,
                             $mergeId
                         ));
+
+                        //POCOR-9794: base already has the equivalent record - this is a
+                        // resolved conflict (base wins), not a failure. Record it
+                        // structurally instead of only as a log line.
+                        $skipped[] = [
+                            'table' => $table,
+                            'column' => $fkCol,
+                            'row_id' => $rowIdentifier,
+                        ];
 
                         continue;
                     }
@@ -620,6 +641,8 @@ class UsersMergeCommand extends Command
                 'User merge failed: ' . implode(' | ', $errors)
             );
         }
+
+        return $skipped;
     }
 
     //MERGE-DEBUG --start

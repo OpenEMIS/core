@@ -111,10 +111,14 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
     {
         if ($field == 'scholarship_attachment_type_id') {
             return __('Type');
+        }else if ($field == 'modified') {
+            return __('Modified');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified User');
         }else if ($field == 'created') {
-            return __('Uploaded On');
+            return __('Created');
         } else if ($field == 'created_user_id') {
-            return __('Uploaded By');
+            return __('Created User');
         } else if ($field == 'applicant_id') {
             return __('Applicant');
         }else if ($field == 'start_date') {
@@ -280,10 +284,11 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
 
     public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
-        $this->field('created', ['attr' => ['label' => __('Created By')]]);
-        $this->field('created_user_id', ['attr' => ['label' => __('Created On')]]);
-        $this->field('modified', ['attr' => ['label' => __('Modified By')]]);
-        $this->field('modified_user_id', ['attr' => ['label' => __('Modified On')]]);
+        $this->field('created', ['attr' => ['label' => __('Created')]]);
+        $this->field('created_user_id', ['attr' => ['label' => __('Created User')]]);
+
+        $this->field('modified', ['attr' => ['label' => __('Modified')]]);
+        $this->field('modified_user_id', ['attr' => ['label' => __('Modified User')]]);
         $this->field('file_content', ['visible' => true]);
         $this->field('file_name', ['visible' => false]);
         $this->field('applicant_id', ['visible' => false]);

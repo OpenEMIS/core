@@ -930,11 +930,20 @@ class WorkflowBehavior extends Behavior
                         $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
                         $WorkflowStepRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                         $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                        // $workflowId (from $entity['status']['workflow_id']) can be null when the
+                        // entity's current status doesn't resolve to a workflow step (e.g. record
+                        // has transition history but no live workflow status). CakePHP 5's query
+                        // builder no longer auto-converts a null value in where() into "IS NULL" -
+                        // it now throws InvalidArgumentException instead, so it must be spelled out
+                        // explicitly here to keep the previous (find-nothing, not crash) behaviour.
+                        $stepConditions = ['name' => $transition->workflow_step_name];
+                        if ($workflowId === null) {
+                            $stepConditions['workflow_id IS'] = null;
+                        } else {
+                            $stepConditions['workflow_id'] = $workflowId;
+                        }
                         $step = $WorkflowSteps->find()
-                            ->where([
-                                'name' => $transition->workflow_step_name,
-                                'workflow_id' => $workflowId
-                            ])
+                            ->where($stepConditions)
                             ->first();
 
                          if (!empty($step)) { 

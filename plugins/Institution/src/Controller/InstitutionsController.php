@@ -9311,7 +9311,8 @@ class InstitutionsController extends AppController
             'Institution.InstitutionStandards' => __('Students') . ' ' . __('Overview'),
             'Institution.StudentSpecialNeeds' => __('Student Special Needs'),
             'StaffAppraisal.Appraisals' => __('Staff Appraisals'),
-            'Institution.InstitutionConsumablesReport' => __('Consumables') //POCOR-9058
+            'Institution.InstitutionConsumablesReport' => __('Consumables'), //POCOR-9058
+            'Institution.InstitutionStudentWeeklyAttendance' => __('Students Attendance Weekly'), //POCOR-9611
         ];
         // End POCOR-6871
         return $options;

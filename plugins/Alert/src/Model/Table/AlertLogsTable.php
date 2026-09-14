@@ -1056,9 +1056,9 @@ class AlertLogsTable extends ControllerActionTable
             case 'message':
                 return __('Message');
             case 'created':
-                return __('Created By');
+                return __('Created');
             case 'created_user_id':
-                return __('Created On');
+                return __('Created User');
             default:
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

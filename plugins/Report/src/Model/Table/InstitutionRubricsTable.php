@@ -416,6 +416,14 @@ class InstitutionRubricsTable extends AppTable {
                 return __('Institution');
             case 'status':
                 return __('Status');
+			case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified User');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

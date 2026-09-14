@@ -180,13 +180,13 @@ class SurveyQuestionsTable extends CustomFieldsTable
         } elseif ($field == 'is_unique') {
             return __('Is Unique');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         }elseif ($field == 'description') {
             return __('Description');
         }elseif ($field == 'description') {

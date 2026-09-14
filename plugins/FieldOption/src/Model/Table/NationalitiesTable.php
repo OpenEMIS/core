@@ -68,11 +68,11 @@ class NationalitiesTable extends ControllerActionTable
             case 'modified':
                 return __('Modified');
             case 'modified_user_id':
-                return __('Modified By');
+                return __('Modified User');
             case 'created':
                 return __('Created');
             case 'created_user_id':
-                return __('Created By');
+                return __('Created User');
             case 'visible':
                 return __('Visible');
             case 'name':

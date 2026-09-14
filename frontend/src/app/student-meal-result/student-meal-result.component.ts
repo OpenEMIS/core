@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../api.service';
 import { DEFAULT_TEMPLATE_THEME } from '../shared/config.default-val';
+import { applyThemeFromResponse } from '../shared/theme.utils';
 import { IMiniDashboardConfig, IMiniDashboardItem } from '../workbench/component.mini-dashboard.config';
 import { MINI_DASHBOARD_CONFIG } from '../student-attendance/student_attendance.config';
 import { ITableApi, ITableConfig, KdAlertEvent } from 'openemis-styleguide-lib';
@@ -208,20 +209,7 @@ export class StudentMealResultComponent implements OnInit {
   setTheme() {
     this.Rest.getWithToken('themes').subscribe({
       next: (response: any) => {
-        console.log(response?.data[3].default_value, "response");
-        let selectedThemeData = '';
-        if (response?.data[3].value) {
-          selectedThemeData = response?.data[3].value;
-          selectedThemeData = `#${selectedThemeData}`;
-        } else {
-          selectedThemeData = response?.data[3].default_value;
-          selectedThemeData = `#${selectedThemeData}`;
-        }
-        this.themeArray.btnGroup[0].dropdownContent.forEach((element: any) => {
-          if (element.text == selectedThemeData) {
-            document.body.className = element.theme + ' fuelux';
-          }
-        });
+        applyThemeFromResponse(response, this.themeArray.btnGroup[0].dropdownContent);
       },
       error: (error: any) => {
 

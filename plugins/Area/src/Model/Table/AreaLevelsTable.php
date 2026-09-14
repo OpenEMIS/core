@@ -96,4 +96,21 @@ class AreaLevelsTable extends ControllerActionTable
 
         $this->dispatchEventToModels('Model.AreaLevel.afterDelete', [$entity], $this, $listeners);
     }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified User');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }
