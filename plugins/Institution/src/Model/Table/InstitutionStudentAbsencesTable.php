@@ -47,7 +47,16 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             'description' => 'Triggering this rule will assign the case to Principal',
             'method' => 'onAssignToPrincipal',
             'roleCode' => 'PRINCIPAL'
+        ],
+
+        [
+            'value' => 'Workflow.onAssignToMoeadmin',
+            'text' => 'Assign to MOE ADMIN',
+            'description' => 'Triggering this rule will assign the case to MOE ADMIN',
+            'method' => 'onAssignToMoeadmin',
+            'roleCode' => 'MOE_ADMIN'
         ]
+
     ];
 
     public function initialize(array $config): void
@@ -238,6 +247,34 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
         if (!empty($institutionPrincipal)) {
             $staffId = $institutionPrincipal->principal_id;
+
+            if (!empty($staffId)) {
+                $caseEntity->assignee_id = $staffId;
+                $extra['assigneeFound'] = true;
+                $Cases->save($caseEntity);
+            }
+        }
+    }
+
+    public function onAssignToMoeadmin(EventInterface $event, Entity $caseEntity, Entity $linkedRecordEntity, ArrayObject $extra)
+    {
+        $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        $Cases = TableRegistry::getTableLocator()->get('Cases.InstitutionCases');
+
+        $institutionMoeAdmin = $InstitutionPositions->find()
+            ->select([
+                'moeadmin_id' => 'InstitutionStaff.staff_id'
+            ])
+            ->matching('InstitutionStaff')
+            ->matching('StaffPositionTitles')
+            ->where([
+                'InstitutionStaff.institution_id' => $linkedRecordEntity->institution_id,
+                'StaffPositionTitles.name ' => 'MOE ADMIN'
+            ])
+            ->first();
+
+        if (!empty($institutionMoeAdmin)) {
+            $staffId = $institutionMoeAdmin->moeadmin_id;
 
             if (!empty($staffId)) {
                 $caseEntity->assignee_id = $staffId;
