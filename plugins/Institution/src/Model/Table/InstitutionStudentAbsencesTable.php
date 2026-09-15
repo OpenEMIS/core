@@ -48,7 +48,6 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             'method' => 'onAssignToPrincipal',
             'roleCode' => 'PRINCIPAL'
         ],
-
         [
             'value' => 'Workflow.onAssignToMoeadmin',
             'text' => 'Assign to MOE ADMIN',
