@@ -28,9 +28,7 @@ class StaffBehavioursTable extends ControllerActionTable
     const DONE = 3; //POCOR-6670
 
     // POCOR-7626: Rule Events offered on Workflow > Rules for the Staff Behaviours feature.
-    // Only the institution-level Principal role applies here - Home Room/Secondary Teacher
-    // assignment (as offered for Student Attendances) needs a student enrolled in a class,
-    // which a Staff Behaviour record has no equivalent of.
+    // Only the institution-level .
     private $workflowRuleEvents = [
         [
             'value' => 'Workflow.onAssignToHomeRoomTeacher',
@@ -630,11 +628,6 @@ class StaffBehavioursTable extends ControllerActionTable
         ]);
         $title = '';
         $title .= $recordEntity->staff->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->staff_behaviour_category->name;
-
-        // POCOR-7626: autoLinkRecordWithCases() does `$title = $event->getResult();` with no
-        // unwrapping - it expects a plain string (see InstitutionStudentAbsencesTable's working
-        // onSetCustomCaseTitle for the same event). Returning [$title, true] here made the case's
-        // title the literal 2-element array instead of the string, leaving it blank/mangled.
         return $title;
     }
 

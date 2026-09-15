@@ -7,13 +7,16 @@
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
-                $baseUrl = $this->Url->build([
+                $urlArray = [
                     'plugin' => $this->request->getParam('plugin'),
                     'controller' => $this->request->getParam('controller'),
                     'action' => $this->request->getParam('action'),
                     '0' => 'index',
-                    '1' => $encodedQueryString,
-                ]);
+                ];
+                if (!empty($institutionId)) {
+                    $urlArray['?']['institution_id'] = $institutionId;
+                }
+                $baseUrl = $this->Url->build($urlArray);
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);
 

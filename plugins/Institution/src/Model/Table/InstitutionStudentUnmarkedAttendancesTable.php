@@ -30,10 +30,7 @@ class InstitutionStudentUnmarkedAttendancesTable extends ControllerActionTable
     private $staffId = null;
 
     // POCOR-7626: Rule Events offered on Workflow > Rules for the Student Unmarked
-    // Attendances feature. Only the institution-level Principal role applies here - Home
-    // Room/Secondary Teacher assignment (as offered for Student Attendances) needs a
-    // student_id, which this table (mapped to institution_staff_leave_archived) has
-    // no equivalent of.
+    // Attendances feature. Only the institution-level .
     private $workflowRuleEvents = [
         [
             'value' => 'Workflow.onAssignToHomeRoomTeacher',

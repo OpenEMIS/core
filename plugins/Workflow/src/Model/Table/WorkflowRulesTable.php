@@ -363,12 +363,7 @@ class WorkflowRulesTable extends ControllerActionTable
         } else if ($action == 'add' || $action == 'edit') {
             $entity = $attr['attr']['entity'];
             if ($action == 'add') {
-                // POCOR-7626: on the AJAX reload triggered by changing the Feature select,
-                // there is no '?feature=' in the URL for getQuery() to read - only the POST
-                // body has it (addOnChangeFeature() tries to bridge this via
-                // $request->getQuery['feature'] = ..., but that's a property write on a
-                // method name, so it never reaches getQuery()). Same fallback already used
-                // by onUpdateFieldWorkflowId() above for this exact reason.
+                // POCOR-7626
                 $feature = $request->getQuery('feature');
                 if ($feature == null) {
                     $requestData = $request->getData();
@@ -407,13 +402,7 @@ class WorkflowRulesTable extends ControllerActionTable
 
             $workflowId = $entity->workflow_id;
             if ($action == 'add' && empty($workflowId)) {
-                // POCOR-7626: on Add, workflow_id only reaches $entity once the Workflow
-                // select itself fires a reload - but when a feature has only one Workflow
-                // option (e.g. the single "Cases - General" workflow every Institutions >
-                // Cases feature is tied to today), a native <select> never fires 'change'
-                // for its only option, so workflow_id is never (re)submitted and $entity
-                // stays empty for the whole Add lifecycle. Same fallback already used for
-                // $feature above - read it straight from the posted form data instead.
+                // POCOR-7626
                 $requestData = $request->getData();
                 if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('workflow_id', $requestData[$this->getAlias()])) {
                     $workflowId = $requestData[$this->getAlias()]['workflow_id'];
@@ -436,10 +425,7 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function addEditOnAddEvent(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        // POCOR-7626: $data is an ArrayObject (per the method signature above), but
-        // array_key_exists() requires a real array for its 2nd argument as of PHP 8 -
-        // this was previously unreachable (the Add Event dropdown never had any options
-        // to select), so the TypeError only surfaces now that selecting an event is possible.
+        // POCOR-7626
         if ($data->offsetExists($this->getAlias())) {
             if (array_key_exists('event_method_key', $data[$this->getAlias()])) {
                 $methodKey = $data[$this->getAlias()]['event_method_key'];

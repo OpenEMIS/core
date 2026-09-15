@@ -179,6 +179,10 @@ class InstitutionCasesTable extends ControllerActionTable
         $session = $this->request->getSession();
         $requestQuery = $this->request->getQuery();
         $institutionId = $session->read('Institution.Institutions.id');
+        if (empty($institutionId)) {
+            $institutionId = $this->getInstitutionID();
+        }
+        $this->controller->set(compact('institutionId'));
 
         $params = new ArrayObject([
             'element' => ['filter' => ['name' => 'Cases.controls', 'order' => 2]],
@@ -216,8 +220,6 @@ class InstitutionCasesTable extends ControllerActionTable
             $helpBtn['attr'] = $btnAttr;
             $helpBtn['attr']['title'] = __('Help');
             $extra['toolbarButtons']['help'] = $helpBtn;
-
-
             // End POCOR-5188
         }
     }
