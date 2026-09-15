@@ -776,6 +776,19 @@ class QualificationsTable extends ControllerActionTable
 
     //POCOR-9531
     public function beforeSave(EventInterface  $event, Entity $entity, ArrayObject $data){
+        // POCOR-9805: this table gets save()'d directly by the Import behavior too (e.g. via
+        // Directory > [staff] > Staff Qualifications > Import), using a plain
+        // TableRegistry::get('Staff.Qualifications') instance that never goes through the normal
+        // controller dispatch lifecycle - so it never gets a real HTTP request copied onto it (see
+        // ControllerActionV4Trait::_initComponents()/ControllerActionComponent::model(), which
+        // only do that for the actively-dispatched model). Accessing $this->request there doesn't
+        // just return null - Table's magic __get() tries to resolve 'request' as an association
+        // name and throws "Undefined property `request`". property_exists() checks the real PHP
+        // property table directly, bypassing that magic getter entirely, so it's safe to call here
+        // even when the property was never set.
+        if (!property_exists($this, 'request') || empty($this->request)) {
+            return;
+        }
         $qualifications = $this->request->getData('Qualifications');
         if (empty($qualifications['qualification_institution']['_ids'])) {
             return;

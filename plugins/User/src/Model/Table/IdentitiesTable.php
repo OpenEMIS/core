@@ -60,6 +60,53 @@ class IdentitiesTable extends ControllerActionTable
         return $events;
     }
 
+    /**
+     * POCOR-9805: the generic "Cancel" back-button, for a model-alias-dispatched tab like this
+     * one (ControllerActionComponent::onInitializeButtons(), $this->triggerFrom == 'Model'),
+     * builds its URL as action=<model alias> ('Identities'), pass[0]='index' - but only carries
+     * the ORIGINAL request's pass params (which include the encoded security_user_id identifying
+     * whose Identities we're even looking at) over onto the back URL when going back to 'view',
+     * never to 'index':
+     *   if ($backAction != 'index') { $backUrl = array_merge($backUrl, $pass); }
+     * On the Add form (Cancel -> back to 'index'), that param is simply dropped, so the back URL
+     * ends up as .../Directories/Identities/index with NO identifying context at all. Directory >
+     * [person] > Identities > Add > Cancel landed on that URL, and IdentitiesTable's own index
+     * query (indexBeforeQuery(), via getUserID()) then builds a `security_user_id = NULL`
+     * condition with no IS NULL/IS NOT NULL wrapper, which CakePHP's query builder correctly
+     * refuses - InvalidArgumentException, rendered as this ticket's reported error page.
+     *
+     * A 'Model.custom.onUpdateToolbarButtons' listener (this codebase's usual pattern for
+     * rewriting a back-button URL - see ImportStaffQualificationsTable) never actually fired here
+     * for the 'add' action, confirmed by a [TEMP-LOG] check finding zero log entries even on a
+     * plain page load - that hook point isn't reached on this dispatch path. Set the back URL
+     * directly here in addBeforeAction() instead (the same proven approach already used by
+     * ReportCardGenerateTable::addBeforeAction() elsewhere in this codebase), which runs early
+     * enough to survive the framework's own (broken) construction of the same button.
+     *
+     * Scoped to the 'Directories' controller only - Identities is also reached via Institution's
+     * Staff/Students tabs and Personal profiles (StaffController, StudentsController,
+     * ProfilesController), whose own back-button URLs already work correctly today. Overriding
+     * unconditionally sent Cancel from those contexts to Directory too, which was wrong -
+     * confirmed regression once this got tested there.
+     */
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        if ($this->controller->getName() !== 'Directories') {
+            return;
+        }
+        $pass = $this->request->getParam('pass');
+        if (empty($pass[1])) {
+            return;
+        }
+        $extra['toolbarButtons']['back']['url'] = [
+            'plugin' => 'Directory',
+            'controller' => 'Directories',
+            'action' => 'Identities',
+            0 => 'index',
+            1 => $pass[1],
+        ];
+    }
+
     // The bootstrap-datepicker "date" fields (issue_date/expiry_date) render/accept text in
     // whatever format is configured in System Configurations > Date Format (e.g. "July 31, 2026"),
     // not just 'Y-m-d'. Cake's DateType::marshal() only ever accepts the strict 'Y-m-d' format, so
