@@ -484,7 +484,11 @@ class ApplicationsTable extends ControllerActionTable
                 $this->aliasField('requested_amount'),
                 $this->aliasField('comments'),
                 $this->aliasField('status_id'),
-                $this->aliasField('assignee_id')
+                $this->aliasField('assignee_id'), //POCOR-9649[START]
+                $this->aliasField('modified'),
+                $this->aliasField('modified_user_id'),
+                $this->aliasField('created'),
+                $this->aliasField('created_user_id') //POCOR-9649[START]
             ])
             ->contain([
                 'Applicants' => [
@@ -567,6 +571,26 @@ class ApplicationsTable extends ControllerActionTable
                         'last_name',
                         'preferred_name'
                     ]
+                ],
+                'ModifiedUser' => [ //POCOR-9649[START]
+                    'fields' => [
+                        'id',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name'
+                    ]
+                ],
+                'CreatedUser' => [
+                    'fields' => [
+                        'id',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name' //POCOR-9649[END]
+                    ]
                 ]
             ]);
     }
@@ -609,11 +633,11 @@ class ApplicationsTable extends ControllerActionTable
         }elseif ($field == 'modified') {
             return __('Modified');
         }elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         }elseif ($field == 'created') {
             return __('Created');
         }elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         }else if ($field == 'financial_assistance_type_id') {
             return __('Financial Assistance Type');
         }else if ($field == 'description') {

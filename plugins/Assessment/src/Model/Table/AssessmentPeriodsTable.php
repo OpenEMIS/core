@@ -49,6 +49,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             'Results' => ['index']
         ]);
         $this->setDeleteStrategy('restrict');
+        
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -478,10 +479,12 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
         //this is to sort array based on certain value on subarray, in this case based on education order value
         $educationSubjects = $entity->education_subjects;
-        usort($educationSubjects, function ($a, $b) {
-            return $a['order'] - $b['order'];
-        });
-        $entity->education_subjects = $educationSubjects;
+        if (is_array($educationSubjects)) {
+            usort($educationSubjects, function ($a, $b) {
+                return $a['order'] - $b['order'];
+            });
+            $entity->education_subjects = $educationSubjects;
+        }
     }
 
     public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -489,10 +492,12 @@ class AssessmentPeriodsTable extends ControllerActionTable
         if ($this->action == 'edit') {
             //this is to sort array based on certain value on subarray, in this case based on education order value
             $educationSubjects = $entity->education_subjects;
-            usort($educationSubjects, function ($a, $b) {
-                return $a['order'] - $b['order'];
-            });
-            $entity->education_subjects = $educationSubjects;
+            if (is_array($educationSubjects)) {
+                usort($educationSubjects, function ($a, $b) {
+                    return $a['order'] - $b['order'];
+                });
+                $entity->education_subjects = $educationSubjects;
+            }
         }
 
         $this->setupFields($entity);
@@ -1009,6 +1014,23 @@ class AssessmentPeriodsTable extends ControllerActionTable
                 $event->stopPropagation();
                 return $this->controller->redirect($url);
             }
+        }
+    }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified User');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 

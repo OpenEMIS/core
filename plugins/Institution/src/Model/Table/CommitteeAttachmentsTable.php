@@ -104,9 +104,21 @@ class CommitteeAttachmentsTable extends ControllerActionTable
       
     }
 
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        //POCOR-9715
+        return $validator
+            ->requirePresence('name', true)
+            ->notEmptyString('name', __('This field cannot be left empty'))
+            ->requirePresence('file_content', 'create')
+            ->notEmptyFile('file_content', __('Please select a file to upload'), 'create');
+    }
+
     public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
-        $this->field('file_content', ['type' => 'binary', 'visible' => true]);
+        $this->field('name', ['null' => false]); //POCOR-9715
+        $this->field('file_content', ['type' => 'binary', 'visible' => true, 'null' => false]);//POCOR-9715
         $this->field('file_name', ['visible' => false]);
         $this->setFieldOrder(['name', 'description', 'file_content']);
 
@@ -117,6 +129,7 @@ class CommitteeAttachmentsTable extends ControllerActionTable
 
     public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('name', ['null' => false]);//POCOR-9715
         $this->field('file_content', ['type' => 'binary', 'visible' => true]);
         $this->field('file_name', ['visible' => false]);
         $this->setFieldOrder(['name', 'description', 'file_content']);

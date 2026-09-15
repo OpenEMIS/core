@@ -47,7 +47,10 @@ class CompetencyTemplatesTable extends ControllerActionTable
                     'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                     'provider' => 'table'
                 ]
-            ]);
+            ])
+            ->notEmpty('name')
+            ->notEmpty('education_programme_id')
+            ->notEmpty('education_grade_id');
     }
 
 
@@ -166,7 +169,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
             $attr['visible'] = false;
         } else if ($action == 'add') {
             $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-            if (!empty($this->request->getQuery('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
+            if (!empty($this->request->getQuery('period')) && empty($request->getData($this->aliasField('academic_period_id')))) {
                 $academicPeriodId = $this->request->getQuery('period');
             } else {
                 $academicPeriodId = !empty($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();    //POCOR-7066
@@ -306,6 +309,23 @@ class CompetencyTemplatesTable extends ControllerActionTable
         }
         return $buttons;
         //POCOR-8074-5 end
+    }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified User');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     

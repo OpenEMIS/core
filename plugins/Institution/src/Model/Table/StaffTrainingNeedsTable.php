@@ -35,7 +35,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         //echo "<pre>"; print_r($queryString); die;
         /** Start POCOR-7158 */
         $connection = ConnectionManager::get('default');
-        $connection->execute('SET foreign_key_checks = 0');
+        //$connection->execute('SET foreign_key_checks = 0');
         /** End POCOR-7158 */
 
         $modelAlias = 'Needs';
@@ -184,13 +184,13 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         } elseif ($field == 'assignee_id') {
             return __('Assignee');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

@@ -591,13 +591,13 @@ class StudentMarkTypesTable extends ControllerActionTable
         }elseif ($field == 'type') {
             return __('Type');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         }elseif ($field == 'attendance_per_day') {
             return __('Attendance Per Day');
         }elseif ($field == 'visible') {

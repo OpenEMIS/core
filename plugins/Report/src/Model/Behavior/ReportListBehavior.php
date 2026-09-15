@@ -153,7 +153,7 @@ class ReportListBehavior extends Behavior {
 			//->where(['JSON_EXTRACT(params, "$.institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
 			//END:POCOR-6629
 			->where([
-				'JSON_UNQUOTE(JSON_EXTRACT(params, "$.institution_id")) =' => $institutionId,
+				"JSON_UNQUOTE(JSON_EXTRACT(params, '$.institution_id')) = '" . (int)$institutionId . "'", //POCOR-9611: numeric-key raw SQL — CakePHP 5 re-parsed associative key and stripped JSON_EXTRACT path arg, causing MySQL error 1582
 				'module' => 'InstitutionStandards'
 			]) //POCOR-8485
 			->order([
@@ -356,11 +356,28 @@ class ReportListBehavior extends Behavior {
 		    $selectedOption = $data[$alias][$key] ?? null;
 
 		    // Normalize selected value
-		    $selectedValues = is_array($selectedOption)
-		        ? $selectedOption
-		        : [$selectedOption];
+		    if ($key === 'institution_id' && is_array($selectedOption) && isset($selectedOption['_ids'])) {
+		        $selectedValues = array_values(array_filter((array)$selectedOption['_ids'], function ($id) {
+		            return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+		        }));
+		    } elseif (is_array($selectedOption)) {
+		        $selectedValues = $selectedOption;
+		    } else {
+		        $selectedValues = [$selectedOption];
+		    }
 
 		    // Ensure options exist and are valid
+		    if ($key === 'institution_id' && !empty($selectedValues) && (empty($obj['options']) || !is_array($obj['options']))) {
+		        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+		        $obj['options'] = $Institutions->find('list', [
+		            'keyField' => 'id',
+		            'valueField' => 'code_name'
+		        ])
+		        ->where(['id IN' => $selectedValues])
+		        ->order(['code' => 'ASC', 'name' => 'ASC'])
+		        ->toArray();
+		    }
+
 		    if (empty($obj['options']) || !is_array($obj['options'])) {
 		        continue;
 		    }

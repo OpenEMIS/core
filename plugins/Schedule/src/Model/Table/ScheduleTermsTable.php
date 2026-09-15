@@ -99,8 +99,10 @@ class ScheduleTermsTable extends ControllerActionTable
                      $ScheduleTermsTable = $context['providers']['table'];
                      $institutionId = $context['data']['institution_id'];
                      $academicPeriodId = $context['data']['academic_period_id'];
-                     $endDate = $context['data']['end_date'];
-                     $startDate = $context['data']['start_date'];
+                    //  $endDate = $context['data']['end_date'];
+                    //  $startDate = $context['data']['start_date'];
+                     $startDate = date('Y-m-d', strtotime($context['data']['start_date']));
+                    $endDate   = date('Y-m-d', strtotime($context['data']['end_date']));
                      $termIdCondition = '';
                      if(isset($context['data']['id']) && $context['data']['id'] > 0){
                          $termIdCondition = array('ScheduleTerms.id !=' => $context['data']['id']);
@@ -307,11 +309,11 @@ class ScheduleTermsTable extends ControllerActionTable
             case 'modified':
                 return __('Modified');
             case 'modified_user_id':
-                return __('Modified By');
+                return __('Modified User');
             case 'created':
                 return __('Created');
             case 'created_user_id':
-                return __('Created By');
+                return __('Created User');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

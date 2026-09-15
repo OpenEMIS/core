@@ -100,7 +100,14 @@ class UsersMergeCommand extends Command
         $conn = ConnectionManager::get('default');
         try {
             // One transaction for the whole merge (locks + saves + FK repoints + deactivate)
-            $conn->transactional(function ($conn) use ($SystemProcesses) {
+            //POCOR-9794: capture repointForeignKeys()'s return value via the closure's
+            // return - Connection::transactional() passes through whatever the callback
+            // returns, so this survives outside the closure without needing a by-ref use().
+            $skippedDuplicates = $conn->transactional(function ($conn) use ($SystemProcesses) {
+
+                //MERGE-DEBUG --start
+                $this->dlog('entered transaction, about to lock base/merge rows');
+                //MERGE-DEBUG --end
 
                 $Users = TableRegistry::getTableLocator()->get('User.Users');
 
@@ -109,23 +116,53 @@ class UsersMergeCommand extends Command
                 $base = $Users->find()->where(['id' => $this->baseId])
                     ->applyOptions(['forUpdate' => true])->firstOrFail();
 
+                //MERGE-DEBUG --start
+                $this->dlog('locked base row id=' . $this->baseId);
+                //MERGE-DEBUG --end
+
                 /** @var Entity $merge */
                 $merge = $Users->find()->where(['id' => $this->mergeId])
                     ->applyOptions(['forUpdate' => true])->firstOrFail();
 
-                //NEW: validate user types
-                $this->assertSameUserType($base, $merge);
+                //MERGE-DEBUG --start
+                $this->dlog('locked merge row id=' . $this->mergeId);
+                //MERGE-DEBUG --end
+
+                //POCOR-9794: merging users of different types (Student/Staff/Guardian) is
+                // now explicitly allowed per product decision - the merged person may hold
+                // more than one role rather than being forced into a single type. The
+                // previous type-match guard (assertSameUserType) blocked exactly this case
+                // and has been removed; see buildMovePlan()'s role-union step below.
 
                 // 2) Compute move plan according to your rule: "if base is empty → take merge"
                 $plan = $this->buildMovePlan($Users, $base, $merge);
+
+                //MERGE-DEBUG --start
+                $this->dlog('move plan built, fields=' . implode(',', array_keys($plan)));
+                //MERGE-DEBUG --end
+
                 // 3) Neutralize MERGE row for any fields that are unique and we plan to move
                 //    This avoids UNIQUE violations when we later assign those values to BASE.
                 $this->neutralizeMergeForUniqueFields($Users, $merge, $plan, $this->mergeId, $base);
+
+                //MERGE-DEBUG --start
+                $this->dlog('neutralized merge unique fields');
+                //MERGE-DEBUG --end
+
                 // 4) Save MERGE FIRST (now neutralized → cannot collide with anyone)
                 $Users->saveOrFail($merge, ['checkRules' => false, 'atomic' => false]);
+
+                //MERGE-DEBUG --start
+                $this->dlog('saved merge row');
+                //MERGE-DEBUG --end
+
                 // 5) Optional preflight: if moving a unique value into BASE collides with a third row, decide policy
                 //    Here we *fail fast* with a clear message, but you can also "skip move" instead.
                 $this->preflightThirdPartyCollisionsOrFail($Users, $base->id, $merge->id, $plan);
+
+                //MERGE-DEBUG --start
+                $this->dlog('preflight collision check passed');
+                //MERGE-DEBUG --end
 
                 // 6) Apply the move plan to BASE and save BASE
                 foreach ($plan as $field => $valueToAssign) {
@@ -133,8 +170,20 @@ class UsersMergeCommand extends Command
                 }
                 $Users->saveOrFail($base, ['checkRules' => false, 'atomic' => false]);
 
+                //MERGE-DEBUG --start
+                $this->dlog('saved base row, about to repoint foreign keys');
+                //MERGE-DEBUG --end
+
                 // 7) Repoint foreign keys referencing the MERGE user → BASE user
-                $this->repointForeignKeys($conn, $this->baseId, $this->mergeId, $SystemProcesses, $this->systemProcessId);
+                //POCOR-9794: a duplicate here means base already has the equivalent
+                // record - base's row wins, merge's is left untouched (not deleted,
+                // not a failure). Recorded below for traceability, doesn't block
+                // deactivation.
+                $skippedDuplicates = $this->repointForeignKeys($conn, $this->baseId, $this->mergeId, $SystemProcesses, $this->systemProcessId);
+
+                //MERGE-DEBUG --start
+                $this->dlog('repointForeignKeys returned');
+                //MERGE-DEBUG --end
 
                 // 8) Deactivate MERGE user (and optionally scrub PII to avoid future uniqueness surprises)
                 // $conn->execute(
@@ -153,13 +202,38 @@ class UsersMergeCommand extends Command
                 ]);
                 */
 
+                //POCOR-9794: pass the skip report out through the closure's return value.
+                return $skippedDuplicates;
             });
+
+            //MERGE-DEBUG --start
+            $this->dlog('transaction committed, about to deactivate merge user');
+            //MERGE-DEBUG --end
+
+            //POCOR-9794: record what got left behind as duplicate-resolved (base's
+            // existing row wins) against this merge run, so it's answerable later
+            // without grepping log files. This is informational only - it does not
+            // block deactivation, since a resolved duplicate is not a failure.
+            if (!empty($skippedDuplicates)) {
+                Log::write('info', sprintf(
+                    '[UsersMergeCommand] base_id=%d merge_id=%d: %d record(s) left unrepointed as duplicate-resolved (base already had equivalent data): %s',
+                    $this->baseId,
+                    $this->mergeId,
+                    count($skippedDuplicates),
+                    json_encode($skippedDuplicates)
+                ));
+            }
+
             $conn->execute(
                 "UPDATE `security_users`
                 SET `status` = 0
                 WHERE `id` = :id",
                 ['id' => $this->mergeId]
             );
+
+            //MERGE-DEBUG --start
+            $this->dlog('merge user deactivated');
+            //MERGE-DEBUG --end
 
             if (method_exists($SystemProcesses, 'updateProcess')) {
                 $SystemProcesses->updateProcess($this->systemProcessId, FrozenTime::now(), $SystemProcesses::COMPLETED);
@@ -177,38 +251,6 @@ class UsersMergeCommand extends Command
         }
     }
 
-    private function assertSameUserType(Entity $base, Entity $merge): void
-    {
-        $types = [
-            'is_student',
-            'is_staff',
-            'is_guardian',
-        ];
-
-        foreach ($types as $type) {
-            if ((int)$base->get($type) !== (int)$merge->get($type)) {
-                throw new \RuntimeException(sprintf(
-                    'Invalid merge: base user (%d) and merge user (%d) have different user types (%s mismatch).',
-                    $base->get('id'),
-                    $merge->get('id'),
-                    $type
-                ));
-            }
-        }
-
-        // Optional strict check: ensure exactly ONE role is true
-        $baseRoles = array_sum(array_map(fn($t) => (int)$base->get($t), $types));
-        $mergeRoles = array_sum(array_map(fn($t) => (int)$merge->get($t), $types));
-
-        if ($baseRoles !== 1 || $mergeRoles !== 1) {
-            throw new \RuntimeException(sprintf(
-                'Invalid merge: users must have exactly one role. base=%d roles, merge=%d roles.',
-                $baseRoles,
-                $mergeRoles
-            ));
-        }
-    }
-
     /**
      * Build the move plan:
      *  - Only move when base is "empty-ish" (null or ''), keep base otherwise
@@ -219,7 +261,13 @@ class UsersMergeCommand extends Command
         $exclude = [
             'id','password','status','created_user_id','created',
             'modified_user_id','modified','name','name_with_id',
-            'name_with_id_role','default_identity_type','has_special_needs'
+            'name_with_id_role','default_identity_type','has_special_needs',
+            //POCOR-9794 --start
+            // Handled separately below via role-union logic, not the generic
+            // "copy if base is empty" rule - these are 0/1 flags, never
+            // null/'', so the generic rule below would never touch them anyway.
+            'is_student','is_staff','is_guardian',
+            //POCOR-9794 --end
         ];
 
         $schema = $Users->getSchema();
@@ -241,6 +289,21 @@ class UsersMergeCommand extends Command
                 $plan[$field] = $mergeNorm;
             }
         }
+
+        //POCOR-9794 --start
+        // Umairah Yusoff (POCOR-9794): merging users of different types (e.g.
+        // Student + Staff) is now allowed - the merged person may hold both
+        // roles rather than being forced into one. Union the role flags onto
+        // base: turn a role ON if merge has it and base doesn't; never turn one
+        // off. This is the one exception to "base wins on conflict" above,
+        // since roles are additive, not a single value to pick between.
+        foreach (['is_student', 'is_staff', 'is_guardian'] as $roleField) {
+            if ((int)$merge->get($roleField) === 1 && (int)$base->get($roleField) !== 1) {
+                $plan[$roleField] = 1;
+            }
+        }
+        //POCOR-9794 --end
+
         return $plan;
     }
 
@@ -371,7 +434,7 @@ class UsersMergeCommand extends Command
         int $mergeId,
         Table $SystemProcesses,
         int $systemProcessId
-    ): void {
+    ): array {
 
         $db = $conn->config()['database'];
 
@@ -402,27 +465,49 @@ class UsersMergeCommand extends Command
 
         $progress = 0;
         $errors   = [];
+        $skipped  = []; //POCOR-9794: structured duplicate-skip report, returned below
+
+        //MERGE-DEBUG --start
+        $this->dlog('repointForeignKeys: scanning ' . count($columns) . ' table/column pairs');
+        //MERGE-DEBUG --end
 
         foreach ($columns as $colInfo) {
 
             $table = $colInfo['TABLE_NAME'];
             $fkCol = $colInfo['COLUMN_NAME'];
 
+            //MERGE-DEBUG --start
+            $this->dlog("repointForeignKeys: [{$progress}] starting {$table}.{$fkCol}");
+            //MERGE-DEBUG --end
+
             try {
 
                 // 🔹 Discover composite unique indexes
-            //  $uniqueIndexes = $this->getCompositeUniqueIndexes($conn, $table);
+                //POCOR-9778 MERGE-FIX --start
+                // getCompositeUniqueIndexes() already includes PRIMARY (SHOW INDEX
+                // returns it with Non_unique=0), so merging in getPrimaryKeyIndexes()
+                // only added a second, differently-shaped copy of the same PRIMARY
+                // key (['name'=>..,'columns'=>[...]] instead of a flat column list),
+                // which wouldCauseDuplicate() silently skipped via its
+                // array_key_exists() guard. Harmless there, but keeping a single,
+                // consistently-shaped source of truth here since it now also drives
+                // which columns the UPDATE below uses to find the row.
+                $uniqueIndexes = $this->getCompositeUniqueIndexes($conn, $table);
+                //MERGE-FIX --end
 
-                $uniqueIndexes = array_merge(
-                    $this->getCompositeUniqueIndexes($conn, $table),
-                    $this->getPrimaryKeyIndexes($conn, $table)
-                );
+                //MERGE-DEBUG --start
+                $this->dlog("repointForeignKeys: [{$progress}] {$table}.{$fkCol} got unique indexes, fetching rows");
+                //MERGE-DEBUG --end
 
                 // 🔹 Fetch rows from merge
                 $rows = $conn->execute(
                     "SELECT * FROM `$table` WHERE `$fkCol` = :merge",
                     ['merge' => $mergeId]
                 )->fetchAll('assoc');
+
+                //MERGE-DEBUG --start
+                $this->dlog("repointForeignKeys: [{$progress}] {$table}.{$fkCol} fetched " . count($rows) . ' row(s)');
+                //MERGE-DEBUG --end
 
                 foreach ($rows as $row) {
 
@@ -447,26 +532,63 @@ class UsersMergeCommand extends Command
                             $mergeId
                         ));
 
+                        //POCOR-9794: base already has the equivalent record - this is a
+                        // resolved conflict (base wins), not a failure. Record it
+                        // structurally instead of only as a log line.
+                        $skipped[] = [
+                            'table' => $table,
+                            'column' => $fkCol,
+                            'row_id' => $rowIdentifier,
+                        ];
+
                         continue;
                     }
 
-                    // 🔥 SAFE UPDATE
-                    if (array_key_exists('id', $row)) {
+                    //POCOR-9778 MERGE-FIX --start
+                    // Target the row using columns an actual unique/primary index
+                    // covers, instead of assuming "row has an `id` key" means "`id`
+                    // is indexed". For tables like institution_students_report_cards
+                    // the `id` column exists but carries NO index at all - the real
+                    // primary key is a composite of business columns - so
+                    // `WHERE id = :id` silently became a full table scan (MySQL
+                    // state "Searching rows for update"), holding this row's lock
+                    // for as long as the scan took instead of failing fast.
+                    $identifierColumns = $this->resolveIndexedIdentifier($row, $uniqueIndexes);
+                    //MERGE-FIX --end
 
-                        // Normal case
+                    // 🔥 SAFE UPDATE
+                    if ($identifierColumns !== null) {
+
+                        // Indexed lookup (PRIMARY, a composite unique key, or `id`
+                        // when `id` itself is actually indexed)
+                        $conditions = [];
+                        $params = ['base' => $baseId];
+
+                        foreach ($identifierColumns as $col) {
+                            if ($col === $fkCol) {
+                                $conditions[] = "`$col` = :merge";
+                                $params['merge'] = $mergeId;
+                            } else {
+                                $conditions[] = "`$col` <=> :$col";
+                                $params[$col] = $row[$col];
+                            }
+                        }
+
                         $conn->execute(
                             "UPDATE `$table`
                             SET `$fkCol` = :base
-                            WHERE `id` = :id",
-                            [
-                                'base' => $baseId,
-                                'id'   => $row['id']
-                            ]
+                            WHERE " . implode(' AND ', $conditions),
+                            $params
                         );
 
                     } else {
 
-                        // Update using all columns to target only this row
+                        //POCOR-9778 MERGE-FIX --start
+                        $this->dlog("repointForeignKeys: {$table} has no usable unique/primary index - falling back to a full-row match (may be slow)");
+                        //MERGE-FIX --end
+
+                        // No indexed column set available at all - fall back to
+                        // matching on every column to still target only this row.
                         $conditions = [];
                         $params = ['base' => $baseId];
 
@@ -492,6 +614,10 @@ class UsersMergeCommand extends Command
 
             } catch (\Throwable $e) {
                 $errors[] = "[{$table}.{$fkCol}] {$e->getMessage()}";
+
+                //MERGE-DEBUG --start
+                $this->dlog("repointForeignKeys: [{$progress}] {$table}.{$fkCol} THREW: " . $e->getMessage());
+                //MERGE-DEBUG --end
             }
 
             $progress++;
@@ -504,6 +630,10 @@ class UsersMergeCommand extends Command
                     $progress
                 );
             }
+
+            //MERGE-DEBUG --start
+            $this->dlog("repointForeignKeys: [{$progress}] finished {$table}.{$fkCol}");
+            //MERGE-DEBUG --end
         }
 
         if ($errors) {
@@ -511,7 +641,29 @@ class UsersMergeCommand extends Command
                 'User merge failed: ' . implode(' | ', $errors)
             );
         }
+
+        return $skipped;
     }
+
+    //MERGE-DEBUG --start
+    /**
+     * Timestamped, immediately-flushed diagnostic line for tracing where a merge run stalls.
+     * Temporary — remove once the hang on Bahamas is root-caused.
+     */
+    private function dlog(string $message): void
+    {
+        $line = sprintf(
+            '[DEBUG %s] %s',
+            FrozenTime::now()->i18nFormat('yyyy-MM-dd HH:mm:ss.SSS'),
+            $message
+        );
+        if ($this->io) {
+            $this->io->out($line);
+        }
+        @fwrite(STDOUT, $line . PHP_EOL);
+        @fflush(STDOUT);
+    }
+    //MERGE-DEBUG --end
 
     private function getPrimaryKeyIndexes($conn, string $table): array
     {
@@ -636,6 +788,46 @@ class UsersMergeCommand extends Command
         }
     }
 
+    //POCOR-9778 MERGE-FIX --start
+    /**
+     * Pick the smallest unique/primary index whose columns are all present on
+     * $row, to use as the WHERE clause for repointing this row. Returns null
+     * if no index is fully covered by $row (caller should fall back to a
+     * full-row match in that case).
+     */
+    private function resolveIndexedIdentifier(array $row, array $uniqueIndexes): ?array
+    {
+        $candidates = [];
+
+        foreach ($uniqueIndexes as $columns) {
+
+            if (!is_array($columns) || empty($columns)) {
+                continue;
+            }
+
+            $usable = true;
+            foreach ($columns as $col) {
+                if (!is_string($col) || !array_key_exists($col, $row)) {
+                    $usable = false;
+                    break;
+                }
+            }
+
+            if ($usable) {
+                $candidates[] = array_values($columns);
+            }
+        }
+
+        if (!$candidates) {
+            return null;
+        }
+
+        usort($candidates, fn($a, $b) => count($a) <=> count($b));
+
+        return $candidates[0];
+    }
+    //MERGE-FIX --end
+
     private function getCompositeUniqueIndexes($conn, string $table): array
     {
         $indexes = $conn->execute(
@@ -690,6 +882,15 @@ class UsersMergeCommand extends Command
         array $candidateRow
     ): bool {
 
+        //POCOR-9778 MERGE-FIX --start
+        // The candidate row still carries its own, not-yet-updated id. Without
+        // excluding it, any unique index that includes id (the primary key
+        // always does) self-matches this exact row every time - it hasn't been
+        // updated or removed yet - so every row was being flagged as a
+        // "duplicate" of itself regardless of whether a real collision existed.
+        $selfId = $candidateRow['id'] ?? null;
+        //MERGE-FIX --end
+
         foreach ($uniqueIndexes as $columns) {
 
             $conditions = [];
@@ -704,6 +905,15 @@ class UsersMergeCommand extends Command
                 $conditions[] = "`$col` = :$col";
                 $params[$col] = $candidateRow[$col];
             }
+
+            //POCOR-9778 MERGE-FIX --start
+            // Ask whether a DIFFERENT row already has this combination, not
+            // whether this row matches itself.
+            if ($selfId !== null) {
+                $conditions[] = "`id` != :selfId";
+                $params['selfId'] = $selfId;
+            }
+            //MERGE-FIX --end
 
             $sql = sprintf(
                 "SELECT 1 FROM `%s` WHERE %s LIMIT 1",

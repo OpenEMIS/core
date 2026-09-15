@@ -220,7 +220,9 @@ class HealthsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
+        $validator
+            ->allowEmpty('file_content')
+            ->notEmpty('blood_type');
         return $validator;
     }
 
@@ -301,11 +303,11 @@ class HealthsTable extends ControllerActionTable
         } elseif ($field == 'file_content') {
             return __('Attachment');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         }elseif ($field == 'created_user_id') {
-            return __('Modified By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -317,4 +319,26 @@ class HealthsTable extends ControllerActionTable
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;
     }
+
+    //POCOR-9507
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $file = $this->request->getData('Healths.file_content');
+
+        if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) {
+
+            $filename = $file->getClientFilename();
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+            if (in_array($extension, ['exe', 'zip','mov'])) {
+                $entity->setError(
+                    'file_content',
+                    __('This file is not allowed.')
+                );
+                $event->stopPropagation();
+                return false;
+            }
+        }
+    }
+    
 }

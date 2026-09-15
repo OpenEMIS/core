@@ -143,7 +143,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     private function saveSession($sessionId, ArrayObject $extra)
     {
         $connection = ConnectionManager::get('default'); // POCOR-7578
-        $connection->query("SET FOREIGN_KEY_CHECKS=0");  // POCOR-7578
+        //$connection->query("SET FOREIGN_KEY_CHECKS=0");  // POCOR-7578
 
         $staffId = $extra['staffId'];
         $institutionId = $extra['institutionId'];
@@ -157,10 +157,10 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $entity = $this->newEntity($application);
 
         if ($this->save($entity)) {
-            $connection->query("SET FOREIGN_KEY_CHECKS=1");  // POCOR-7578
+            //$connection->query("SET FOREIGN_KEY_CHECKS=1");  // POCOR-7578
             return true;
         }
-        $connection->query("SET FOREIGN_KEY_CHECKS=1");  // POCOR-7578
+        //$connection->query("SET FOREIGN_KEY_CHECKS=1");  // POCOR-7578
         return false;
     }
 
@@ -646,13 +646,13 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         } elseif ($field == 'assignee_id') {
             return __('Assignee');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         }elseif ($field == 'institution_id') {
             return __('Institution');
         }elseif ($field == 'training_session_id') {

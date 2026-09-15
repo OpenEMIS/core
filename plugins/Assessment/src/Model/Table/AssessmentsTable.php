@@ -64,13 +64,17 @@ class AssessmentsTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         return $validator
-            ->add('code', [
-                'ruleUniqueCode' => [
-                    'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                    'provider' => 'table'
-                ]
+            ->add('code', 'ruleUniqueCode', [
+                'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
             ])
-            ->requirePresence('assessment_items')
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('name', __('This field cannot be left empty'))
+            ->notEmptyString('academic_period_id')
+            ->notEmpty('assessment_items')
+            ->notEmpty('education_programme_id')
+            ->notEmpty('education_grade_id')
             ->add('education_grade_id', [
                 'ruleAssessmentExistByGradeAcademicPeriod' => [ //validate so only 1 assessment for each grade per academic period
                     'rule' => ['assessmentExistByGradeAcademicPeriod'],
@@ -690,13 +694,13 @@ class AssessmentsTable extends ControllerActionTable {
         } elseif ($field == 'name') {
             return __('Name');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

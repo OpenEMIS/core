@@ -64,10 +64,14 @@ class StaffTemplatesTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->add('code', 'ruleUniqueCode', [
+           ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                'provider' => 'table'
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
             ])
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('name', __('This field cannot be left empty'))
+            ->notEmptyString('academic_period_id')
             // ->add('generate_start_date', 'ruleInAcademicPeriod', [
             //     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             // ])
@@ -88,7 +92,8 @@ class StaffTemplatesTable extends ControllerActionTable
             ->notEmpty('generate_start_date', __('This field cannot be left empty'))
             ->requirePresence('generate_end_date', 'create')
             ->notEmpty('generate_end_date', __('This field cannot be left empty'))
-            ->allowEmpty('excel_template');
+           ->requirePresence('excel_template', 'create', __('This field cannot be left empty'))
+            ->notEmptyFile('excel_template', __('This field cannot be left empty'), 'create');
     }
 
     public function validationSubjects(Validator $validator) {
@@ -364,13 +369,13 @@ class StaffTemplatesTable extends ControllerActionTable
         } elseif ($field == 'code') {
             return __('Code');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         }elseif ($field == 'description') {
             return __('Description');  
         }elseif ($field == 'academic_period_id') {

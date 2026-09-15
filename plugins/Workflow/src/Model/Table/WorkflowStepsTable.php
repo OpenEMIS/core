@@ -72,7 +72,10 @@ class WorkflowStepsTable extends AppTable {
 			->requirePresence('category')
 			->requirePresence('is_editable')
 			->requirePresence('is_removable')
-			->requirePresence('is_system_defined');
+			->requirePresence('is_system_defined')
+			->requirePresence('workflow_model_id', 'create')
+    		->notEmptyString('workflow_model_id', __('Please select a workflow model.'))
+			->requirePresence('workflow_id');
 	}
 
 	public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
@@ -534,4 +537,21 @@ class WorkflowStepsTable extends AppTable {
 
 		return $list;
 	}
+
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified User');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

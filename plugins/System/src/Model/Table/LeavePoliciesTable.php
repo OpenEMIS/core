@@ -14,6 +14,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use Cake\ORM\Exception\PersistenceFailedException;
+use Cake\Validation\Validator;
 
 class LeavePoliciesTable extends ControllerActionTable
 {
@@ -63,9 +64,24 @@ class LeavePoliciesTable extends ControllerActionTable
 
     }
 
+    // public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    // {
+    //     return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    // }
+
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
-        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        if ($field == 'modified_user_id') {
+            return __('Modified User');
+        } elseif ($field == 'modified') {
+            return __('Modified');
+        } elseif ($field == 'created_user_id') {
+            return __('Created User');
+        } elseif ($field == 'created') {
+            return __('Created');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     public function afterAction(EventInterface $event, ArrayObject $extra)
@@ -432,6 +448,12 @@ class LeavePoliciesTable extends ControllerActionTable
         return true;
     }
 
-
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+                ->notEmpty('code')
+                ->notEmpty('name');
+    }
 
 }

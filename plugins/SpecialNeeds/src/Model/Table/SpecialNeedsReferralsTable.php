@@ -133,13 +133,13 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             case 'reason_type_id':
                 return __('Reason for Referral');
             case 'modified_user_id':
-                return __('Modified By');
+                return __('Modified User');
             case 'modified':
-                return __('Modified On');
+                return __('Modified');
             case 'created_user_id':
-                return __('Created By');
+                return __('Created User');
             case 'created':
-                return __('Created On');
+                return __('Created');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -430,7 +430,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'referrer_id', 'special_needs_referrer_type_id', 'date', 'reason_type_id', 'comment', 'file_name', 'file_content']);
     }
 
-    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
     {
         $institutionId = $this->getInstitutionID();
         $academicPeriodId = $this->request->getQuery('academic_period_id');

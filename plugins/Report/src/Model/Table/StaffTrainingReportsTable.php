@@ -59,6 +59,18 @@ class StaffTrainingReportsTable extends AppTable {
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
         $conditions = [];
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
         if (!empty($academicPeriodId)) {
                 $conditions['OR'] = [
                     'OR' => [
@@ -84,8 +96,8 @@ class StaffTrainingReportsTable extends AppTable {
                     ]
                 ];
         }
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions['InstitutionStaff.institution_id'] = $institutionId; 
+        if (!empty($filterInstitutionIds)) {
+            $conditions['InstitutionStaff.institution_id IN'] = $filterInstitutionIds;
         }
         if (!empty($areaId) && $areaId != -1) {
             $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId; 

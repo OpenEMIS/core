@@ -167,11 +167,6 @@ class StudentWithdrawTable extends ControllerActionTable
         $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
         $statuses = $StudentStatuses->findCodeList();
 
-        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-        $academicPeriodDetail = $this->AcademicPeriods->get($currentAcademicPeriod);
-        $academicPeriodEffectiveDate = $academicPeriodDetail->start_date->format('Y-m-d');
-        $academicPeriodEndDate = $academicPeriodDetail->end_date->format('Y-m-d');
-
         $statusId = $entity->status_id;
         $existingStudentEntity = $Students->find()->where([
             $Students->aliasField('institution_id') => $entity->institution_id,
@@ -182,18 +177,36 @@ class StudentWithdrawTable extends ControllerActionTable
         ->first();
 
         Log::write('debug', 'Updating Student StatusId >>>>>>>>>>>>>>>>>>>>>> ');
-        Log::write('debug', $existingStudentEntity);
+        Log::write('debug', $existingStudentEntity ? json_encode($existingStudentEntity) : 'No matching Students record found');
 
         if ($existingStudentEntity && $entity->status_id == $statuses['WITHDRAWN']) {
             $existingStudentEntity['student_status_id'] = $statuses['WITHDRAWN'];
-            $Students->save($existingStudentEntity);
+            try {
+                $Students->save($existingStudentEntity);
+            } catch (\Exception $e) {
+                // POCOR-9770: unique_institution_students fires on the exact values
+                // being written, so this specific collision can only mean another
+                // institution_students row already has this institution/student/
+                // grade/period/date-range combination marked WITHDRAWN - the intended
+                // end state already exists via a duplicate row. Retrying would hit
+                // the same deterministic collision every time, so don't let this
+                // block execution_status below or be treated as a transient failure.
+                if (strpos($e->getMessage(), 'unique_institution_students') === false) {
+                    throw $e;
+                }
+                Log::write('error', 'StudentWithdraw: student ' . $entity->security_user_id . ' already withdrawn via a duplicate institution_students row (institution ' . $entity->institution_id . ', grade ' . $entity->education_grade_id . ', period ' . $entity->academic_period_id . '); skipping the save. ' . $e->getMessage());
+            }
         }
 
         Log::write('debug', 'Updating Student Status Updates Entity: '.$entity->security_user_id);
         $today = Time::now();
         $today = $today->format('Y-m-d');
 
-        if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
+        // POCOR-9770: this used to compare today against the CURRENT academic period's
+        // start/end dates, which has nothing to do with whether this specific withdrawal
+        $effectiveDate = $entity->effective_date ? $entity->effective_date->format('Y-m-d') : null;
+
+        if (!empty($effectiveDate) && $effectiveDate <= $today) {
             $StudentStatusUpdates->updateAll(['execution_status' => 2], ['id' => $entity->id]);
         }else{
             $StudentStatusUpdates->updateAll(['execution_status' => 1], ['id' => $entity->id]);

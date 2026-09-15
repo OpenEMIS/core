@@ -20,6 +20,12 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     use HasFactory;
     use WebhookQueueTrait;
 
+    //POCOR-9591: start - account status constants (mirrors Security\UsersTable)
+    const STATUS_ACTIVE   = 1; // active account
+    const STATUS_INACTIVE = 0; // admin-disabled account
+    const STATUS_LOCKED   = 2; // system-locked after exceeding login attempts
+    //POCOR-9591: end
+
     // POCOR-9257: Configure webhook events
     protected $webhookEvents = ['created', 'updated', 'deleted'];
     use Notifiable;
@@ -30,6 +36,7 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     public $timestamps = false;
     protected $casts = [
         'date_of_birth' => 'date:Y-m-d',
+        'status'        => 'integer', //POCOR-9591: ensure integer comparison works
     ];
     protected $table = "security_users";
 
@@ -179,7 +186,7 @@ public function _swaggerPath() {}
                           @OA\Property(property="identity_number", type="string", example=null),
                           @OA\Property(property="external_reference", type="string", example=null),
                           @OA\Property(property="sync_status", type="integer", enum={0,1,2}, example=0, description="0=Local, 1=Synced, 2=Not Synced. Set to 1 on external-search import or confirmed Sync action; auto-resets to 2 when first_name/middle_name/third_name/last_name/gender_id/date_of_birth changes."),
-                          @OA\Property(property="status", type="integer", example=null),
+                          @OA\Property(property="status", type="integer", description="0 = Inactive, 1 = Active, 2 = Locked", example=null),
                           @OA\Property(property="last_login", type="string", format="date-time", example=null),
                           @OA\Property(property="failed_logins", type="integer", example=null),
                           @OA\Property(property="photo_name", type="string", example=null),
@@ -236,7 +243,7 @@ public function _swaggerList() {}
                      @OA\Property(property="identity_number", type="string", example=null),
                      @OA\Property(property="external_reference", type="string", example=null),
                      @OA\Property(property="sync_status", type="integer", enum={0,1,2}, example=0, description="0=Local, 1=Synced, 2=Not Synced. Set to 1 on external-search import or confirmed Sync action; auto-resets to 2 when first_name/middle_name/third_name/last_name/gender_id/date_of_birth changes."),
-                     @OA\Property(property="status", type="integer", example=null),
+                     @OA\Property(property="status", type="integer", description="0 = Inactive, 1 = Active, 2 = Locked", example=null),
                      @OA\Property(property="last_login", type="string", format="date-time", example=null),
                      @OA\Property(property="failed_logins", type="integer", example=null),
                      @OA\Property(property="photo_name", type="string", example=null),
@@ -331,7 +338,7 @@ public function _swaggerView() {}
                      @OA\Property(property="identity_number", type="string", example=null),
                      @OA\Property(property="external_reference", type="string", example=null),
                      @OA\Property(property="sync_status", type="integer", enum={0,1,2}, example=0, description="0=Local, 1=Synced, 2=Not Synced. Set to 1 on external-search import or confirmed Sync action; auto-resets to 2 when first_name/middle_name/third_name/last_name/gender_id/date_of_birth changes."),
-                     @OA\Property(property="status", type="integer", example=null),
+                     @OA\Property(property="status", type="integer", description="0 = Inactive, 1 = Active, 2 = Locked", example=null),
                      @OA\Property(property="last_login", type="string", format="date-time", example=null),
                      @OA\Property(property="failed_logins", type="integer", example=null),
                      @OA\Property(property="photo_name", type="string", example=null),

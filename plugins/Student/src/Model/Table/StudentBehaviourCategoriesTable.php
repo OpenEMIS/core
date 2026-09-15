@@ -130,7 +130,7 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
-        $connection->execute('SET FOREIGN_KEY_CHECKS = 0');
+       // $connection->execute('SET FOREIGN_KEY_CHECKS = 0');//POCOR-9151
     }
 
     public function beforeDelete(EventInterface $event, Entity $entity)
@@ -145,11 +145,11 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
             case 'modified':
                 return __('Modified');
             case 'modified_user_id':
-                return __('Modified By');
+                return __('Modified User');
             case 'created':
                 return __('Created');
             case 'created_user_id':
-                return __('Created By');
+                return __('Created User');
             case 'visible':
                 return __('Visible');
             case 'name':

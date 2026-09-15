@@ -14,6 +14,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use Cake\Http\ServerRequest;
 use Cake\View\Helper\UrlHelper;
+use Cake\Validation\Validator;
 
 class LeaveEntitlementsTable extends ControllerActionTable
 {
@@ -46,6 +47,14 @@ class LeaveEntitlementsTable extends ControllerActionTable
         $this->controller->set('contentHeader', $header);
         $this->controller->Navigation->substituteCrumb(__('StaffPolicies'), $header);
         $this->controller->Navigation->substituteCrumb(__('Systems'), __('Staff'));
+    }
+    
+    public function validationDefault(Validator $validator): Validator 
+     {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        return $validator
+            ->requirePresence('staff_leave_type_id');
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -95,10 +104,10 @@ class LeaveEntitlementsTable extends ControllerActionTable
         }
         return $value;
     }
-    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
-    {
-        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-    }
+    // public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    // {
+    //     return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    // }
 
     public function afterAction(EventInterface $event, ArrayObject $extra)
     {
@@ -289,6 +298,23 @@ class LeaveEntitlementsTable extends ControllerActionTable
 //        Log::debug(print_r($event, true));
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified User');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 }

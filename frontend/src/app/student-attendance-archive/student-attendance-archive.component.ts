@@ -5,6 +5,7 @@ import { ApiService } from '../api.service';
 import { timer } from 'rxjs';
 import { MINI_DASHBOARD_CONFIG, TABLE_COLUMN_LIST } from '../student-attendance/student_attendance.config';
 import { DEFAULT_TEMPLATE_THEME } from '../shared/config.default-val';
+import { applyThemeFromResponse } from '../shared/theme.utils';
 import { IMiniDashboardConfig, IMiniDashboardItem } from 'openemis-styleguide-lib/kd-components/kd-angular-mini-dashboard/kd-angular-mini-dashboard-interface';
 
 @Component({
@@ -258,19 +259,7 @@ export class StudentAttendanceArchiveComponent extends KdPageBase implements OnI
   setTheme() {
     this.Rest.getWithToken('themes').subscribe({
       next: (response: any) => {
-        let selectedThemeData = '';
-        if (response?.data[3].value) {
-          selectedThemeData = response?.data[3].value;
-          selectedThemeData = `#${selectedThemeData}`;
-        } else {
-          selectedThemeData = response?.data[3].default_value;
-          selectedThemeData = `#${selectedThemeData}`;
-        }
-        this.themeArray.btnGroup[0].dropdownContent.forEach((element: any) => {
-          if (element.text == selectedThemeData) {
-            document.body.className = element.theme + ' fuelux';
-          }
-        });
+        applyThemeFromResponse(response, this.themeArray.btnGroup[0].dropdownContent);
       },
       error: (error: any) => {
 

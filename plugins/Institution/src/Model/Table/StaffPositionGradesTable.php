@@ -70,11 +70,11 @@ class StaffPositionGradesTable extends ControllerActionTable
             case 'modified':
                 return __('Modified');
             case 'modified_user_id':
-                return __('Modified By');
+                return __('Modified User');
             case 'created':
                 return __('Created');
             case 'created_user_id':
-                return __('Created By');
+                return __('Created User');
             case 'visible':
                 return __('Visible');
             case 'name':
@@ -91,4 +91,11 @@ class StaffPositionGradesTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+    
+    //POCOR-8211 Start
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('salary', ['visible' => true, 'after' => 'name']);
+    }
+    //POCOR-8211 End
 }

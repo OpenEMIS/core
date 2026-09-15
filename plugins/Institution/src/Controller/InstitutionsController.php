@@ -22,6 +22,8 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use Cake\Utility\Text;
 use ControllerAction\Model\Traits\UtilityTrait;
+use Institution\Model\Traits\StudentCreationCheckTrait;
+use Institution\Model\Traits\RouteInstitutionIdTrait;
 use Exception;
 use PHPExcel_IOFactory;
 use Cake\Auth\DefaultPasswordHasher;
@@ -42,6 +44,8 @@ class InstitutionsController extends AppController
 {
     use OptionsTrait;
     use UtilityTrait;
+    use StudentCreationCheckTrait; //POCOR-9385: single source of truth for the student-creation entry-grade gate
+    use RouteInstitutionIdTrait; //POCOR-7692: shared ':institutionId' route param decode (Houses/Associations add-edit links)
     // POCOR-8231 start
     const STUDENT = 1;
     const STAFF = 2;
@@ -101,6 +105,7 @@ class InstitutionsController extends AppController
         'InstitutionStudentAbsences',
         'StudentAttendances',
         'InstitutionStudentAbsencesArchived',
+        'InstitutionStudentsReportCardsArchived', //POCOR-8898
 
         'StudentArchive',
 //        'AssessmentsArchive',
@@ -215,6 +220,7 @@ class InstitutionsController extends AppController
             'RubricAnswers' => ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
 
             'ImportInstitutions' => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
+            'ImportHouses' => ['className' => 'Institution.ImportHouses', 'actions' => ['add']], //POCOR-7692
             'ImportInstitutionAssets' => ['className' => 'Institution.ImportInstitutionAssets', 'actions' => ['add']],
             'ImportStaffAttendances' => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
             'ImportStudentAttendances' => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
@@ -953,6 +959,11 @@ class InstitutionsController extends AppController
             //POCOR-9691[END]
 
         }
+        // Associations (Houses) add/edit links use the ':institutionId' route param - getQueryString()/session
+        // above don't read it, so fall back to decoding it here (see RouteInstitutionIdTrait).
+        if (!$institution_id && $this->request->getParam('action') == 'Associations') {
+            $institution_id = $this->resolveRouteInstitutionId($this->request, $this) ?: $institution_id;
+        }
         // StaffBehaviours view: if still missing, decode pass[1] or load behaviour by id so view does not redirect to Dashboard
         if (!$institution_id && $this->request->getParam('action') == 'StaffBehaviours') {
             $pass = $this->request->getParam('pass');
@@ -974,7 +985,9 @@ class InstitutionsController extends AppController
             }
         }
         if (!$institution_id && $debugString != "") {
-            die($debugString . 'For Developer: You should put institution_id into query string first');
+            // POCOR-9788: see getStudentID() below for why this no longer die()s.
+            Log::write('error', $debugString . ' - missing required "institution_id" in query string (queryString likely failed to decode).');
+            throw new NotFoundException($debugString . ' - missing required "institution_id" in query string.');
         }
         return $institution_id;
     }
@@ -1102,6 +1115,18 @@ class InstitutionsController extends AppController
         // Previously redirecting to ReportCardStatusProgress caused redirect to Dashboard for non-super-admin.
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatuses']);
     }//POCOR-6822 Ends
+
+    //POCOR-8898: start
+    public function ReportCardArchives()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentsReportCardsArchives']);
+    }
+
+    public function InstitutionStudentsReportCardsArchived()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCardsArchived']);
+    }
+    //POCOR-8898: end
 
     public function ReportCardStatusProgress()
     {
@@ -3061,87 +3086,7 @@ class InstitutionsController extends AppController
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
-        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
-        //for api purpose POCOR-5672 starts
-        if ($this->request->getParam('action') == 'getEducationGrade') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getEducationGrade';
-        }
-        if ($this->request->getParam('action') == 'getClassOptions') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getClassOptions';
-        }
-        if ($this->request->getParam('action') == 'getPositionType') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getPositionType';
-        }
-        if ($this->request->getParam('action') == 'getFTE') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getFTE';
-        }
-        if ($this->request->getParam('action') == 'getShifts') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getShifts';
-        }
-        if ($this->request->getParam('action') == 'getPositions') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getPositions';
-        }
-        if ($this->request->getParam('action') == 'getStaffType') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStaffType';
-        }
-        if ($this->request->getParam('action') == 'studentCustomFields') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'studentCustomFields';
-        }
-        //POCOR-8538 start
-        if ($this->request->getParam('action') == 'classCustomFields') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'classCustomFields';
-        }
-        //POCOR-8538 end
-        if ($this->request->getParam('action') == 'staffCustomFields') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'staffCustomFields';
-        }
-        if ($this->request->getParam('action') == 'saveStudentData') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveStudentData';
-        }
-        if ($this->request->getParam('action') == 'saveStaffData') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveStaffData';
-        }
-        if ($this->request->getParam('action') == 'saveGuardianData') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveGuardianData';
-        }
-        if ($this->request->getParam('action') == 'saveDirectoryData') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveDirectoryData';
-        }
-        if ($this->request->getParam('action') == 'getStudentTransferReason') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStudentTransferReason';
-        }
-        if ($this->request->getParam('action') == 'checkStudentAdmissionAgeValidation') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkStudentAdmissionAgeValidation';
-        }
-        if ($this->request->getParam('action') == 'getStartDateFromAcademicPeriod') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStartDateFromAcademicPeriod';
-        }
-        if ($this->request->getParam('action') == 'checkUserAlreadyExistByIdentity') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkUserAlreadyExistByIdentity';
-        }
-        if ($this->request->getParam('action') == 'checkConfigurationForExternalSearch') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkConfigurationForExternalSearch';
-        }
-        if ($this->request->getParam('action') == 'getStaffPosititonGrades') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStaffPosititonGrades';
-        }
-        if ($this->request->getParam('action') == 'getCspdData') { //POCOR-6930 starts
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getCspdData';
-        }
-        if ($this->request->getParam('action') == 'getConfigurationForExternalSourceData') { //POCOR-6930 starts
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getConfigurationForExternalSourceData';
-        }
-        //POCOR-6930 ends
-        if ($this->request->getParam('action') == 'getStudentAdmissionStatus') {//POCOR-7716
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStudentAdmissionStatus';
-        }
-        // POCOR-8224 start
-        if ($this->request->getParam('action') == 'saveAssessmentItemExemptions') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveAssessmentItemExemptions';
-        }
-        // POCOR-8224 end
-
-        //for api purpose POCOR-5672 ends
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored'; //POCOR-9385: fixed POCOR-5672 bug — action methods must never be registered as security event handlers
 
         return $events;
     }
@@ -3150,6 +3095,37 @@ class InstitutionsController extends AppController
     {
         $pass = $this->request->getParam('pass');
         if (isset($pass[0]) && $pass[0] == 'downloadFile') {
+            return true;
+        }
+
+        //POCOR-9385: fix POCOR-5672 bug — these AJAX endpoints must bypass security without re-running the action method
+        $ajaxActions = [
+            'getEducationGrade',                    //POCOR-5672
+            'getClassOptions',                      //POCOR-5672
+            'getPositionType',                      //POCOR-5672
+            'getFTE',                               //POCOR-5672
+            'getShifts',                            //POCOR-5672
+            'getPositions',                         //POCOR-5672
+            'getStaffType',                         //POCOR-5672
+            'studentCustomFields',                  //POCOR-5672
+            'classCustomFields',                    //POCOR-8538
+            'staffCustomFields',                    //POCOR-5672
+            'saveStudentData',                      //POCOR-5672
+            'saveStaffData',                        //POCOR-5672
+            'saveGuardianData',                     //POCOR-5672
+            'saveDirectoryData',                    //POCOR-5672
+            'getStudentTransferReason',             //POCOR-5672
+            'checkStudentAdmissionAgeValidation',   //POCOR-5672
+            'getStartDateFromAcademicPeriod',       //POCOR-5672
+            'checkUserAlreadyExistByIdentity',      //POCOR-5672
+            'checkConfigurationForExternalSearch',  //POCOR-5672
+            'getStaffPosititonGrades',              //POCOR-5672
+            'getCspdData',                          //POCOR-6930
+            'getConfigurationForExternalSourceData',//POCOR-6930
+            'getStudentAdmissionStatus',            //POCOR-7716
+            'saveAssessmentItemExemptions',         //POCOR-8224
+        ];
+        if (in_array($this->request->getParam('action'), $ajaxActions, true)) {
             return true;
         }
     }
@@ -3558,11 +3534,21 @@ class InstitutionsController extends AppController
     function getStudentID($debugString = "")
     {
         // POCOR-8115;
-        // student_id should always be in query string, if not, die as an error
+        // student_id should always be in query string, if not, error out.
         $student_id = $this->getQueryString('student_id');
         if (!$student_id) {
             if ($debugString != "") {
-                die($debugString . 'For Developer: You should put student_id into query string first');
+                // POCOR-9788: previously die($debugString . '...'), which hard-kills the
+                // request with zero logging (getQueryString() returns null - and thus
+                // !$student_id is true - whenever the signed `queryString` URL param
+                // fails to decode, e.g. a stale/mismatched session; see
+                // SecurityTrait::paramsDecode()). Throwing here instead of die()-ing
+                // keeps the return contract intact for the many callers of
+                // getStudentID() that don't pass a $debugString, gets this logged via
+                // the normal error-handling pipeline, and renders the app's existing
+                // friendly error page instead of a raw dumped string.
+                Log::write('error', $debugString . ' - missing required "student_id" in query string (queryString likely failed to decode).');
+                throw new NotFoundException($debugString . ' - missing required "student_id" in query string.');
             }
         }
         return $student_id;
@@ -3572,11 +3558,13 @@ class InstitutionsController extends AppController
     function getStaffID($debugString = "")
     {
         // POCOR-8115;
-        // staff_id should always be in query string, if not, die as an error
+        // staff_id should always be in query string, if not, error out.
         $staff_id = $this->getQueryString('staff_id');
         if (!$staff_id) {
             if ($debugString != "") {
-                die($debugString . 'For Developer: You should put staff_id into query string first');
+                // POCOR-9788: see getStudentID() above for why this no longer die()s.
+                Log::write('error', $debugString . ' - missing required "staff_id" in query string (queryString likely failed to decode).');
+                throw new NotFoundException($debugString . ' - missing required "staff_id" in query string.');
             }
         }
         return $staff_id;
@@ -3588,11 +3576,13 @@ class InstitutionsController extends AppController
     function getClassID($debugString = "")
     {
         // POCOR-8115;
-        // class_id should always be in query string, if not, die as an error
+        // class_id should always be in query string, if not, error out.
         $class_id = $this->getQueryString('class_id');
         if (!$class_id) {
             if ($debugString != "") {
-                die($debugString . 'For Developer: You should put class_id into query string first');
+                // POCOR-9788: see getStudentID() above for why this no longer die()s.
+                Log::write('error', $debugString . ' - missing required "class_id" in query string (queryString likely failed to decode).');
+                throw new NotFoundException($debugString . ' - missing required "class_id" in query string.');
             }
         }
         return $class_id;
@@ -3968,7 +3958,9 @@ class InstitutionsController extends AppController
         }
         if (!$user_id) {
             if ($debugString != "") {
-                die($debugString . 'For Developer: You should put user_id into query string first');
+                // POCOR-9788: see getStudentID() above for why this no longer die()s.
+                Log::write('error', $debugString . ' - missing required "user_id" in query string (queryString likely failed to decode).');
+                throw new NotFoundException($debugString . ' - missing required "user_id" in query string.');
             }
         }
         if (is_numeric($user_id)) {
@@ -5774,8 +5766,6 @@ class InstitutionsController extends AppController
     public function getEducationGrade()
     {
         $requestData = $this->getRequestData();
-//        Log::debug(__FUNCTION__);
-//        Log::debug(print_r($requestData, true));
         if (isset($requestData['institution_id'])) {
             $institutionId = $requestData['institution_id'];
         } else {
@@ -5812,15 +5802,18 @@ class InstitutionsController extends AppController
         $endDate = date('Y-m-d', strtotime($academicPeriodResult->end_date));
 
         $institutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
+        $educationGrades   = self::getDynamicTableInstance('Education.EducationGrades'); //POCOR-9385: for aliasField
         $institutionGradesResult = $institutionGrades
             ->find()
             ->select([
-                'id' => $institutionGrades->aliasField('id'),
-                'academic_period_id' => $institutionGrades->aliasField('academic_period_id'),
-                'EducationGrades.id',
-                'EducationGrades.name',
-                'end_date' => $institutionGrades->aliasField('end_date'),
-                'start_date' => $institutionGrades->aliasField('start_date'),
+                'id'                => $institutionGrades->aliasField('id'),
+                'academic_period_id'=> $institutionGrades->aliasField('academic_period_id'),
+                'eg_id'             => $educationGrades->aliasField('id'),
+                'eg_name'           => $educationGrades->aliasField('name'),
+                'eg_order'          => $educationGrades->aliasField('order'),                      //POCOR-9385: entry-grade filter
+                'eg_programme_id'   => $educationGrades->aliasField('education_programme_id'),     //POCOR-9385: entry-grade filter
+                'end_date'          => $institutionGrades->aliasField('end_date'),
+                'start_date'        => $institutionGrades->aliasField('start_date'),
             ])
             ->innerJoin(['EducationGrades' => 'education_grades'], [
                 'EducationGrades.id = ' . $institutionGrades->aliasField('education_grade_id')
@@ -5869,15 +5862,38 @@ class InstitutionsController extends AppController
         $resultArray = [];
         foreach ($institutionGradesResult as $result) {
             $resultArray[] = [
-                'id' => $result['id'],
-                'education_grade_id' => $result['EducationGrades']['id'],
-                'name' => $result['EducationGrades']['name'],
-                'start_date' => $result['start_date'],
-                'end_date' => $result['end_date'],
-                'academic_period_id' => $result['academic_period_id']
+                'id'                  => $result['id'],
+                'education_grade_id'  => $result['eg_id'],
+                'name'                => $result['eg_name'],
+                'start_date'          => $result['start_date'],
+                'end_date'            => $result['end_date'],
+                'academic_period_id'  => $result['academic_period_id'],
+                '_grade_order'        => (int)$result['eg_order'],        //POCOR-9385: internal, stripped before response
+                '_programme_id'       => (int)$result['eg_programme_id'], //POCOR-9385: internal
             ];
         }
-//        Log::debug(print_r($resultArray, true));
+
+        //POCOR-9385: filter to entry grades when student creation restriction is active — uses the
+        //same isUserExcludedFromStudentCreationRestriction()/getEntryEducationGradeIds() single
+        //source of truth as the Save check (StudentCreationCheckTrait) so the dropdown can never
+        //offer a grade that Save would reject (no select-then-error).
+        $ConfigItems        = \Cake\ORM\TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $restrictionEnabled = ($ConfigItems->value('restrict_student_creation') == 1); //POCOR-9385
+        $isSuperAdmin       = ($this->Auth->user('super_admin') == 1);                 //POCOR-9385
+
+        if ($restrictionEnabled && !$isSuperAdmin && !$this->isUserExcludedFromStudentCreationRestriction((int)$institutionId)) {
+            $entryIds = $institutionGrades->getEntryEducationGradeIds((int)$institutionId, (int)$academicPeriodId);
+            $resultArray = array_values(array_filter($resultArray, function ($row) use ($entryIds) {
+                return in_array((int)$row['education_grade_id'], $entryIds, true);
+            }));
+        }
+
+        //POCOR-9385: strip internal fields before sending response
+        foreach ($resultArray as &$row) {
+            unset($row['_grade_order'], $row['_programme_id']);
+        }
+        unset($row);
+
         $this->sendJsonResponse($resultArray);
 
     }
@@ -7033,8 +7049,6 @@ class InstitutionsController extends AppController
         $this->savingStudentData = $this->savingStudentData + 1;
 
         $requestData = $this->getRequestData();
-//        Log::debug(__FUNCTION__);
-//        self::debug($requestData);
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
@@ -7044,6 +7058,35 @@ class InstitutionsController extends AppController
         }
 //        Log::debug(print_r($requestData, true));
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
+
+        //POCOR-9385: student creation restriction check for Angular add form — delegates to the same
+        //isStudentCreationAllowed()/getEntryEducationGradeIds() single source of truth used by the
+        //dropdown filter (getEducationGrade) and the other 3 entry points, so Save can never reject a
+        //grade the dropdown just offered.
+        if (empty($requestData['is_diff_school'])) { //POCOR-9385: transfers bypass grade restriction
+            $gradeId          = !empty($requestData['education_grade_id']) ? (int)$requestData['education_grade_id'] : null;
+            $academicPeriodId = !empty($requestData['academic_period_id']) ? (int)$requestData['academic_period_id'] : null;
+            //POCOR-9385: no debug string here — saveStudentData is also reached from Directory's
+            //saveDirectoryData (Directory has no institution_id in query string/session at all).
+            //getInstitutionID($debugString) calls die() when institution_id can't be resolved AND a
+            //debug string is passed; passing one here previously killed the whole request (raw
+            //"For Developer: ..." text response) on every Directory-triggered student save.
+            //isStudentCreationAllowed() already handles a null $institutionId correctly (falls back
+            //to the global entry-grade rule), so just let it be null here instead of dying.
+            $institutionId    = $this->getInstitutionID() ?: null;
+
+            if (!$this->isStudentCreationAllowed($gradeId, $institutionId, $academicPeriodId)) {
+                $gradeName = '';
+                if (!empty($gradeId)) {
+                    $EducationGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
+                    $grade = $EducationGrades->find()->select(['name'])->where(['id' => $gradeId])->first();
+                    $gradeName = $grade ? $grade->name : '';
+                }
+                return $this->sendJsonResponse(['message' => $this->studentCreationBlockMessage($gradeName)], 422); //POCOR-9385
+            }
+        }
+        //POCOR-9385: end — student creation restriction check
+
         $studentData = $this->extractSecurityUserData($requestData, $userId, true);
         if ($requestData['is_diff_school'] == 1) {
             $userRecordId = $requestData['student_id'];
@@ -7211,6 +7254,38 @@ class InstitutionsController extends AppController
         $existing = $securityUsers->find()
             ->where(['openemis_no' => $userData['openemis_no'] ?? null])
             ->first();
+
+        // POCOR-9793 start: security_users.mobile_number carries a genuine UNIQUE
+        // index (unique_mobile) because it doubles as an account identifier for
+        // authentication (e.g. OTP/login lookups), so it must stay unique here.
+        // But the Add Student/Guardian wizards populate it straight from the
+        // "contact number" field on the form, and that number is very often shared
+        // between family members (e.g. siblings using a parent's phone) - the same
+        // sharing POCOR-9793 explicitly allows in the Contacts tab. Previously that
+        // collision surfaced as an uncaught PDOException ("Duplicate entry ... for
+        // key unique_mobile"), which aborted the whole save and blocked creating the
+        // student/guardian record entirely. Since the Contacts tab entry for this
+        // number is saved separately via handleContacts() regardless, we can safely
+        // just skip writing the conflicting value onto this particular account's
+        // mobile_number instead of failing the save - the number stays unique in
+        // security_users (so authentication is unaffected) and the record still
+        // gets created.
+        // Staff are intentionally excluded from this relaxation - per explicit
+        // requirement, two staff accounts must not share a mobile number, so a
+        // staff save with a colliding number is left to fail below exactly as
+        // before (raising the "Duplicate mobile number" response).
+        $isStaffAccount = !empty($userData['is_staff']);
+        if (!$isStaffAccount && !empty($userData['mobile_number'])) {
+            $mobileConditions = ['mobile_number' => $userData['mobile_number']];
+            if ($existing) {
+                $mobileConditions[$securityUsers->aliasField($securityUsers->getPrimaryKey()) . ' !='] = $existing->id;
+            }
+            $mobileTakenByAnotherAccount = $securityUsers->exists($mobileConditions);
+            if ($mobileTakenByAnotherAccount) {
+                unset($userData['mobile_number']);
+            }
+        }
+        // POCOR-9793 end
 
         if ($existing) {
             // Prevent accidental username/password overwrite during update
@@ -7705,6 +7780,12 @@ class InstitutionsController extends AppController
                     'id' => Text::uuid(),
                     'student_status_id' => $requestData['student_status_id'] ?? null,
                     'student_id' => $userRecordId,
+                    //POCOR-9355: StudentsTable::validationDefault() hangs the duplicate-enrolment,
+                    // completed-grade, and admission-age rules off the 'student_name' field.
+                    // CakePHP's Validator skips a field's rules entirely when the key is absent
+                    // from the data array (Validator::validate(), "if (!$keyPresent) continue;"),
+                    // so without this key those checks silently never ran for this save path.
+                    'student_name' => (string)$userRecordId,
                     'education_grade_id' => $educationGradeId,
                     'academic_period_id' => $academicPeriodId,
                     'start_date' => $startDate,
@@ -7722,7 +7803,22 @@ class InstitutionsController extends AppController
                         $saved_student['institution_student'] = $savedResult->toArray();
                     } else {
                         //POCOR-9635: save returned false (validation failure) — toArray() on false caused fatal crash
-                        Log::error('[POCOR-9635] institution_students save failed in saveStudentData for student_id=' . ($entityStudentsData->student_id ?? 'unknown') . ' institution_id=' . ($entityStudentsData->institution_id ?? 'unknown') . ' errors=' . json_encode($entityStudentsData->getErrors()));
+                        $validationErrors = $entityStudentsData->getErrors();
+                        Log::error('[POCOR-9635] institution_students save failed in saveStudentData for student_id=' . ($entityStudentsData->student_id ?? 'unknown') . ' institution_id=' . ($entityStudentsData->institution_id ?? 'unknown') . ' errors=' . json_encode($validationErrors));
+
+                        //POCOR-9355: surface the actual rule message (e.g. "already enrolled in the
+                        // same programme") to the UI instead of a generic failure - the JS layer
+                        // reads saved_student.error when institution_student is missing.
+                        $firstError = null;
+                        foreach ($validationErrors as $fieldErrors) {
+                            foreach ((array)$fieldErrors as $message) {
+                                if (is_string($message)) {
+                                    $firstError = $message;
+                                    break 2;
+                                }
+                            }
+                        }
+                        $saved_student['error'] = $firstError ?? __('Student is not added. Check for errors.');
                     }
                 } catch (\Exception $exception) {
                     Log::debug(__FUNCTION__);
@@ -9215,7 +9311,8 @@ class InstitutionsController extends AppController
             'Institution.InstitutionStandards' => __('Students') . ' ' . __('Overview'),
             'Institution.StudentSpecialNeeds' => __('Student Special Needs'),
             'StaffAppraisal.Appraisals' => __('Staff Appraisals'),
-            'Institution.InstitutionConsumablesReport' => __('Consumables') //POCOR-9058
+            'Institution.InstitutionConsumablesReport' => __('Consumables'), //POCOR-9058
+            'Institution.InstitutionStudentWeeklyAttendance' => __('Students Attendance Weekly'), //POCOR-9611
         ];
         // End POCOR-6871
         return $options;
@@ -10286,22 +10383,51 @@ class InstitutionsController extends AppController
         if (empty($id)) {
             throw new NotFoundException(__('Invalid file'));
         }
+         $url = $_SERVER['HTTP_REFERER'] ?? '';
+        if (strpos($url, '/StudentEnrolment') !== false) {
+            $studentEnrolmentCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
+            $getQueryString = $this->getQueryString();
+            $fileRecord = $studentEnrolmentCustomFieldValues->find()
+                            ->where([
+                                'file IS NOT' => null,
+                                'id' => $getQueryString['id']
+                            ])->first();
 
+            if (empty($fileRecord) || empty($fileRecord->file)) {
+                throw new NotFoundException(__('File not found'));
+            }
+            $fileName = $fileRecord->text_value;
+            $fileResource = $fileRecord->file;
+            
+        }elseif(strpos($url, '/StudentAdmission') !== false) {
+            $studentAdmissionCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentAdmissionCustomFieldValues');
+            $getQueryString = $this->getQueryString();
+            $fileRecord = $studentAdmissionCustomFieldValues->find()
+                            ->where([
+                                'file IS NOT' => null,
+                                'id' => $getQueryString['id']
+                            ])->first();
+
+            if (empty($fileRecord) || empty($fileRecord->file)) {
+                throw new NotFoundException(__('File not found'));
+            }
+            $fileName = $fileRecord->text_value;
+            $fileResource = $fileRecord->file;
+        }else{
         // Load your custom field values table
-        $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
-        $fileRecord = $InstitutionCustomFieldValues->find()
-                        ->where([
-                            'file IS NOT' => null,
-                            'file_name IS NOT' => null,
-                            'institution_id' => $this->getInstitutionID(),
-                        ])->first();
+            $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
+            $fileRecord = $InstitutionCustomFieldValues->find()
+                            ->where([
+                                'file IS NOT' => null,
+                                'institution_id IS' => $this->getInstitutionID(),
+                            ])->first();
 
-        if (empty($fileRecord) || empty($fileRecord->file_name) || empty($fileRecord->file)) {
-            throw new NotFoundException(__('File not found'));
+            if (empty($fileRecord) || empty($fileRecord->file)) {
+                throw new NotFoundException(__('File not found'));
+            }
+            $fileName = $fileRecord->text_value;
+            $fileResource = $fileRecord->file;
         }
-
-        $fileName = $fileRecord->file_name;
-        $fileResource = $fileRecord->file;
         $this->response = $this->response
             ->withType(mime_content_type($fileResource))
             ->withHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"')
@@ -10429,6 +10555,3 @@ class InstitutionsController extends AppController
     }
 
 }
-
-
-

@@ -72,11 +72,16 @@ class AppController extends Controller
      */
     public function initialize(): void
     {
-        if (!file_exists(CONFIG . 'app_local.php')) {
+        // POCOR-9686: redirect to the installer when either of the two
+        // bootstrap configuration files is missing (app_local.php for the
+        // CakePHP core app, api/.env for the Laravel API).
+        $appLocalMissing = !file_exists(CONFIG . 'app_local.php');
+        $envMissing = !file_exists(ROOT . DS . 'api' . DS . '.env');
+        if ($appLocalMissing || $envMissing) {
             $url = Router::url(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'index'], true);
             header('Location: ' . $url);
             die;
-        }
+        }// POCOR-9686 ends
 
         if (Configure::read('schoolMode')) {
             $this->productName = 'OpenEMIS School';
@@ -137,6 +142,9 @@ class AppController extends Controller
             'productName' => $this->productName
         ]);
         $themeData = $this->getTheme(); // POCOR-8951
+        // POCOR-9801: expose product colour for Angular pages (datepicker buttons)
+        $productColour = ltrim((string)($themeData['colour'] ?? '6699CC'), '#');
+        $this->set('productColour', $productColour);
         $this->loadComponent('OpenEmis.OpenEmis', [
             'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
             'headerMenu' => [
@@ -304,8 +312,12 @@ class AppController extends Controller
         }
         Log::write('debug', 'Theme data: ' . print_r($themes, true));
         // Modify CSS template
-        $colour = $themes['colour'] ?? '000000';
-        $secondaryColour = $this->darkenColour($colour);
+        // POCOR-9801: never fall back to black; strip accidental leading '#'
+        $colour = ltrim((string)($themes['colour'] ?? '6699CC'), '#');
+        if (!preg_match('/^[0-9A-Fa-f]{6}$/', $colour)) {
+            $colour = '6699CC';
+        }
+        $secondaryColour = ltrim((string)$this->darkenColour($colour), '#');
 
         $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
         $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) . '/';

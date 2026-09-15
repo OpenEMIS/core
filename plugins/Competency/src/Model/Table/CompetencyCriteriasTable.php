@@ -42,7 +42,9 @@ class CompetencyCriteriasTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
             ])
-            ->allowEmpty('code');
+            ->allowEmpty('code')
+            ->notEmpty('competency_item_id')
+            ->notEmpty('competency_grading_type_id');
     }
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
@@ -334,13 +336,13 @@ class CompetencyCriteriasTable extends ControllerActionTable
         } elseif ($field == 'academic_period_id') {
             return __('Academic Period');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

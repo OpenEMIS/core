@@ -1232,7 +1232,12 @@ class CrudApiController extends Controller
 
         $value = trim($value);
 
-        if (($field === 'id' || str_ends_with($field, '_id')) && strpos($value, ',') !== false) { //POCOR-9660: match bare 'id' and any '*_id' field for multi-value filter
+        // Bare column for type checks when client sends table.column (POCOR-9633 / withMeals).
+        $bareColumn = (strpos($field, '.') !== false)
+            ? substr($field, strrpos($field, '.') + 1)
+            : $field;
+
+        if (($bareColumn === 'id' || str_ends_with($bareColumn, '_id')) && strpos($value, ',') !== false) { //POCOR-9660: match bare 'id' and any '*_id' field for multi-value filter
             $values = $this->splitAndTrimValues($value);
 
             if (!empty($values) && count(array_filter($values, [$this, 'isValidIdentifier'])) === count($values)) {
@@ -1429,6 +1434,55 @@ class CrudApiController extends Controller
     private const SENSITIVE_FILTER_FIELDS = ['super_admin', 'password', 'remember_token', 'password_hash'];
 
     /**
+     * Resolve a filter key for allowlist / type checks.
+     *
+     * Accepts bare columns (`institution_id`) or table-qualified columns
+     * (`institution_class_students.institution_id`) used by scopes with JOINs
+     * (e.g. Student Meals `withMeals` / POCOR-9633). Qualified form is only
+     * accepted when the table prefix matches this resource's own table name —
+     * other tables' columns remain rejected.
+     *
+     * @param string $field Raw filter key from `_conditions`.
+     * @param mixed $model Model class name or instance (optional).
+     * @return array{0:string,1:string}|null [sqlField, bareColumn] or null if invalid.
+     */
+    private function resolveQueryableFilterField(string $field, $model = null): ?array
+    {
+        $field = trim($field);
+        if ($field === '' || strpos($field, '`') !== false) {
+            return null;
+        }
+
+        if (strpos($field, '.') === false) {
+            return [$field, $field];
+        }
+
+        $parts = explode('.', $field);
+        if (count($parts) !== 2) {
+            return null; // reject a.b.c and empty segments
+        }
+
+        [$table, $column] = $parts;
+        if ($table === '' || $column === '') {
+            return null;
+        }
+
+        if (is_string($model)) {
+            $model = new $model;
+        }
+        $resourceTable = (is_object($model) && method_exists($model, 'getTable'))
+            ? $model->getTable()
+            : null;
+
+        // Only allow qualifying with this resource's own table (anti-join-injection).
+        if ($resourceTable === null || $table !== $resourceTable) {
+            return null;
+        }
+
+        return [$field, $column];
+    }
+
+    /**
      * Apply filters to the query.
      *
      * POCOR-9697: `$model` is now required so we can reject any filter key that
@@ -1444,6 +1498,10 @@ class CrudApiController extends Controller
      *  - 400 + generic message preserves the anti-fingerprinting property: the
      *    response body is identical for `super_admin`, `password`, or `hubabuba`,
      *    so the attacker cannot A/B test field existence.
+     *
+     * Table-qualified keys (`table.column`) are allowed when `column` is in the
+     * fillable allowlist and `table` is this resource's table — needed so JOIN
+     * scopes (POCOR-9633 Student Meals `withMeals`) stay unambiguous.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param array $filters
@@ -1462,43 +1520,58 @@ class CrudApiController extends Controller
         foreach ($filters as $field => $value) {
             //POCOR-9697: collect non-allowlist keys; we'll log and 400 after the loop so a
             //single request lists every offender once (anti-fingerprinting + DX clarity).
-            if (!empty($allowed) && !in_array($field, $allowed, true)) {
+            // Allow `table.column` when column is fillable and table is this resource's table
+            // (Student Meals withMeals / POCOR-9633); keep qualified name in SQL WHERE.
+            $resolved = $this->resolveQueryableFilterField((string) $field, $model);
+            if ($resolved === null) {
                 $dropped[] = $field;
-                if (in_array($field, self::SENSITIVE_FILTER_FIELDS, true)) {
+                $bareForSensitive = (strpos((string) $field, '.') !== false)
+                    ? substr((string) $field, strrpos((string) $field, '.') + 1)
+                    : (string) $field;
+                if (in_array($bareForSensitive, self::SENSITIVE_FILTER_FIELDS, true)) {
+                    $sensitiveDropped[] = $field;
+                }
+                continue;
+            }
+            [$sqlField, $bareColumn] = $resolved;
+
+            if (!empty($allowed) && !in_array($bareColumn, $allowed, true)) {
+                $dropped[] = $field;
+                if (in_array($bareColumn, self::SENSITIVE_FILTER_FIELDS, true)) {
                     $sensitiveDropped[] = $field;
                 }
                 continue;
             }
             if (is_array($value)) {
-                $query->whereIn($field, $value);
+                $query->whereIn($sqlField, $value);
             } elseif (strpos($value, '>=') === 0) {
-                $query->where($field, '>=', substr($value, 2));
+                $query->where($sqlField, '>=', substr($value, 2));
             } elseif (strpos($value, '<=') === 0) {
-                $query->where($field, '<=', substr($value, 2));
+                $query->where($sqlField, '<=', substr($value, 2));
             } elseif (strpos($value, '>') === 0) {
-                $query->where($field, '>', substr($value, 1));
+                $query->where($sqlField, '>', substr($value, 1));
             } elseif (strpos($value, '<') === 0) {
-                $query->where($field, '<', substr($value, 1));
+                $query->where($sqlField, '<', substr($value, 1));
             } elseif (strpos($value, 'BETWEEN') === 0) {
                 $range = explode(',', substr($value, 8));
                 if (count($range) === 2) {
-                    $query->whereBetween($field, $range);
+                    $query->whereBetween($sqlField, $range);
                 }
-            } elseif (substr($field, -3) === '_id' && $this->isValidIdentifier($value)) {
+            } elseif (substr($bareColumn, -3) === '_id' && $this->isValidIdentifier($value)) {
                 // If field ends with '_id' and value is numeric, use exact match
-                $query->where($field, '=', $value);
-            } elseif ($field === 'id'  && $this->isValidIdentifier($value)) {
+                $query->where($sqlField, '=', $value);
+            } elseif ($bareColumn === 'id' && $this->isValidIdentifier($value)) {
+                // If field is 'id', use exact match
+                $query->where($sqlField, '=', $value);
+            } elseif ($bareColumn === 'code') {
                 // If field is 'code', use exact match
-                $query->where($field, '=', $value);
-            } elseif ($field === 'code') {
-                // If field is 'code', use exact match
-                $query->where($field, '=', $value);
+                $query->where($sqlField, '=', $value);
             } else {
                 // Default to 'like' for other fields
                if (strpos($value, '*') !== false) {
-                    $query->where($field, 'like', str_replace('*', '%', $value));
+                    $query->where($sqlField, 'like', str_replace('*', '%', $value));
                 } else {
-                    $query->where($field, '=', $value);
+                    $query->where($sqlField, '=', $value);
                 }
             }
         }

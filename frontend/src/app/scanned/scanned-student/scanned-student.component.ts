@@ -4,6 +4,7 @@ import { timer } from 'rxjs';
 import { TABLE_COLUMN_LIST } from './scanned-student.config';
 import { ApiService } from 'src/app/api.service';
 import { DEFAULT_TEMPLATE_THEME } from 'src/app/shared/config.default-val';
+import { applyThemeFromResponse } from 'src/app/shared/theme.utils';
 import { Router } from '@angular/router';
 import { SharedService } from 'src/app/shared/shared.service';
 
@@ -154,20 +155,7 @@ export class ScannedStudentComponent implements OnInit {
   setTheme() {
     this.Rest.getWithToken('themes').subscribe({
       next: (response: any) => {
-        console.log(response?.data[3].default_value, "response");
-        let selectedThemeData = '';
-        if (response?.data[3].value) {
-          selectedThemeData = response?.data[3].value;
-          selectedThemeData = `#${selectedThemeData}`;
-        } else {
-          selectedThemeData = response?.data[3].default_value;
-          selectedThemeData = `#${selectedThemeData}`;
-        }
-        this.themeArray.btnGroup[0].dropdownContent.forEach((element: any) => {
-          if (element.text == selectedThemeData) {
-            document.body.className = element.theme + ' fuelux';
-          }
-        });
+        applyThemeFromResponse(response, this.themeArray.btnGroup[0].dropdownContent);
       },
       error: (error: any) => {
 

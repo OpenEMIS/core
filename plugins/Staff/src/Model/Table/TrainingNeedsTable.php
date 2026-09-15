@@ -24,7 +24,7 @@ class TrainingNeedsTable extends TrainingNeedsAppTable
 
     public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $connection = ConnectionManager::get('default');
-        $connection->execute('SET foreign_key_checks = 0');
+        //$connection->execute('SET foreign_key_checks = 0');//POCOR-9151
         $session = $this->request->getSession();
         $queryString = $this->getQueryString();
         $data['staff_id'] = $queryString['staff_id'];
@@ -79,11 +79,11 @@ class TrainingNeedsTable extends TrainingNeedsAppTable
             case 'modified':
                 return __('Modified'); 
             case 'modified_user_id':
-                return __('Modified By');
+                return __('Modified User');
             case 'created':
                 return __('Created');
             case 'created_user_id':
-                return __('Created By');
+                return __('Created User');
             case 'training_priority_id':
                 return __('Training Priority');
             case 'reason':

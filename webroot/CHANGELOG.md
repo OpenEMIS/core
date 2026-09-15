@@ -1,3 +1,66 @@
+### 5.18.0 - 2026-09-03
+- Bug Fixed: CLONE - Upgrade OpenEMIS Core to CakePHP 5-(Institutions) : When logged in as a teacher part two
+- Implemented: Develop Duties feature enhancements
+- Bug Fixed: Institutions > Scanned : UI buttons are not following the System Theme, Scanned documents do not show up and Export button does not export an Excel file.
+- Bug Fixed: Institution > Students  > Contacts : 404 error when adding same contacts
+- Bug Fixed: Institution > Meals > Students > View : KD Minidashboard and Classdropdown error.
+- Bug Fixed: Institutions > Students > Risk > View: Data should be showing for all columns
+- Bug Fixed: Update summary_student_attendances and summary_area_institution_grade_attendances tables to only generate current academic_period
+- Bug Fixed: Reports>Staff : Got error on generating the Staff out of school report.
+- Implemented: Control over the exam result release
+- Implemented: Develop an import function for the houses feature
+
+### 5.17.3 - 2026-08-28
+- Bug Fixed: Core>Directory>import: When a file with inadequate information was uploaded the system did not show the error fields with and error report
+
+### 5.17.2 - 2026-08-26
+- Bug Fixed: Administrations > Performances > Assessment > Assessment Periods : 404 Error usort(): Argument #1 ($array) must be of type array, null given
+
+### 5.17.1 - 2026-08-21
+- Bug Fixed: MySQL 8.4 Upgrade Regression Testing on BS MOE TST
+- Bug Fixed: Administrations > System Configurations : SAML SSO is no longer working upon login
+
+### 5.17.0 - 2026-08-19
+- Bug Fixed: Institution Bugs: Gives 404 on addition and deletion, however performs that action.
+- Bug Fixed: Registrations: When registering student with custom field file and file is uploaded, file is not seen in student list page.
+- Bug Fixed: Remove unneccessary files on filesystem
+- Bug Fixed: Docker container not working.
+- Bug Fixed: Core>Directory>Search user records>Merge : Investigate why merge failed
+- Implemented: Develop password rotation policy
+- Implemented: Develop fuction to archive Student Report Cards
+- Implemented: Develop a Teacher Classes report
+- Implemented: Develop system configuration - Administrations > System Setup > System Configurations > Student Settings : Allow users to enrol students to multiple programmes
+- Implemented: Develop an account locked function
+- Bug Fixed: Report: Form pages load a new form on revisit, causing field reshuffling and hidden filters
+- Implemented: Develop changes to user contacts
+- Bug Fixed: Administrations > Profiles > Institutions : Time taken to generate Institution Profile is too long
+- Bug Fixed: Administrations > System Setup > Labels : System does not update Address Area in affected pages
+- Bug Fixed: Institution > Students > Timetables : User sees a blank screen
+- Implemented: Check and remove (where appropriate) the set foreign_key_checks = 0 
+- Implemented: Develop changes to increase attachment size from 2MB to 10MB
+
+### 5.16.0 - 2026-08-11
+- Bug Fixed: Registrations > Add: No email is received when a student is in Open, Pending Approval, Approved or Pending cancellation state.
+- Bug Fixed: Core>Reports>Institution>Student Absence Report/Student Absence Per day Report:
+- Bug Fixed: Core>Administration>Security >Groups:  In security Group when user tries to search for a user, the system reports an error 404. Any subsequent attempt to return to this group returns a 404 error.
+- Implemented: Add Import function to Translations
+- Implemented: Develop Siblings feature
+- Implemented: Develop system configuration for add student by grade
+- Implemented: Develop changes to health feature
+- Implemented: Develop a migration script to add / update database table descriptions 
+- Bug Fixed: Change field options name 
+- Bug Fixed: Institution > Messaging : Messaging Alerts and SMS need to be triggered automatically.
+- Bug Fixed: Reports: Change the dropdown for selecting institution to multi select dropdown
+- Implemented: Develop migration script to remove summary_institution_student_absences
+- Implemented: Develop Counselling Report
+- Implemented: Develop changes to updates email address from support@openemis.org to updates@openemis.org
+- Bug Fixed: Institutions>Students>Select Student>Counselling
+- Bug Fixed: Core>Administration>Communications>Alert Rules : Security Roles should retrieve all the available roles in the system
+- Bug Fixed: Reports > Institutions > Student Report : Reports get stuck when generating
+- Implemented: Develop enhancement of OpenEMIS Core Staff Salary Module
+- Bug Fixed: Table displaying all records even when selected :  display 10 records.
+- Bug Fixed: Core>Administration: Review mandatory fields
+
 ### 5.15.2 - 2026-07-31
 - Bug Fixed: Date is saving the wrong value throughout multiple pages
 - Bug Fixed: Institutions>Students>List: Enrolled(Repeater) will reflect if the previous academic is Repeated/ Withdrawn/ Promoted/ Graduated but yet assign to the same Education Grade.

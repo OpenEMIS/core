@@ -16,7 +16,6 @@ class LocalesTable extends ControllerActionTable
     private $fieldsOrder = ['iso','name','editable','created']; // POCOR-9504
     public function initialize(array $config): void
     {
-
        parent::initialize($config);
        $this->toggle('view', true);
        $this->toggle('edit', true);
@@ -76,9 +75,26 @@ class LocalesTable extends ControllerActionTable
 
     }
 
+    // public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    // {
+    //     return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    // }
+
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
-        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        switch ($field) {
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified User');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     public function afterAction(EventInterface $event, ArrayObject $extra)

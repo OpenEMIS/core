@@ -44,24 +44,38 @@ class InstallerController extends AppController
         //$this->viewBuilder()->layout('Installer.default');
         $this->viewBuilder()->setLayout('Installer.default');
     }
+    //POCOR-9686 Starts
+    private function isInstallationRequired()
+    {
+        $appLocalExists = file_exists(CONFIG . 'app_local.php');
+
+        $envPath = ROOT . DS . 'api' . DS . '.env';
+        $envExists = file_exists($envPath);
+
+        return (!$appLocalExists || !$envExists);
+    }//POCOR-9686 Ends
 
     public function index()
     {
-       // $request = new ServerRequest();
-       // print($this->request->getParam());die;
-        if (file_exists(CONFIG . 'app_local.php')) {//POCOR-8308
+        if (!$this->isInstallationRequired()) {//POCOR-9686
+
             if ($this->request->getParam('_ext') != 'json') {
-                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+                return $this->redirect([
+                    'plugin' => 'User',
+                    'controller' => 'Users',
+                    'action' => 'login'
+                ]);
             } else {
                 $this->set('code', 422);
-                $this->set('message', 'Datasource has already been created');
-                $this->response->withStatus(422);//POCOR-8308
+                $this->set('message', 'Installation has already been completed');
+                $this->response = $this->response->withStatus(422);//POCOR-8308
             }
         }
 
         $this->set('code', 200);
         $this->set('message', 'OK');
         $this->set('_serialize', ['message', 'code']);
+
         $action = '1';
         $this->set('action', $action);
     }
@@ -71,8 +85,7 @@ class InstallerController extends AppController
         
         $request = new ServerRequest();
         $response = new Response();
-        // echo "<pre>";print_r($response->withStatus());die;
-        if (file_exists(CONFIG . 'app_local.php')) {//POCOR-8308
+        if (!$this->isInstallationRequired()) {//POCOR-9686
             if ($this->request->getParam('params')['_ext'] != 'json') {
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             } else {
@@ -179,15 +192,22 @@ class InstallerController extends AppController
 
     public function step3()
     {
-        if (!file_exists(CONFIG . 'app_local.php')) {//POCOR-8308
-            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        //POCOR-9686 start
+        if ($this->isInstallationRequired()) {
+            return $this->redirect([
+                'plugin' => 'Installer',
+                'controller' => 'Installer',
+                'action' => 'index'
+            ]);
         }
+        //POCOR-9686 ends
         $action = '3';
+
         $this->set('action', $action);
         $this->set('code', 200);
         $this->set('message', 'OK');
         $this->set('_serialize', ['message', 'code']);
-        $this->response->withStatus(200);//POCOR-8308
+        $this->response = $this->response->withStatus(200);
         $this->render('index');
     }
 }

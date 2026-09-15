@@ -41,6 +41,9 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
     {
         $this->field('institution_consumable_id', ['type' => 'hidden']);
         $this->field('created_user_id', ['visible' => ['index' => true, 'add' => false, 'view' => true, 'edit' => false]]);
+        $this->field('date', ['null' => false]);//POCOR-9715
+        $this->field('received', ['null' => false]);//POCOR-9715
+        $this->field('issued', ['null' => false]);//POCOR-9715
 
         $this->setupTabElements();
         $this->setFieldOrder(['date', 'received', 'issued', 'balance', 'created_user_id']);
@@ -50,10 +53,14 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
+        //POCOR-9715
         return $validator
-            ->requirePresence('date')
-            ->requirePresence('received')
-            ->requirePresence('issued')
+            ->requirePresence('date', true)
+            ->notEmptyDate('date', __('This field cannot be left empty'))
+            ->requirePresence('received', true)
+            ->notEmptyString('received', __('This field cannot be left empty'))
+            ->requirePresence('issued', true)
+            ->notEmptyString('issued', __('This field cannot be left empty'))
             ->add('issued', 'balanceCheck', [
                 'rule' => function ($value, $context) {
                     if (isset($context['data']['balance']) && $context['data']['balance'] <= 0) {
@@ -147,18 +154,14 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
             return  __('Minimum');
         } else if ($field == 'balance') {
             return  __('Balance');
-        }
-        else if ($field == 'created_user_id') {
-            return  __('Created By');
-        } 
-        else if ($field == 'modified_user_id') {
-            return __('Modified By');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified User');
         } else if ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } else if ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } else if ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -179,6 +182,21 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
 
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
+        //POCOR-9715
+        $received = $data['received'] ?? null;
+        $issued = $data['issued'] ?? null;
+
+        if ($received === '' || $received === null || $issued === '' || $issued === null) {
+            return;
+        }
+
+        if (!is_numeric($received) || !is_numeric($issued)) {
+            return;
+        }
+
+        $received = (float)$received;
+        $issued = (float)$issued;
+        //POCOR-9715
         $institution_consumable_id = $this->ControllerAction->getQueryString('consumable_id');
         $transactions = TableRegistry::getTableLocator()->get('Institution.InstitutionConsumableTransactions');
         $lastBalance = $transactions->find()
@@ -187,9 +205,9 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
             ->order(['id' => 'DESC'])
             ->first();
         if ($lastBalance) {
-            $data['balance'] = $lastBalance->balance + $data['received'] - $data['issued'];
+            $data['balance'] = $lastBalance->balance + $received - $issued; //POCOR-9715
         } else {
-            $data['balance'] = $data['received'] - $data['issued'];
+            $data['balance'] = $received - $issued; //POCOR-9715
         }
     }
 

@@ -58,6 +58,17 @@ class UpdateRisksShell extends Shell
     {
 
         $today = FrozenTime::now();
+
+        //POCOR-9594-1 --start
+        // Absence-based criteria are still registered under the old model name
+        // (Risk.Risks::$criteriaTypes), but attendance now saves through
+        // StudentAbsencesPeriodDetailsTable - querying the old table here found
+        // no current rows, so Generate silently recalculated nothing for any
+        // student whose attendance was recorded after the move.
+        if ($model === 'Institution.InstitutionStudentAbsences') {
+            $model = 'Institution.StudentAbsencesPeriodDetails';
+        }
+        //POCOR-9594-1 --end
         $CriteriaModel = TableRegistry::getTableLocator()->get($model);
 
         // get the list of enrolled student in the institution in academic period

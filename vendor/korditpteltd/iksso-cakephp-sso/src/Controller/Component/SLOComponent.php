@@ -3,56 +3,68 @@ namespace SSO\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
-use Cake\Log\Log;
-use Cake\Http\ServerRequest;
 
 class SLOComponent extends Component
 {
     public function login()
     {
-        //Log::write('debug', $this->request);
-       // $request = new ServerRequest();
-         $request = $this->getController()->getRequest();
+        $request = $this->getController()->getRequest();
+
         if ($request->is('post')) {
-            $username = $this->request->getData('username');
-            $sessionId = $this->request->getData('session_id');
-            // Commit session
-            if (session_id()) {
-                // Same as session_write_close()
-                session_commit();
+            $username = $request->getData('username');
+            $sessionId = $request->getData('session_id');
+
+            // Commit current session before switching session IDs.
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
             }
 
-            // Store current session id
+            // Store current session ID.
             session_start();
             $currentSessionId = session_id();
-            session_commit();
+            session_write_close();
 
-            // Hijack and destroy specified session id
-            session_id($sessionId);
-            session_start();
-            session_destroy();
-            session_commit();
+            // Hijack and destroy the specified session ID.
+            if (!empty($sessionId)) {
+                session_id($sessionId);
+                session_start();
+                session_destroy();
+                session_write_close();
+            }
 
-            // Restore existing session id
+            // Restore the existing session ID.
             session_id($currentSessionId);
             session_start();
-            session_commit();
+            session_write_close();
+
             if (!empty($username)) {
-                $SingleLogoutTable = TableRegistry::get('SSO.SingleLogout');
-                $SingleLogoutTable->removeLogoutRecord($username);
+                $singleLogoutTable = TableRegistry::getTableLocator()
+                    ->get('SSO.SingleLogout');
+
+                $singleLogoutTable->removeLogoutRecord($username);
             }
-        } else if ($request->is('put')) {
+        } elseif ($request->is('put')) {
             $this->captureLogin();
         }
     }
 
-    private function captureLogin()
+    private function captureLogin(): void
     {
-        $url = $this->request->getData('url');
-        $sessionId = $this->request->getData('session_id');
-        $username = $this->request->getData('username');
+        $request = $this->getController()->getRequest();
+
+        $url = $request->getData('url');
+        $sessionId = $request->getData('session_id');
+        $username = $request->getData('username');
+
         if (!empty($url) && !empty($sessionId) && !empty($username)) {
-            TableRegistry::get('SSO.SingleLogout')->addRecord($url, $username, $sessionId);
+            $singleLogoutTable = TableRegistry::getTableLocator()
+                ->get('SSO.SingleLogout');
+
+            $singleLogoutTable->addRecord(
+                $url,
+                $username,
+                $sessionId
+            );
         }
     }
 }
