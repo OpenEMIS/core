@@ -1159,69 +1159,174 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
     }
 
+    //POCOR-9594-1: per-request cache — value is constant per request
+    private ?int $_dailyAttendanceConfig = null;
+
     public function institutionStudentRiskCalculateRiskValue(EventInterface $event, ArrayObject $params)
     {
-        $institutionId = $params['institution_id'];
-        $studentId = $params['student_id'];
+        $institutionId    = $params['institution_id'];
+        $studentId        = $params['student_id'];
         $academicPeriodId = $params['academic_period_id'];
 
-        $Indexes = TableRegistry::getTableLocator()->get('Risk.Risks');
-        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-        $academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;
-        $academicPeriodEndDate = $AcademicPeriod->get($academicPeriodId)->end_date;
+        $period      = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->get($academicPeriodId);
+        $startDate   = $period->start_date->format('Y-m-d');
+        $endDate     = $period->end_date->format('Y-m-d');
+        $absenceTypeId = TableRegistry::getTableLocator()->get('Risk.Risks')
+            ->getCriteriasDetails($params['criteria_name'])['absence_type_id'];
+        $dailyConfig = $this->getDailyAttendanceConfig();
 
-        $absenceTypeId = $Indexes->getCriteriasDetails($params['criteria_name'])['absence_type_id'];
-
-        $absenceResultsCount = $this
-            ->find()
-            ->where([
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('student_id') => $studentId,
-                $this->aliasField('absence_type_id') => $absenceTypeId,
-                $this->aliasField('date') . ' >='  => $academicPeriodStartDate,
-                $this->aliasField('date') . ' <='  => $academicPeriodEndDate
-            ])
-            ->count();
+        //POCOR-9594-1 --start
+        // Attendance is now recorded in institution_student_absence_details
+        // (period-by-period marking), not institution_student_absences - counting
+        // from $this (the old table) always returned 0 for any student whose
+        // attendance was recorded after the move, so the threshold check below
+        // never fired and Risk > View stayed blank.
+        //
+        // calculate_daily_attendance governs how period-level absences roll up
+        // into a "day counts as absent" decision:
+        //  - 1 (once): any single absent period on a date counts that whole day
+        //  - 2 (all):  a day only counts if the number of absent periods meets
+        //    the per-grade threshold (attendance_per_day) active for that date
+        if ($dailyConfig == 1) {
+            $absenceResultsCount = $this->countAbsentDaysOnce($institutionId, $studentId, $absenceTypeId, $startDate, $endDate);
+        } else {
+            $gradeId          = $this->getStudentGradeFromAbsences($studentId, $institutionId, $academicPeriodId);
+            $attendancePerDay = $this->getMinAttendancePerDay($gradeId, $academicPeriodId, $startDate, $endDate);
+            $absenceResultsCount = $this->countAbsentDaysAll($institutionId, $studentId, $absenceTypeId, $startDate, $endDate, $attendancePerDay);
+        }
+        //POCOR-9594-1 --end
 
         return $absenceResultsCount;
     }
 
+    //POCOR-9594-1 --start
+    // config=1 — any period absence on a date counts that day
+    private function countAbsentDaysOnce(int $institutionId, int $studentId, int $absenceTypeId, string $startDate, string $endDate): int
+    {
+        $row = \Cake\Datasource\ConnectionManager::get('default')->execute(
+            'SELECT COUNT(DISTINCT date) AS absent_days
+             FROM institution_student_absence_details
+             WHERE institution_id = ? AND student_id = ? AND absence_type_id = ?
+               AND subject_id = 0 AND date >= ? AND date <= ?',
+            [$institutionId, $studentId, $absenceTypeId, $startDate, $endDate]
+        )->fetch('assoc');
+        return (int)($row['absent_days'] ?? 0);
+    }
+
+    // config=2 — day counts only when period absences >= attendancePerDay
+    private function countAbsentDaysAll(int $institutionId, int $studentId, int $absenceTypeId, string $startDate, string $endDate, int $attendancePerDay): int
+    {
+        $row = \Cake\Datasource\ConnectionManager::get('default')->execute(
+            'SELECT COUNT(*) AS absent_days
+             FROM (
+                 SELECT date
+                 FROM institution_student_absence_details
+                 WHERE institution_id = ? AND student_id = ? AND absence_type_id = ?
+                   AND subject_id = 0 AND date >= ? AND date <= ?
+                 GROUP BY date
+                 HAVING COUNT(*) >= ?
+             ) AS qualifying_dates',
+            [$institutionId, $studentId, $absenceTypeId, $startDate, $endDate, $attendancePerDay]
+        )->fetch('assoc');
+        return (int)($row['absent_days'] ?? 0);
+    }
+
+    // MIN across overlapping DAY-type mark types active in the date window
+    // (date_enabled/date_disabled can overlap — MIN = stricter: lower threshold = more days qualify)
+    private function getMinAttendancePerDay(?int $gradeId, int $academicPeriodId, string $startDate, string $endDate): int
+    {
+        if (!$gradeId) {
+            return 1;
+        }
+        $row = \Cake\Datasource\ConnectionManager::get('default')->execute(
+            'SELECT MIN(smt.attendance_per_day) AS min_apd
+             FROM student_attendance_mark_types smt
+             JOIN student_attendance_types sat ON sat.id = smt.student_attendance_type_id
+             JOIN student_mark_type_statuses smts ON smts.student_attendance_mark_type_id = smt.id
+             JOIN student_mark_type_status_grades smtsg ON smtsg.student_mark_type_status_id = smts.id
+             WHERE smtsg.education_grade_id = ? AND smts.academic_period_id = ?
+               AND sat.code = ?
+               AND smts.date_enabled <= ? AND smts.date_disabled >= ?',
+            [$gradeId, $academicPeriodId, 'DAY', $endDate, $startDate]
+        )->fetch('assoc');
+        return max(1, (int)($row['min_apd'] ?? 1));
+    }
+
+    // read education_grade_id from the absence records themselves — correct even when
+    // a class spans multiple grades, since each absence row carries its own grade
+    private function getStudentGradeFromAbsences(int $studentId, int $institutionId, int $academicPeriodId): ?int
+    {
+        $row = \Cake\Datasource\ConnectionManager::get('default')->execute(
+            'SELECT education_grade_id
+             FROM institution_student_absence_details
+             WHERE student_id = ? AND institution_id = ? AND academic_period_id = ?
+             ORDER BY date DESC LIMIT 1',
+            [$studentId, $institutionId, $academicPeriodId]
+        )->fetch('assoc');
+        return $row ? (int)$row['education_grade_id'] : null;
+    }
+
+    // read calculate_daily_attendance from config (1=once, 2=all periods); cached per instance
+    private function getDailyAttendanceConfig(): int
+    {
+        if ($this->_dailyAttendanceConfig === null) {
+            $this->_dailyAttendanceConfig = (int)(TableRegistry::getTableLocator()->get('Configuration.ConfigItems')
+                ->find()
+                ->select(['value'])
+                ->where(['code' => 'calculate_daily_attendance'])
+                ->first()['value'] ?? 1);
+        }
+        return $this->_dailyAttendanceConfig;
+    }
+    //POCOR-9594-1 --end
+
     public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
     {
-        $Indexes = TableRegistry::getTableLocator()->get('Risk.Risks');
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $dateFormat = $ConfigItems->value('date_format');
-        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-        $academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;
-        $academicPeriodEndDate = $AcademicPeriod->get($academicPeriodId)->end_date;
-        $absenceTypeId = $Indexes->getCriteriasDetails($criteriaName)['absence_type_id'];
+        $period      = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->get($academicPeriodId);
+        $startDate   = $period->start_date->format('Y-m-d');
+        $endDate     = $period->end_date->format('Y-m-d');
+        $absenceTypeId = TableRegistry::getTableLocator()->get('Risk.Risks')
+            ->getCriteriasDetails($criteriaName)['absence_type_id'];
+        $dateFormat  = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('date_format');
+        $dailyConfig = $this->getDailyAttendanceConfig();
 
-        $absenceResults = $this
-            ->find()
-            // ->contain(['AbsenceTypes', 'StudentAbsenceReasons'])
-            ->contain(['AbsenceTypes'])
-            ->where([
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('student_id') => $studentId,
-                $this->aliasField('absence_type_id') => $absenceTypeId,
-                $this->aliasField('date') . ' >='  => $academicPeriodStartDate,
-                $this->aliasField('date') . ' <='  => $academicPeriodEndDate
-            ])
-            ->all();
+        //POCOR-9594-1 --start
+        // Same table move + same calculate_daily_attendance awareness as
+        // institutionStudentRiskCalculateRiskValue() above — this feeds the
+        // "reference" column shown directly on the Risk View page, so it needs
+        // to agree with which dates actually triggered the risk value.
+        $gradeId          = $this->getStudentGradeFromAbsences($studentId, $institutionId, $academicPeriodId);
+        $attendancePerDay = $dailyConfig == 1
+            ? 1
+            : $this->getMinAttendancePerDay($gradeId, $academicPeriodId, $startDate, $endDate);
 
-        $referenceDetails = [];
-        foreach ($absenceResults as $key => $obj) {
+        $qualifyingDates = $this->getQualifyingAbsentDates(
+            $institutionId, $studentId, $absenceTypeId, $startDate, $endDate, $attendancePerDay
+        );
 
-            $referenceDetails[$obj->id] = ' (' . $obj->date->format($dateFormat) . ')';
-        }
-
-        // tooltip only receieved string to be display
         $reference = '';
-        foreach ($referenceDetails as $key => $referenceDetailsObj) {
-            $reference = $reference . $referenceDetailsObj . ' <br/>';
+        foreach ($qualifyingDates as $date) {
+            $reference .= ' (' . (new \Cake\I18n\Date($date))->format($dateFormat) . ') <br/>';
         }
-
         return $reference;
+        //POCOR-9594-1 --end
+    }
+
+    //POCOR-9594-1: returns sorted qualifying absent dates — dates where period absence count >= attendancePerDay
+    private function getQualifyingAbsentDates(int $institutionId, int $studentId, int $absenceTypeId, string $startDate, string $endDate, int $attendancePerDay): array
+    {
+        $rows = \Cake\Datasource\ConnectionManager::get('default')->execute(
+            'SELECT date
+             FROM institution_student_absence_details
+             WHERE institution_id = ? AND student_id = ? AND absence_type_id = ?
+               AND subject_id = 0 AND date >= ? AND date <= ?
+             GROUP BY date
+             HAVING COUNT(*) >= ?
+             ORDER BY date ASC',
+            [$institutionId, $studentId, $absenceTypeId, $startDate, $endDate, $attendancePerDay]
+        )->fetchAll('assoc');
+
+        return array_column($rows, 'date');
     }
 
     public function getModelAlertData($threshold)

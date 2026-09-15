@@ -47,6 +47,7 @@ class StaffTable extends ControllerActionTable
     const PENDING_TRANSFEROUT = -3;
     const PENDING_RELEASEIN = -4;
     const PENDING_RELEASEOUT = -5;
+    const ALL_STATUS = 0;
     private $dashboardQuery = null;
     private $institution_id;
     private $academic_period_id;
@@ -1229,7 +1230,7 @@ class StaffTable extends ControllerActionTable
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
         }*///PCOOR-7115 comment code ends
 
-        $statusOptions = $this->StaffStatuses->find('list')->toArray();
+        $statusOptions = [self::ALL_STATUS => __('All Status')] + $this->StaffStatuses->find('list')->toArray();
 
         $approvedStatus = $this->Workflow->getStepsByModelCode('Institution.StaffPositionProfiles', 'APPROVED');
         $closedStatus = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'CLOSED');
@@ -1273,13 +1274,20 @@ class StaffTable extends ControllerActionTable
 
 
         $selectedStatus = $this->queryString('staff_status_id', $statusOptions);
+        if (is_null($this->request->getQuery('staff_status_id'))) {
+            $selectedStatus = $this->assigned;
+        }
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
         // $request->query['staff_status_id'] = $selectedStatus;
         $queryParams = $this->request->getQueryParams();
         $queryParams['staff_status_id'] = $selectedStatus;
         $this->request = $this->request->withQueryParams($queryParams);
 
-        $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+        if ($selectedStatus != self::ALL_STATUS) {
+            $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+        }
+
+        // $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
 
         // POCOR-2547 sort list of staff and student by name
         if (!isset($request->getQuery['sort'])) {
@@ -1292,11 +1300,13 @@ class StaffTable extends ControllerActionTable
             // Starts POCOR-6532
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
             // Ends POCOR-6532 //POCOR-7278
-            $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+            if ($selectedStatus != self::ALL_STATUS) {
+                $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+            }
         } else {
             //POCOR-5690 remove check isAdvancedSearchEnabled for search data from list
             //if (!$this->isAdvancedSearchEnabled() && $selectedStatus != -1) {
-            if ($selectedStatus != -1) {
+            if ($selectedStatus != -1 && $selectedStatus != self::ALL_STATUS) {
                 $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
             }
         }//PCOOR-7115 ends
@@ -1431,8 +1441,7 @@ class StaffTable extends ControllerActionTable
         if($this->action == 'view'){
             $url = $this->url('view');
         }
-        else{
-            $options = [
+        $options = [
                 'userRole' => 'Staff',
                 'action' => $this->action,
                 'id' => $entity->id,
@@ -1444,7 +1453,6 @@ class StaffTable extends ControllerActionTable
 
             $this->controller->set('tabElements', $tabElements);
             $this->controller->set('selectedAction', 'Positions');
-        }
     }
 
     public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
@@ -1548,7 +1556,8 @@ class StaffTable extends ControllerActionTable
 
         $listeners = [
             TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff'),
-            TableRegistry::getTableLocator()->get('Institution.StaffUser')
+            TableRegistry::getTableLocator()->get('Institution.StaffUser'),
+            TableRegistry::getTableLocator()->get('Institution.InstitutionStaffDuties') // POCOR-9768: auto-deactivate duties on end of assignment
         ];
         $this->dispatchEventToModels('Model.Staff.afterSave', [$entity], $this, $listeners);
     }
@@ -2278,7 +2287,8 @@ class StaffTable extends ControllerActionTable
     {
         $broadcaster = $this;
         $listeners = [
-            TableRegistry::getTableLocator()->get('Institution.StaffLeave')    // Staff Leave associated to institution must be deleted.
+            TableRegistry::getTableLocator()->get('Institution.StaffLeave'),    // Staff Leave associated to institution must be deleted.
+            TableRegistry::getTableLocator()->get('Institution.InstitutionStaffDuties') // POCOR-9768: auto-deactivate duties when staff record is deleted outright
         ];
         $this->dispatchEventToModels('Model.InstitutionStaff.afterDelete', [$entity], $broadcaster, $listeners);
 
@@ -3943,6 +3953,10 @@ class StaffTable extends ControllerActionTable
                 foreach ($resultSet as $entity) {
                     $this->removeStaffRole($entity);
                     $this->updateStaffStatus($entity, $this->endOfAssignment);
+                    // POCOR-9768: this bulk sweep bypasses save(), so Model.Staff.afterSave never
+                    // fires here — deactivate duties directly instead.
+                    TableRegistry::getTableLocator()->get('Institution.InstitutionStaffDuties')
+                        ->deactivateDuties($entity->staff_id, $entity->institution_id);
                 }
             }
         }
@@ -3973,6 +3987,9 @@ class StaffTable extends ControllerActionTable
                 [$this->getPrimaryKey() => $entity->id]
             );
             $this->updateStaffStatus($entity, $this->endOfAssignment);
+            // POCOR-9768: this path bypasses save() too — deactivate duties directly.
+            TableRegistry::getTableLocator()->get('Institution.InstitutionStaffDuties')
+                ->deactivateDuties($entity->staff_id, $entity->institution_id);
         }
     }
 
@@ -5099,13 +5116,13 @@ class StaffTable extends ControllerActionTable
         } elseif ($field == 'passport_no') {
             return __('Passport');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

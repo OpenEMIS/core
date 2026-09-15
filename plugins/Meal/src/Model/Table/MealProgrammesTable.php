@@ -582,13 +582,13 @@ use AllowDynamicProperties; // POCOR-8988
             case 'end_date':
                 return __('End Date');
             case 'modified_user_id':
-                return __('Modified By');
+                return __('Modified User');
             case 'modified':
                 return __('Modified');
             case 'created_user_id':
-                return __('Created By');
+                return __('Created User');
             case 'created':
-                return __('Created On');
+                return __('Created');
             case 'code':
                 return __('Code');
             case 'academic_period_id':

@@ -519,13 +519,13 @@ class EducationSystemsTable extends ControllerActionTable
         }elseif ($field == 'visible') {
             return __('Visible');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         }elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         }elseif ($field == 'to_be_deleted') {
             return __('To be Deleted');
         }elseif ($field == 'associated_records') {

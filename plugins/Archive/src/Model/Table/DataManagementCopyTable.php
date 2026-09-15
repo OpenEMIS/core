@@ -614,7 +614,7 @@ class DataManagementCopyTable extends ControllerActionTable
             case 'features':
                 return __('Features');
             case 'created_user_id':
-                return __('Created By');
+                return __('Created User');
             case 'created':
                 return __('Created');
             default:
@@ -1707,7 +1707,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //            case 'features':
 //                return __('Features');
 //            case 'created_user_id':
-//                return __('Created By');
+//                return __('Created User');
 //            case 'created':
 //                return __('Created');
 //            default:

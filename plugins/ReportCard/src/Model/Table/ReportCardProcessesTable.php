@@ -55,9 +55,9 @@ class ReportCardProcessesTable extends ControllerActionTable
         }else if($field == 'academic_period_id') {
             return __('Academic Period');
         }elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         }else if($field=='education_grade_id'){//POCOR-7319
             return __('Education Grades');
         }else {

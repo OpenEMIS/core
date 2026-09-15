@@ -7,6 +7,7 @@ import { ApiService } from '../api.service';
 import { StudentMealsCacheService } from './student-meals-cache.service'; //POCOR-9594: caching service
 import { ActivatedRoute, Router } from '@angular/router';
 import { DEFAULT_TEMPLATE_THEME } from '../shared/config.default-val';
+import { applyThemeFromResponse } from '../shared/theme.utils';
 import { saveAs } from 'file-saver'
 
 @Component({
@@ -555,20 +556,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   setTheme() {
     this.Rest.getWithToken('themes').subscribe({
       next: (response: any) => {
-        // console.log(response?.data[3].default_value, "response");
-        let selectedThemeData = '';
-        if (response?.data[3].value) {
-          selectedThemeData = response?.data[3].value;
-          selectedThemeData = `#${selectedThemeData}`;
-        } else {
-          selectedThemeData = response?.data[3].default_value;
-          selectedThemeData = `#${selectedThemeData}`;
-        }
-        this.themeArray.btnGroup[0].dropdownContent.forEach((element: any) => {
-          if (element.text == selectedThemeData) {
-            document.body.className = element.theme + ' fuelux';
-          }
-        });
+        applyThemeFromResponse(response, this.themeArray.btnGroup[0].dropdownContent);
       },
       error: (error: any) => {
 
@@ -869,7 +857,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     // console.log(this.selected_meal_program, "selected_meal_program");
 
     if (this.academic_Period && this.academic_period_day && this.selected_academic_class && this.selected_meal_program) {
-      this.Rest.getWithToken(`institution-class-students?_scope=withMeals&_conditions=institution_class_students.institution_id:${this.institution_id};institution_class_students.academic_period_id:${this.academic_Period};institution_class_students.institution_class_id:${this.selected_academic_class}&_date=${this.academic_period_day}&_meal_programmes_id=${this.selected_meal_program}`, true).subscribe({ //POCOR-9633: use v5 institution-class-students with withMeals scope; qualified table.column in _conditions to avoid ambiguity
+      this.Rest.getWithToken(`institutions/${this.institution_id}/meal-students?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&institution_class_id=${this.selected_academic_class}&meal_program_id=${this.selected_meal_program}`).subscribe({
         next: (response: any) => {
           if (response && response?.data?.data?.length > 0) {
             let newDataRow = [];

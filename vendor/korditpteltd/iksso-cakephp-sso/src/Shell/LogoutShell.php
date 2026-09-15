@@ -2,9 +2,7 @@
 namespace SSO\Shell;
 
 use Cake\Console\Shell;
-use Cake\Event\Event;
 use Cake\Http\Client;
-use Exception;
 
 class LogoutShell extends Shell
 {
@@ -13,20 +11,32 @@ class LogoutShell extends Shell
         parent::initialize();
     }
 
-    public function main()
+    public function main(): void
     {
         $this->out('Initialize Logout Shell ...');
+
         try {
             $http = new Client();
-            $url = $this->args[0];
-            $sessionId = $this->args[1];
-            $username = $this->args[2];
-            $response = $http->post($url, ['session_id' => $sessionId, 'username' => $username]);
-            $this->out($response->getStatusCode());
+
+            $url = $this->args[0] ?? null;
+            $sessionId = $this->args[1] ?? null;
+            $username = $this->args[2] ?? null;
+
+            if (empty($url) || empty($sessionId) || empty($username)) {
+                $this->err('Logout Shell > Missing required arguments.');
+                return;
+            }
+
+            $response = $http->post($url, [
+                'session_id' => $sessionId,
+                'username' => $username,
+            ]);
+
+            $this->out((string)$response->getStatusCode());
             $this->out('End Processing Logout Shell');
-        } catch (\Exception $e) {
-            $this->out('Logout Shell > Exception : ');
-            $this->out($e->getMessage());
+        } catch (\Throwable $e) {
+            $this->err('Logout Shell > Exception:');
+            $this->err($e->getMessage());
         }
     }
 }

@@ -1,94 +1,218 @@
 <?php
+declare(strict_types=1);
+
 namespace SSO\Controller\Component;
 
 use ArrayObject;
-use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
-use Cake\Event\Event;
-use Cake\Http\ServerRequest;
+use Cake\Event\EventInterface;
+use Cake\ORM\TableRegistry;
 
-class LocalAuthComponent extends Component {
-    public $components = ['Auth', 'Alert'];
+class LocalAuthComponent extends Component
+{
+    /**
+     * Components used by this component.
+     *
+     * @var array<string>
+     */
+    public $components = [
+        'Auth',
+        'Alert',
+    ];
 
+    /**
+     * Default component configuration.
+     *
+     * @var array<string, mixed>
+     */
     protected $_defaultConfig = [
         'homePageURL' => null,
         'loginPageURL' => null,
     ];
 
-    public function implementedEvents(): array {
+    /**
+     * Define events handled by this component.
+     *
+     * @return array<string, string>
+     */
+    public function implementedEvents(): array
+    {
         $events = parent::implementedEvents();
+
         //$events['Controller.Auth.beforeAuthenticate'] = 'beforeAuthenticate';
         $events['Controller.Auth.authenticate'] = 'authenticate';
+
         return $events;
     }
 
-    public function beforeFilter(Event $event) {
-        $controller = $this->_registry->getController();
+    /**
+     * Component beforeFilter event.
+     *
+     * @param \Cake\Event\EventInterface $event Event object.
+     * @return void
+     */
+    public function beforeFilter(EventInterface $event): void
+    {
+        $controller = $this->getController();
+
         $controller->Auth->setConfig('authenticate', [
             'Form' => [
-                'userModel' => $this->_config['userModel'],
+                'userModel' => $this->getConfig('userModel'),
                 'passwordHasher' => [
                     'className' => 'Fallback',
-                    'hashers' => ['Default', 'Legacy']
-                ]
-            ]
+                    'hashers' => [
+                        'Default',
+                        'Legacy',
+                    ],
+                ],
+            ],
         ]);
     }
 
-    public function authenticate(Event $event, ArrayObject $extra) {
-        $controller = $this->_registry->getController();
+    /**
+     * Authenticate user.
+     *
+     * @param \Cake\Event\EventInterface $event Event object.
+     * @param \ArrayObject $extra Additional authentication data.
+     * @return mixed
+     */
+    public function authenticate(
+        EventInterface $event,
+        ArrayObject $extra
+    ) {
+        $controller = $this->getController();
         $request = $controller->getRequest();
-        
-        if ($request->is('post')) {
-            if ($request->getData('submit') == 'login') {
-                $username = $request->getData('username');
-                return $this->checkLogin($username);
-            } else if ($request->getData('submit') == 'reload') {
-                $username = $request->getData['username'];
-                $password = $request->getData['password'];
-                $session = $this->request->session();
-                $session->write('login.username', $username);
-                $session->write('login.password', $password);
-                return $controller->redirect($this->loginPageURL);
+
+        if (!$request->is('post')) {
+            $homePageURL = $this->getConfig('homePageURL');
+
+            if (!empty($homePageURL)) {
+                return $controller->redirect($homePageURL);
             }
-        } else {
-            return $controller->redirect($this->homePageURL);
-            // return false;
+
+            return false;
         }
+
+        $submit = $request->getData('submit');
+
+        if ($submit === 'login') {
+            $username = $request->getData('username');
+
+            return $this->checkLogin($username);
+        }
+
+        if ($submit === 'reload') {
+            $username = $request->getData('username');
+            $password = $request->getData('password');
+
+            $session = $request->getSession();
+
+            $session->write('login.username', $username);
+            $session->write('login.password', $password);
+
+            $loginPageURL = $this->getConfig('loginPageURL');
+
+            if (!empty($loginPageURL)) {
+                return $controller->redirect($loginPageURL);
+            }
+
+            return false;
+        }
+
+        return false;
     }
 
-    private function checkLogin($username = null, $extra = [])
-    {
-
-        $controller = $this->_registry->getController();
+    /**
+     * Check user login.
+     *
+     * @param string|null $username Username.
+     * @param array $extra Additional authentication data.
+     * @return bool
+     */
+    private function checkLogin(
+        ?string $username = null,
+        array $extra = []
+    ): bool {
+        $controller = $this->getController();
         $request = $controller->getRequest();
-        $session = $this->getController()->getRequest()->getSession();
-        if (array_key_exists('REMOTE_ADDR', $_SERVER)) {
-            $this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
+        $session = $request->getSession();
+
+        $remoteAddress = $request->getAttribute('clientIp');
+
+        if (empty($remoteAddress)) {
+            $remoteAddress = $request->getEnv('REMOTE_ADDR') ?? 'unknown';
         }
-        
+
+        $this->log(
+            sprintf(
+                '[%s] Attempt to login as %s@%s',
+                $username ?? '',
+                $username ?? '',
+                $remoteAddress
+            ),
+            'debug'
+        );
+
         $user = $this->Auth->identify();
 
         $extra['status'] = true;
         $extra['loginStatus'] = false;
         $extra['fallback'] = false;
+
+        $statusField = $this->getConfig('statusField');
+
         if ($user) {
-            if ($user[$this->_config['statusField']] != 1) {
+            if (
+                !empty($statusField) &&
+                isset($user[$statusField]) &&
+                (int)$user[$statusField] !== 1
+            ) {
                 $extra['status'] = false;
             } else {
                 $this->Auth->setUser($user);
-                if ($this->Auth->authenticationProvider()->needsPasswordRehash()) {
-                    $this->Users = TableRegistry::getTableLocator()->get($this->_config['userModel']);
-                    $user = $this->Users->get($this->Auth->user('id'));
-                    $user->password = $request->getData['password'];
-                    $this->Users->save($user);
+
+                /*
+                 * Rehash the password when required by the
+                 * authentication provider.
+                 */
+                $authenticationProvider = $this->Auth->authenticationProvider();
+
+                if (
+                    $authenticationProvider &&
+                    $authenticationProvider->needsPasswordRehash()
+                ) {
+                    $userModel = $this->getConfig('userModel');
+
+                    if (!empty($userModel)) {
+                        $this->Users = TableRegistry::getTableLocator()->get(
+                            $userModel
+                        );
+
+                        $userId = $this->Auth->user('id');
+
+                        if ($userId !== null) {
+                            $userEntity = $this->Users->get($userId);
+
+                            $password = $request->getData('password');
+
+                            if (!empty($password)) {
+                                $userEntity->password = $password;
+                                $this->Users->save($userEntity);
+                            }
+                        }
+                    }
                 }
+
                 $extra['loginStatus'] = true;
             }
-
         }
-        $controller->dispatchEvent('Controller.Auth.afterCheckLogin', [$extra], $this);
-        return $extra['loginStatus'];
 
+        $controller->dispatchEvent(
+            'Controller.Auth.afterCheckLogin',
+            [$extra],
+            $this
+        );
+
+        return (bool)$extra['loginStatus'];
     }
 }

@@ -173,6 +173,7 @@ class ExaminationsTable extends ControllerActionTable {
         $this->field('education_grade_id', ['type' => 'select', 'entity' => $entity, 'empty' => true]);
         $this->field('registration_start_date');
         $this->field('registration_end_date');
+        $this->field('release_results_date', ['type' => 'date']); //POCOR-3573: results visible on student Exams tab once current date >= this date (empty = never released)
         $this->field('examination_subjects', [
             'type' => 'element',
             'element' => 'Examination.examination_subjects'
@@ -406,18 +407,20 @@ class ExaminationsTable extends ControllerActionTable {
             return __('Registration Start Date');
         }  elseif ($field == 'registration_end_date') {
             return __('Registration End Date');
+        } elseif ($field == 'release_results_date') { //POCOR-3573: label per ticket
+            return __('Release Results');
         } elseif ($field == 'academic_period_id') {
             return __('Academic Period');
         } elseif ($field == 'education_grade_id') {
             return __('Education Grade');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         }elseif ($field == 'description') {
             return __('Description');
         }elseif ($field == 'description') {

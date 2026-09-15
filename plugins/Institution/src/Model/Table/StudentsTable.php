@@ -3935,10 +3935,19 @@ class StudentsTable extends ControllerActionTable
     private function setPreviousStudents()
     {
         $statuses = $this->student_status_codes_array;
-        $repeatedStatusID = $statuses['REPEATED'];
-        $withdrawnStatusID = $statuses['WITHDRAWN'];
-        $transferredStatusID = $statuses['TRANSFERRED'];
-        $promotedStatusID = $statuses['PROMOTED'];
+        $repeatedStatusID = $statuses['REPEATED'] ?? null;
+        $withdrawnStatusID = $statuses['WITHDRAWN'] ?? null;
+        $transferredStatusID = $statuses['TRANSFERRED'] ?? null;
+        $promotedStatusID = $statuses['PROMOTED'] ?? null;
+        //POCOR-9594 --start
+        // If a student status code is not configured, $repeatedStatusID is null,
+        // causing CakePHP to throw an InvalidArgumentException. Skip the lookup
+        // and use an empty array, which safely results in no "Enrolled (Repeater)" rows.
+        if ($repeatedStatusID === null || $withdrawnStatusID === null || $transferredStatusID === null || $promotedStatusID === null) {
+            $this->previousStudents = [];
+            return;
+        }
+        //POCOR-9594 --end
         $current_year_id = $this->academic_period_id;
         $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $this->previousStudents = $InstitutionStudents
@@ -4115,13 +4124,13 @@ class StudentsTable extends ControllerActionTable
         } elseif ($field == 'student_status_id') {
             return __('Student Status');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

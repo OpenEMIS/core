@@ -6,6 +6,7 @@ import { Subscription, timer } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../api.service';
 import { DEFAULT_TEMPLATE_THEME } from '../shared/config.default-val';
+import { applyThemeFromResponse } from '../shared/theme.utils';
 
 @Component({
   selector: 'app-student-attendance',
@@ -341,19 +342,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
   setTheme() {
     this.Rest.getWithToken('themes').subscribe({
       next: (response: any) => {
-        let selectedThemeData = '';
-        if (response?.data[3].value) {
-          selectedThemeData = response?.data[3].value;
-          selectedThemeData = `#${selectedThemeData}`;
-        } else {
-          selectedThemeData = response?.data[3].default_value;
-          selectedThemeData = `#${selectedThemeData}`;
-        }
-        this.themeArray.btnGroup[0].dropdownContent.forEach((element: any) => {
-          if (element.text == selectedThemeData) {
-            document.body.className = element.theme + ' fuelux';
-          }
-        });
+        applyThemeFromResponse(response, this.themeArray.btnGroup[0].dropdownContent);
       },
       error: (error: any) => {
 

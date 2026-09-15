@@ -174,13 +174,13 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
             case 'utility_telephone_condition_id':
                 return __('Condition');
             case 'modified_user_id':
-                return __('Modified By');
+                return __('Modified User');
             case 'modified':
-                return __('Modified On');
+                return __('Modified');
             case 'created_user_id':
-                return __('Created By');
+                return __('Created User');
             case 'created':
-                return __('Created On');
+                return __('Created');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

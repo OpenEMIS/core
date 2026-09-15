@@ -461,34 +461,63 @@ class ContactsTable extends ControllerActionTable
                 'rule' => ['validateContact'],
             ])
             ->add('value', 'unique', [
+            // POCOR-9793: Previously this checked security_users.mobile_number globally, which
+            // wrongly blocked entering the same mobile number for two different people (e.g. a
+            // parent's shared phone recorded against two of their children). Duplicate checking
+            // is now scoped to the same user's own Contacts list instead - a number can be reused
+            // across different students/users, but not entered twice for the same person.
             'rule' => function ($value, $context) {
                 if (!isset($context['data']['contact_type_id'])) {
                     return false;
                 }
 
-                $contactTypeId = $context['data']['contact_option_id'];
+                $contactOptionId = $context['data']['contact_option_id'];
 
                 // POCOR-9760 -- start: Duplicate emails are allowed; uniqueness only controls email sync.
-                if ($contactTypeId == 4) {
+                if ($contactOptionId == $this->contactOptionsArray['EMA']) {
                     return true;
                 }
                 //POCOR-9760 --end
 
-                if ($contactTypeId != 1) {
+                // POCOR-9793: Only Mobile/Phone contacts are synced onto the account's
+                // mobile_number (see UsersTable::onChangeUserContacts), so only those need a
+                // duplicate check here.
+                if ($contactOptionId != $this->contactOptionsArray['MOB'] && $contactOptionId != $this->contactOptionsArray['PHO']) {
                     return true;
                 }
 
-                $users = TableRegistry::getTableLocator()->get('User.Users');
-                if (!$users) {
-                    throw new \RuntimeException('Users table could not be found.');
+                $securityUserId = $context['data']['security_user_id'] ?? null;
+
+                // POCOR-9793: The relaxed, per-user-only check below is for Students only -
+                // siblings sharing a parent's phone. Staff (and any other context) keep the
+                // original global check, so two different staff/users still cannot share a
+                // mobile/phone number.
+                $isStudentContext = ($this->request->getParam('controller') === 'Students');
+
+                if (!$isStudentContext) {
+                    $users = TableRegistry::getTableLocator()->get('User.Users');
+                    $query = $users->find()->where(['mobile_number' => $value]);
+
+                    // Exclude the current user if editing
+                    if (!empty($securityUserId)) {
+                        $query->where(['id !=' => $securityUserId]);
+                    }
+
+                    return empty($query->first()); // Return true if no duplicate is found
                 }
 
-                $userId = $context['data']['security_user_id'] ?? null;
-                $query = $users->find()->where(['mobile_number' => $value]);
+                $query = $this->find()
+                    ->where([
+                        $this->aliasField('value') => $value,
+                        $this->aliasField('security_user_id') => $securityUserId,
+                    ])
+                    ->matching('ContactTypes', function ($q) use ($contactOptionId) {
+                        return $q->where(['ContactTypes.contact_option_id' => $contactOptionId]);
+                    });
 
-                // Exclude the current user if editing
-                if (!empty($userId)) {
-                    $query->where(['id !=' => $userId]);
+                // Exclude the current record if editing
+                if (!empty($context['data']['id'])) {
+                    $query->where([$this->aliasField('id') . ' !=' => $context['data']['id']]);
                 }
 
                 // Fetch the first matching record

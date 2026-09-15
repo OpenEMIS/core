@@ -642,13 +642,13 @@ class IdentitiesTable extends ControllerActionTable
         } elseif ($field == 'comments') {
             return __('Comments');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         } elseif ($field == 'sync_status') {
             return __('Synced'); //POCOR-9590: column header label
         } else {
