@@ -146,9 +146,11 @@ class InstitutionCasesTable extends ControllerActionTable
             'after' => 'linked_records'
         ]);
 
-        if (is_null($this->request->getQuery['sort'])) { // comment cakephp4
-            $this->request->getQuery['sort'] = 'created';
-            $this->request->getQuery['direction'] = 'desc';
+        if (is_null($this->request->getQuery('sort'))) { 
+            $this->request = $this->request->withQueryParams([
+                'sort' => 'created',
+                'direction' => 'desc',
+            ]);
         }
 
         $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');

@@ -2660,7 +2660,7 @@ class WorkflowCaseBehavior extends Behavior
         } elseif (!empty($entity->created_user_id)) {
             $entity->assignee_id = $entity->created_user_id;
         } else {
-            $entity->assignee_id = 0;
+            $entity->assignee_id = -1;
         } // POCOR-7626 end
     }
 
