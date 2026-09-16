@@ -841,8 +841,8 @@ class StaffReportCardsTable extends AppTable
                 spt.name AS position_title,
                 st.name AS staff_type,
                 so.name AS shift_name,
-                ish.start_time AS shift_start_time,
-                ish.end_time AS shift_end_time,
+                so.start_time AS shift_start_time,
+                so.end_time AS shift_end_time,
                 ist.start_date,
                 ist.end_date,
                 ss.name AS staff_status
@@ -861,16 +861,10 @@ class StaffReportCardsTable extends AppTable
             LEFT JOIN staff_types st 
                 ON st.id = ist.staff_type_id
 
-            LEFT JOIN institution_shifts ish 
-                ON ish.id = ip.shift_id
-                
-            LEFT JOIN shift_options so 
+            LEFT JOIN shift_options so
             ON so.id = ip.shift_id
 
-           /* LEFT JOIN shift_options so 
-                ON so.id = ish.shift_option_id*/
-
-            LEFT JOIN staff_statuses ss 
+            LEFT JOIN staff_statuses ss
                 ON ss.id = ist.staff_status_id
 
             WHERE ist.staff_id = :staff_id
