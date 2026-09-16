@@ -630,6 +630,68 @@ class StaffUserTable extends ControllerActionTable
 
         $this->fields['identity_type_id']['type'] = 'readonly';
         $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
+
+        // POCOR-4477: last thing in this hook - see applyFieldConfigurations() below.
+        // Safe here because RecordBehavior's addEdit.afterAction (which also
+        // touches field order) fires before this table's own edit.afterAction.
+        $this->applyFieldConfigurations('Staff');
+    }
+
+    /**
+     * POCOR-4477 Phase 2: applies admin-configured visibility/order (Fields
+     * Configurations) to the real Staff View/Edit pages. Only fields marked
+     * non-mandatory AND hidden get hidden - a field configured visible=1 is
+     * left as whatever the page already resolves, so this never
+     * force-reveals something hidden for other reasons. Since this is only
+     * ever called from an action-specific hook, a plain 'visible' => false
+     * is safely scoped to that single request's action.
+     *
+     * No pre-existing hardcoded setFieldOrder() array exists on this table,
+     * so the base order is read directly off $this->fields' current
+     * 'order' values instead of a literal array - safe only because this
+     * is called LAST, after all other field-ordering logic for that
+     * action has already run (see call sites).
+     *
+     * field_configurations module='Staff' has 30 rows split across two
+     * different tables (this one for security_users/user_contacts fields,
+     * Institution.Staff for institution_staff fields) - the intersection
+     * check below means each table only ever reorders/hides the subset of
+     * rows that are genuinely present on its own page.
+     */
+    private function applyFieldConfigurations(string $module): void
+    {
+        $currentOrder = $this->fields;
+        uasort($currentOrder, function ($a, $b) {
+            return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+        });
+        $baseOrder = array_keys($currentOrder);
+
+        $fieldConfigTable = TableRegistry::getTableLocator()->get('Configuration.ConfigFieldsConfigurations');
+        $configs = $fieldConfigTable->find()
+            ->where(['module' => $module])
+            ->order([$fieldConfigTable->aliasField('order') => 'ASC'])
+            ->all();
+
+        $orderedNames = [];
+        foreach ($configs as $config) {
+            if (!in_array($config->field_name, $baseOrder, true)) {
+                continue;
+            }
+            $orderedNames[] = $config->field_name;
+
+            if (empty($config->is_mandatory) && empty($config->visible)) {
+                $this->field($config->field_name, ['visible' => false]);
+            }
+        }
+
+        $queue = $orderedNames;
+        $configurable = array_flip($orderedNames);
+        $result = [];
+        foreach ($baseOrder as $name) {
+            $result[] = isset($configurable[$name]) ? array_shift($queue) : $name;
+        }
+
+        $this->setFieldOrder($result);
     }
 
     public function onGetIsHomeroom(EventInterface $event, Entity $entity)
@@ -1021,6 +1083,17 @@ class StaffUserTable extends ControllerActionTable
             $this->controller->set('contentHeader', $StaffName . ' - ' . 'Overview');
         } catch (RecordNotFoundException $e) {
             Log::write('error', $e->getMessage());
+        }
+
+        // POCOR-4477: deliberately placed in the generic afterAction (not
+        // viewAfterAction) - CustomField.Record's own view.afterAction
+        // listener runs at priority 100, after viewAfterAction, and resets
+        // field order via setupCustomFields(). The generic afterAction event
+        // only fires once the whole per-action lifecycle (including that
+        // priority-100 listener) has completed, so this is the first safe
+        // point to have the last word on order for the view page.
+        if ($this->action == 'view') {
+            $this->applyFieldConfigurations('Staff');
         }
     }
 

@@ -47,7 +47,6 @@ class StaffTable extends ControllerActionTable
     const PENDING_TRANSFEROUT = -3;
     const PENDING_RELEASEIN = -4;
     const PENDING_RELEASEOUT = -5;
-    const ALL_STATUS = 0;
     private $dashboardQuery = null;
     private $institution_id;
     private $academic_period_id;
@@ -1230,7 +1229,7 @@ class StaffTable extends ControllerActionTable
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
         }*///PCOOR-7115 comment code ends
 
-        $statusOptions = [self::ALL_STATUS => __('All Status')] + $this->StaffStatuses->find('list')->toArray();
+        $statusOptions = $this->StaffStatuses->find('list')->toArray();
 
         $approvedStatus = $this->Workflow->getStepsByModelCode('Institution.StaffPositionProfiles', 'APPROVED');
         $closedStatus = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'CLOSED');
@@ -1274,20 +1273,13 @@ class StaffTable extends ControllerActionTable
 
 
         $selectedStatus = $this->queryString('staff_status_id', $statusOptions);
-        if (is_null($this->request->getQuery('staff_status_id'))) {
-            $selectedStatus = $this->assigned;
-        }
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
         // $request->query['staff_status_id'] = $selectedStatus;
         $queryParams = $this->request->getQueryParams();
         $queryParams['staff_status_id'] = $selectedStatus;
         $this->request = $this->request->withQueryParams($queryParams);
 
-        if ($selectedStatus != self::ALL_STATUS) {
-            $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
-        }
-
-        // $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+        $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
 
         // POCOR-2547 sort list of staff and student by name
         if (!isset($request->getQuery['sort'])) {
@@ -1300,13 +1292,11 @@ class StaffTable extends ControllerActionTable
             // Starts POCOR-6532
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
             // Ends POCOR-6532 //POCOR-7278
-            if ($selectedStatus != self::ALL_STATUS) {
-                $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
-            }
+            $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
         } else {
             //POCOR-5690 remove check isAdvancedSearchEnabled for search data from list
             //if (!$this->isAdvancedSearchEnabled() && $selectedStatus != -1) {
-            if ($selectedStatus != -1 && $selectedStatus != self::ALL_STATUS) {
+            if ($selectedStatus != -1) {
                 $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
             }
         }//PCOOR-7115 ends
@@ -2018,6 +2008,58 @@ class StaffTable extends ControllerActionTable
         $this->Session->write('Staff.Staff.id', $entity->staff_id);
         $this->Session->write('Staff.Staff.name', $entity->user->name);
         $this->setupTabElements($entity);
+
+        // POCOR-4477: last thing in this hook - see applyFieldConfigurations()
+        // below. This table has no CustomField.Record behavior attached, so
+        // (unlike StaffUserTable) there's no later priority-100 listener to
+        // worry about clobbering this.
+        $this->applyFieldConfigurations('Staff');
+    }
+
+    /**
+     * POCOR-4477 Phase 2: applies admin-configured visibility/order (Fields
+     * Configurations) to the real Staff Edit "Position" tab (this table
+     * drives that tab; StaffUserTable drives View and the "Overview" edit
+     * tab - see its own copy of this method for details on why the
+     * approach reads current field order dynamically instead of building
+     * on a hardcoded array). The Add Staff page does not go through this
+     * table's lifecycle at all (custom Angular wizard + AJAX save), so
+     * there is deliberately no add-side wiring here.
+     */
+    private function applyFieldConfigurations(string $module): void
+    {
+        $currentOrder = $this->fields;
+        uasort($currentOrder, function ($a, $b) {
+            return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+        });
+        $baseOrder = array_keys($currentOrder);
+
+        $fieldConfigTable = TableRegistry::getTableLocator()->get('Configuration.ConfigFieldsConfigurations');
+        $configs = $fieldConfigTable->find()
+            ->where(['module' => $module])
+            ->order([$fieldConfigTable->aliasField('order') => 'ASC'])
+            ->all();
+
+        $orderedNames = [];
+        foreach ($configs as $config) {
+            if (!in_array($config->field_name, $baseOrder, true)) {
+                continue;
+            }
+            $orderedNames[] = $config->field_name;
+
+            if (empty($config->is_mandatory) && empty($config->visible)) {
+                $this->field($config->field_name, ['visible' => false]);
+            }
+        }
+
+        $queue = $orderedNames;
+        $configurable = array_flip($orderedNames);
+        $result = [];
+        foreach ($baseOrder as $name) {
+            $result[] = isset($configurable[$name]) ? array_shift($queue) : $name;
+        }
+
+        $this->setFieldOrder($result);
     }
 
     public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -5116,13 +5158,13 @@ class StaffTable extends ControllerActionTable
         } elseif ($field == 'passport_no') {
             return __('Passport');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified User');
+            return __('Modified By');
         } elseif ($field == 'modified') {
-            return __('Modified');
+            return __('Modified On');
         } elseif ($field == 'created_user_id') {
-            return __('Created User');
+            return __('Created By');
         } elseif ($field == 'created') {
-            return __('Created');
+            return __('Created On');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

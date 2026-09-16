@@ -1674,9 +1674,65 @@ class InstitutionsTable extends ControllerActionTable
      ** view action methods
      **
      ******************************************************************************************************************/
-    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
+    /**
+     * POCOR-4477 Phase 2: applies admin-configured visibility (Fields
+     * Configurations) to the real Add/Edit/View pages. Only fields marked
+     * non-mandatory AND hidden get hidden here - a field configured
+     * visible=1 is left as whatever the page already hardcodes, so this
+     * never force-reveals something the page intentionally hides for other
+     * reasons (eg contact fields on edit). Since this is only ever called
+     * from an action-specific hook (view-only, or add/edit-only), a plain
+     * 'visible' => false hides the field for that single request's action
+     * without touching any other action's visibility.
+     *
+     * Returns $baseOrder with the subset of names that are both in
+     * $baseOrder and in field_configurations re-sequenced to match the
+     * admin-configured order; everything else (section headers, fields
+     * outside Fields Configurations) keeps its original slot.
+     */
+    private function applyFieldConfigurations(array $baseOrder): array
     {
-        $this->setFieldOrder([
+        $fieldConfigTable = TableRegistry::getTableLocator()->get('Configuration.ConfigFieldsConfigurations');
+        $configs = $fieldConfigTable->find()
+            ->where(['module' => 'Institution'])
+            ->order([$fieldConfigTable->aliasField('order') => 'ASC'])
+            ->all();
+
+        $orderedNames = [];
+        foreach ($configs as $config) {
+            if (!in_array($config->field_name, $baseOrder, true)) {
+                continue;
+            }
+            $orderedNames[] = $config->field_name;
+
+            if (empty($config->is_mandatory) && empty($config->visible)) {
+                $this->field($config->field_name, ['visible' => false]);
+            }
+        }
+
+        $queue = $orderedNames;
+        $configurable = array_flip($orderedNames);
+        $result = [];
+        foreach ($baseOrder as $name) {
+            $result[] = isset($configurable[$name]) ? array_shift($queue) : $name;
+        }
+
+        return $result;
+    }
+
+    /**
+     * POCOR-4477 Phase 2: shared base field list/order for the view action,
+     * re-sequenced by applyFieldConfigurations(). Applied a second time at
+     * the end of viewAfterAction() (see comment there) - not just here in
+     * viewBeforeAction() - because field() unconditionally recomputes
+     * 'order' on every call, and viewAfterAction()'s own field('classification',
+     * ['after' => 'code']) call runs later and would otherwise silently
+     * re-pin classification (undoing any admin-configured position for it
+     * and anything between it and 'code').
+     */
+    private function viewFieldOrder(): array
+    {
+        return $this->applyFieldConfigurations([
             'information_section',
             'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
@@ -1700,6 +1756,11 @@ class InstitutionsTable extends ControllerActionTable
             'map_section',
             'map',
         ]);
+    }
+
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->setFieldOrder($this->viewFieldOrder());
 
         // from onUpdateToolbarButtons
         $btnAttr = [
@@ -1754,6 +1815,10 @@ class InstitutionsTable extends ControllerActionTable
         if ($entity->has('status') && $entity->status->code == 'INACTIVE') {
             $this->Alert->info('general.inactive_message');
         }
+
+        // POCOR-4477: re-apply after classification's 'after' => 'code' call above,
+        // which otherwise silently overrides the admin-configured order (see viewFieldOrder()).
+        $this->setFieldOrder($this->viewFieldOrder());
     }
 
     /******************************************************************************************************************
@@ -1800,7 +1865,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('institution_provider_id', ['type' => 'select', 'sectorId' => $entity->institution_sector_id]);
         $this->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 
-        $this->setFieldOrder([
+        $this->setFieldOrder($this->applyFieldConfigurations([
             'information_section',
             'logo_content',
             'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
@@ -1817,7 +1882,7 @@ class InstitutionsTable extends ControllerActionTable
 
             'contact_section',
             'contact_person', 'telephone', 'email', 'website',
-        ]);
+        ]));
         $this->addManualButton($extra); // POCOR-9519
     }
 

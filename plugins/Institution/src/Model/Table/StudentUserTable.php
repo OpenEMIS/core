@@ -624,6 +624,70 @@ class StudentUserTable extends ControllerActionTable
                 $extra['toolbarButtons'][$key] = $button;
             }
         }
+
+        // POCOR-4477: last thing in this hook, after UserBehavior/AreapickerBehavior
+        // have already positioned everything - see applyFieldConfigurations() below.
+        $this->applyFieldConfigurations('Student');
+    }
+
+    /**
+     * POCOR-4477 Phase 2: applies admin-configured visibility/order (Fields
+     * Configurations) to the real Student View/Edit page. Only fields
+     * marked non-mandatory AND hidden get hidden - a field configured
+     * visible=1 is left as whatever the page already resolves, so this
+     * never force-reveals something hidden for other reasons. Since this is
+     * only ever called from an action-specific hook (view-only or
+     * edit-only), a plain 'visible' => false is safely scoped to that
+     * single request's action.
+     *
+     * Unlike Institution, this table has no pre-existing hardcoded
+     * setFieldOrder() array to build on - field order here comes from
+     * UserBehavior/AreapickerBehavior's own after/before pinning. So the
+     * base order is read directly off $this->fields' current 'order'
+     * values instead of a literal array; this is safe only because this
+     * method is called LAST in each hook, after all other field-ordering
+     * logic for that action has already run.
+     *
+     * Reorders only the subset of fields that are both in field_configurations
+     * and genuinely present on this page (silently skips the 4 enrollment
+     * fields - class/start_date/education_grade_id/academic_period_id -
+     * seeded for Student but rendered elsewhere, not on this table).
+     * Section headers and any other fields keep their existing slot.
+     */
+    private function applyFieldConfigurations(string $module): void
+    {
+        $currentOrder = $this->fields;
+        uasort($currentOrder, function ($a, $b) {
+            return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+        });
+        $baseOrder = array_keys($currentOrder);
+
+        $fieldConfigTable = TableRegistry::getTableLocator()->get('Configuration.ConfigFieldsConfigurations');
+        $configs = $fieldConfigTable->find()
+            ->where(['module' => $module])
+            ->order([$fieldConfigTable->aliasField('order') => 'ASC'])
+            ->all();
+
+        $orderedNames = [];
+        foreach ($configs as $config) {
+            if (!in_array($config->field_name, $baseOrder, true)) {
+                continue;
+            }
+            $orderedNames[] = $config->field_name;
+
+            if (empty($config->is_mandatory) && empty($config->visible)) {
+                $this->field($config->field_name, ['visible' => false]);
+            }
+        }
+
+        $queue = $orderedNames;
+        $configurable = array_flip($orderedNames);
+        $result = [];
+        foreach ($baseOrder as $name) {
+            $result[] = isset($configurable[$name]) ? array_shift($queue) : $name;
+        }
+
+        $this->setFieldOrder($result);
     }
 
     private function setupTabElements($entity)
@@ -679,6 +743,9 @@ class StudentUserTable extends ControllerActionTable
 
         $this->field('institution_id', ['type' => 'hidden']);
         $this->fields['institution_id']['value'] = $extra['institutionId'];
+
+        // POCOR-4477: last thing in this hook - see applyFieldConfigurations() above.
+        $this->applyFieldConfigurations('Student');
     }
 
     public function onUpdateFieldIdentityNumber(EventInterface $event, array $attr, $action, Request $request)
