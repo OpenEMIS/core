@@ -1909,7 +1909,13 @@ class ImportUsersTable extends AppTable
         // save() call - a confusing DB error under the wrong field label instead of a normal
         // per-field validation message. Validate the format here, same pattern the generic check
         // uses for real date columns, before this row ever reaches that save.
-        if (!$have_error && !empty($tempRow['guardian_date_of_birth'])) {
+        //
+        // PR review (POCOR-9796): this must run unconditionally, not gated behind !$have_error -
+        // otherwise a malformed DOB is silently dropped whenever any other mandatory guardian
+        // field on the same row is also blank, reintroducing the exact "one error hides another"
+        // pattern this PR eliminated everywhere else (matches checkUserRequiredFields(), which
+        // has no such guard).
+        if (!empty($tempRow['guardian_date_of_birth'])) {
             $dob = trim((string) $tempRow['guardian_date_of_birth']);
             if (!preg_match('/^(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/[0-9]{4}$/', $dob)) {
                 $this->addError($rowInvalidCodeCols, 'guardian_date_of_birth', __('This field value is invalid'));
