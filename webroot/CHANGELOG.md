@@ -1,3 +1,12 @@
+### 5.19.0 - 2026-09-14
+- Bug Fixed: Institutions > Scanned : UI buttons do now follow the system theme
+- Bug Fixed: SSO Plugin : Fix OAuth Compatibility Issues in CakePHP 5 and Assess Deprecated Authentication APIs
+- Bug Fixed: Institutions > Staff : Implement All Status in the status dropdown
+- Bug Fixed: Core>Directory>Search user records>Merge: Merged account still seen on the Directory after merge is completed.
+- Bug Fixed: Student Status Updates remain stuck as "Not Executed" even after the effective date passes. The background withdrawal processing shell fails silently and has no retry mechanism.
+- Bug Fixed: Setup : Wizard is no longer triggered during local installation
+- Bug Fixed: Administration: Check all view pages to ensure that the following fields are standard
+- Implemented: Develop an Institution > Statistics > Standard > Student Attendance Weekly Report
 ### 5.18.0 - 2026-09-03
 - Bug Fixed: CLONE - Upgrade OpenEMIS Core to CakePHP 5-(Institutions) : When logged in as a teacher part two
 - Implemented: Develop Duties feature enhancements
