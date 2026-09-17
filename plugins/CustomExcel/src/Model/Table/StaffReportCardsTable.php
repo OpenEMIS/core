@@ -877,7 +877,7 @@ class StaffReportCardsTable extends AppTable
             foreach ($staffPositionData as $key => $data) {
 
                 $entity[] = [
-                    'id'               => $key + 1,
+                    'id'               => $key,
                     'institution' => ($data['institution_code'] ?? '') . ' - ' . ($data['institution_name'] ?? ''),
                     'position_no'      => $data['position_no'] ?? '',
                     'position_title'   => $data['position_title'] ?? '',
