@@ -190,7 +190,18 @@ class IdentitiesTable extends ControllerActionTable
             // the same user in the same request) would trigger a rollback of that nested scope -
             // which, without savepoints enabled, actually rolled back the whole underlying
             // transaction, corrupting the connection for whatever save ran next in the request.
-            $this->save($userIdentityEntity, ['atomic' => false]);
+            // POCOR-9808: this return value was never checked - a rejection here (e.g.
+            // checkDuplicateIdentity() finding a different existing identity that shares the same
+            // number + nationality, regardless of type) was silently discarded, leaving the
+            // just-created User with no matching user_identities row and no error surfaced
+            // anywhere. Log it so a future failure here is at least visible, even though the
+            // proper fix is preventing the row from reaching this point in the first place (see
+            // ImportUsersTable::alreadyPresentIdentityTypeName()).
+            $savedIdentity = $this->save($userIdentityEntity, ['atomic' => false]);
+            if (!$savedIdentity) {
+                Log::error('@IdentitiesTable::afterSaveUsers failed to save identity for security_user_id='
+                    . $entity->id . ': ' . json_encode($userIdentityEntity->getErrors()));
+            }
         }
     }
 
