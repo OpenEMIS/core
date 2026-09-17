@@ -225,11 +225,19 @@ class GuardiansTable extends ControllerActionTable
             ?? $this->getQueryString('student_id')
             ?? $this->getQueryString('applicant_id');
 
+        if ($queryString === null && in_array($this->controller->getName(), ['Guardians', 'GuardianNavs'])) {
+            // Self-service Guardian portal identifies the student via the logged-in session, not a query string.
+            $queryString = $this->Session->read('Auth.User.id');
+        }
+
         $search = $this->getSearchKey();
 
         // Add your custom WHERE condition here
         if ($queryString !== null) {
             $query->where(['student_id' => $queryString]);
+        } else {
+            // No identifying key could be resolved - deny by default instead of returning every student's guardians.
+            $query->where(['1 = 0']);
         }
 
         if (!empty($search)) {
