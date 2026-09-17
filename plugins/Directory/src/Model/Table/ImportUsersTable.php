@@ -736,10 +736,21 @@ class ImportUsersTable extends AppTable
 //        $this->log("$identity_number, $identity_type_id", 'debug');
         $where = [
             $this->UserIdentities->aliasField('number') => $identity_number,
-            $this->UserIdentities->aliasField('identity_type_id') => $identity_type_id
         ];
-        if($nationality_id){
+        // POCOR-9808: the rule actually enforced when the identity record is persisted
+        // (IdentitiesTable::checkDuplicateIdentity(), invoked from afterSaveUsers()) matches only
+        // on number + nationality_id - it does not consider identity_type_id at all. Requiring an
+        // identity_type_id match here too let a row with the same number + nationality but a
+        // DIFFERENT identity type pass this pre-check, so a new user got created and then its
+        // identity record silently failed to persist downstream (afterSaveUsers() never checks
+        // save()'s return value) - leaving an orphaned user with no matching user_identities row
+        // and no error ever shown. Match the stricter, real constraint (number + nationality
+        // alone) whenever nationality is available; only fall back to the type-scoped match when
+        // it isn't, since the downstream rule itself never runs without a nationality either.
+        if ($nationality_id) {
             $where[$this->UserIdentities->aliasField('nationality_id')] = $nationality_id;
+        } else {
+            $where[$this->UserIdentities->aliasField('identity_type_id')] = $identity_type_id;
         }
         $query = $this->UserIdentities
             ->find()
