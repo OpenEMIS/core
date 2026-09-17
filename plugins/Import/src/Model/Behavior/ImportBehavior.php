@@ -2241,6 +2241,12 @@ class ImportBehavior extends Behavior
             $modelSpecificPass = $rowPassEvent->getResult();
             if ($modelSpecificPass === false) {
                 $rowPass = false;
+                // Every other failure branch in this method also flips entityValidate off
+                // directly - relying only on processImport()'s later `rowInvalidCodeCols->count()
+                // > 0` check to gate save() is fragile: if a model-specific check ever returns
+                // false without also recording a message in rowInvalidCodeCols, the row would
+                // silently pass through to save() and get imported despite failing validation.
+                $extra['entityValidate'] = false;
             }
         } catch (\Throwable $e) {
             Log::error('@ImportBehavior::_extractRecord onImportModelSpecificValidation threw for row=' . ($references['row'] ?? '?') . ': ' . $e->getMessage());

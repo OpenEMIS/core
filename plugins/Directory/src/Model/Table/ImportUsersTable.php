@@ -318,6 +318,39 @@ class ImportUsersTable extends AppTable
         }
     }
 
+    /**
+     * Translates a raw exception (typically a PDOException surfaced by one of the
+     * atomic=>false inner save() calls in this class - admission/student/guardian creation)
+     * into a message a user reviewing the Import Results screen can actually act on,
+     * instead of leaking raw SQL/driver text like "SQLSTATE[23000]: ... Column 'username'
+     * cannot be null". Mirrors the same translation done for the main row save in
+     * Import\Model\Behavior\ImportBehavior::processImport().
+     */
+    private function friendlyDbErrorMessage(\Throwable $e): string
+    {
+        $message = $e->getMessage();
+        Log::error('@ImportUsersTable: ' . get_class($e) . ': ' . $message);
+
+        if (stripos($message, 'SQLSTATE') === false && !($e instanceof \PDOException)) {
+            // Not a DB-level failure (e.g. a logic error) - safe to show as-is.
+            return $message;
+        }
+
+        if (preg_match("/Duplicate entry '(.*?)' for key '(.*?)'/i", $message, $dupMatches)) {
+            return __('The value "{0}" is already in use and cannot be duplicated.', [$dupMatches[1]]);
+        }
+        if (preg_match('/Duplicate entry/i', $message)) {
+            return __('This record already exists and cannot be duplicated.');
+        }
+        if (preg_match('/Data too long for column \'(.*?)\'/i', $message, $lenMatches)) {
+            return __('The value entered for "{0}" is too long.', [$lenMatches[1]]);
+        }
+        if (preg_match("/Column '(.*?)' cannot be null/i", $message, $nullMatches)) {
+            return __('"{0}" is missing a required value.', [Inflector::humanize($nullMatches[1])]);
+        }
+        return __('This row could not be saved due to an unexpected error. Please review the row\'s data and try importing again.');
+    }
+
     public function onImportGetAccountTypesName(EventInterface $event, $value)
     {
         $name = '';
@@ -470,6 +503,18 @@ class ImportUsersTable extends AppTable
             // confirms the code resolves to a real institution and records institution_id on
             // the row; it does not create any staff-institution assignment record.
             $have_error = $this->checkInstitution($tempRow, $rowInvalidCodeCols, true) || $have_error;
+            // POCOR-9796: Start Date is marked "**" (Mandatory for Institution Import) in the
+            // template with no distinction by account type, but was only ever enforced inside
+            // checkNewAdmission() - which runs for Student rows only. A Staff row with a valid
+            // Institution Code could leave Start Date blank (or invalid/out of the selected
+            // Academic Period) and still import successfully, silently ignoring a field the
+            // template tells the user is mandatory. Enforce it here too, but only once an
+            // Institution Code was actually provided and resolved (institution_id set) - Staff
+            // import doesn't create any institution-assignment record here, so this is purely
+            // the same presence/format/period check checkStartDate() already does for Students.
+            if (!empty($tempRow['institution_id'])) {
+                $have_error = $this->checkStartDate($tempRow, $rowInvalidCodeCols) || $have_error;
+            }
         }
 
         if ($isStudent) {
@@ -1215,7 +1260,12 @@ class ImportUsersTable extends AppTable
             $have_error = true;
         } elseif($newAdmission) {
             // Save the admission
-            $newAdmission = $StudentAdmission->save($newAdmission);
+            // Not atomic: this save already runs inside the outer per-row import
+            // transaction. Letting it open its own nested transaction meant a failed
+            // save() here (returns false) would trigger Cake's rollback() for that
+            // nested scope, which - without savepoints enabled - actually rolled back
+            // the whole underlying transaction and broke every subsequent row's save.
+            $newAdmission = $StudentAdmission->save($newAdmission, ['atomic' => false]);
             if (!$newAdmission) {
                 $rowInvalidCodeCols['admission'] = $this->getExcelLabel('Import', 'save_failed');
                 $tempRow['admission_error'] = true;
@@ -1576,7 +1626,7 @@ class ImportUsersTable extends AppTable
                 $this->Users->setImportValidationPassed();
                 $newEntity = $this->Users->newEntity($tempRowArray);
 
-                if ($this->Users->save($newEntity)) {
+                if ($this->Users->save($newEntity, ['atomic' => false])) {
                     $newId = $newEntity->id;  // Get the ID after save
                     $tempRow['student_id'] = $newId;
                     $tempRow['security_user_id'] = $newId;
@@ -1602,7 +1652,7 @@ class ImportUsersTable extends AppTable
                 }
 
             } catch (\Exception $exception) {
-                $rowInvalidCodeCols['openemis_no'] = 'New Student Creation Error: ' . __($exception->getMessage());
+                $rowInvalidCodeCols['openemis_no'] = 'New Student Creation Error: ' . $this->friendlyDbErrorMessage($exception);
                 $have_error = true;
             }
         }
@@ -1678,7 +1728,7 @@ class ImportUsersTable extends AppTable
                         $tempRow['guardian_error'] = true;
                         $have_error = true;
                     }
-                    if ($this->Users->save($newGuardian)) {
+                    if ($this->Users->save($newGuardian, ['atomic' => false])) {
                         $newId = $newGuardian->id;  // Get the ID after save
                         $tempRow['guardian_id'] = $newId;
                         $tempRow['guardian_entity'] = $newGuardian;
@@ -1688,7 +1738,7 @@ class ImportUsersTable extends AppTable
 
 
             } catch (\Exception $exception) {
-                $rowInvalidCodeCols['guardian_openemis_no'] = 'New Guardian Creation Error: ' . __($exception->getMessage());
+                $rowInvalidCodeCols['guardian_openemis_no'] = 'New Guardian Creation Error: ' . $this->friendlyDbErrorMessage($exception);
                 $have_error = true;
             }
         }
@@ -2112,10 +2162,10 @@ class ImportUsersTable extends AppTable
         // If the entity does not exist, create a new one
 
         try {
-            $newRelationship = $StudentGuardians->save($newRelationship);
+            $newRelationship = $StudentGuardians->save($newRelationship, ['atomic' => false]);
         } catch (\Exception $e) {
             // Handle save error
-            $rowInvalidCodeCols['guardian_openemis_no'] = $e->getMessage();
+            $rowInvalidCodeCols['guardian_openemis_no'] = $this->friendlyDbErrorMessage($e);
             $have_error = true;
         }
         try {
@@ -2123,10 +2173,10 @@ class ImportUsersTable extends AppTable
 
             $guardian_entity = $this->patchEntity($guardian_entity, ['is_guardian' => 1], ['validate' =>false]);
 
-            $this->Users->save($guardian_entity);
+            $this->Users->save($guardian_entity, ['atomic' => false]);
         } catch (\Exception $e) {
             // Handle save error
-            $rowInvalidCodeCols['guardian_openemis_no'] = $e->getMessage();
+            $rowInvalidCodeCols['guardian_openemis_no'] = $this->friendlyDbErrorMessage($e);
             $have_error = true;
         }
         return $have_error;
