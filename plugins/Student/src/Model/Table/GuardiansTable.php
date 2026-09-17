@@ -553,27 +553,37 @@ class GuardiansTable extends ControllerActionTable
         if (isset($buttons['edit'])) {
             $params = ['id' => $entity->_matchingData['Users']->id];
             $encodedParams = $this->paramsEncode($params);
-            $editUrl = $buttons['view']['url'];
-            $editUrl['plugin'] = 'Directory';
-            $editUrl['controller'] = 'Directories';
-            $editUrl['action'] = 'Directories';
-            $editUrl['1'] = $encodedParams;
-            $editUrl['0'] = 'view';
-            if (isset($editUrl['?'])) {
-                unset($editUrl['?']);
-            }
-            if (isset($editUrl['2'])) {
-                unset($editUrl['2']);
-            }
-            if (isset($editUrl['3'])) {
-                unset($editUrl['3']);
-            }
-            if (isset($editUrl['queryString'])) {
-                unset($editUrl['queryString']);
-            }
+
             $newButtons['viewProfile'] = $buttons['edit'];
             $newButtons['viewProfile']['label'] = '<i class="fa fa-pencil"></i>' . __('View Profile');
-            $newButtons['viewProfile']['url'] = $editUrl;
+
+            if ($this->controller->getName() == 'Students') {
+                // Keep the guardian profile inside Institution instead of redirecting to Directory,
+                // since principals/teachers viewing this tab do not have Directory access.
+                // Reuses the same in-page "view" action as View Relation so the breadcrumb,
+                // header and tabs stay consistent with the rest of the Guardians tab.
+                $newButtons['viewProfile']['url'] = $newButtons['view']['url'];
+            } else {
+                $editUrl = $buttons['view']['url'];
+                $editUrl['plugin'] = 'Directory';
+                $editUrl['controller'] = 'Directories';
+                $editUrl['action'] = 'Directories';
+                $editUrl['1'] = $encodedParams;
+                $editUrl['0'] = 'view';
+                if (isset($editUrl['?'])) {
+                    unset($editUrl['?']);
+                }
+                if (isset($editUrl['2'])) {
+                    unset($editUrl['2']);
+                }
+                if (isset($editUrl['3'])) {
+                    unset($editUrl['3']);
+                }
+                if (isset($editUrl['queryString'])) {
+                    unset($editUrl['queryString']);
+                }
+                $newButtons['viewProfile']['url'] = $editUrl;
+            }
 //            die(print_r( $newButtons['view'], true));
         }
 
