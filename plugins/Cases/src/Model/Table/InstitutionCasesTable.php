@@ -366,7 +366,6 @@ class InstitutionCasesTable extends ControllerActionTable
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $requestQuery = $this->request->getQuery('query');
-       // echo "<pre>"; print_r($this->request); die;
         $selectedFeature = $requestQuery['feature'];
         $featureModel = !empty($this->features[$selectedFeature]) ? TableRegistry::getTableLocator()->get($this->features[$selectedFeature]) : '';
         //$featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
