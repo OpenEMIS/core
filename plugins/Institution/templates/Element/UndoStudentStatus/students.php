@@ -59,7 +59,7 @@
 									<td class="checkbox-column tooltip-blue">
 										<?php
 											if (!is_null(($obj->info_message))) {
-												echo '<i class="fa fa-info-circle fa-lg icon-blue" data-placement="top" data-toggle="tooltip" title="" data-original-title="' .$obj->info_message. '"></i>';
+												echo '<i class="fa fa-info-circle fa-lg icon-blue" data-placement="bottom" data-toggle="tooltip" title="" data-original-title="' .$obj->info_message. '"></i>';
 											} else {
 												$alias = $ControllerAction['table']->getAlias();
 												$fieldPrefix = "$alias.students.$i";
