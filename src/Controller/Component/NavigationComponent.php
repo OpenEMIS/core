@@ -1375,6 +1375,7 @@ class NavigationComponent extends Component
                     'Students.Nationalities',
                     'Students.Contacts',
                     'Students.Guardians',
+                    'Students.GuardianProfile',
                     'Students.Languages',
                     'Students.Attachments',
                     'Students.Comments',
