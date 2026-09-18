@@ -47,6 +47,7 @@ class PerformanceTable extends AppTable
             'pages' => false,
             'autoFields' => false
         ]);
+        
         $this->addBehavior('Report.ReportList');
     }
 
