@@ -651,81 +651,88 @@ class IndividualPromotionTable extends ControllerActionTable
                     $this->Session->write($this->getRegistryAlias().'.confirm', $entity);
                     //POCOR-7330 start
 
-
                     $educationGradeId = $entity->education_grade_id;
-                    $educationGradeName = $this->EducationGrades->get($educationGradeId)->code;
-                    $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-                    $studentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
-                    $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
-                    $EducationGradesData = $EducationGrades->find()
-                    ->where([
-                        $EducationGrades->aliasField('code') => $educationGradeName
-                    ])
-                    ->extract('id')
-                    ->toArray();
-                    $studentId = $entity->student_id;
-                    $studentStatusesValidateRepeater = 'no';
-                    $studentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
-                    $statusStudentId = $studentStatuses->find()->where([$studentStatuses->aliasField('id') => $entity->student_status_id])
-                            ->first();
-                    $students =  $institutionStudents->find()->where(
-                        [
-                            $institutionStudents->aliasField('student_id') => $studentId
+
+                    // POCOR-9816: promoting from the last grade of a programme leaves
+                    // education_grade_id empty ("no next grade"), which is a valid promotion --
+                    // there's no grade to run the "already completed this grade" check against,
+                    // so skip straight to reconfirm instead of calling EducationGrades->get(null)
+                    // (which throws RecordNotFoundException).
+                    if (!empty($educationGradeId)) {
+                        $educationGradeName = $this->EducationGrades->get($educationGradeId)->code;
+                        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+                        $studentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+                        $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+                        $EducationGradesData = $EducationGrades->find()
+                        ->where([
+                            $EducationGrades->aliasField('code') => $educationGradeName
                         ])
-                        ->all();
-                    foreach($students AS $studentsData){
-                        $educationGradeName1 = $this->EducationGrades->get($studentsData->education_grade_id)->code;
-                        if($educationGradeName == $educationGradeName1){
-                            if($studentsData->student_status_id == 6 || $studentsData->student_status_id == 7){
-                                $studentStatusesValidateRepeater = $studentsData->education_grade_id;
+                        ->extract('id')
+                        ->toArray();
+                        $studentId = $entity->student_id;
+                        $studentStatusesValidateRepeater = 'no';
+                        $studentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+                        $statusStudentId = $studentStatuses->find()->where([$studentStatuses->aliasField('id') => $entity->student_status_id])
+                                ->first();
+                        $students =  $institutionStudents->find()->where(
+                            [
+                                $institutionStudents->aliasField('student_id') => $studentId
+                            ])
+                            ->all();
+                        foreach($students AS $studentsData){
+                            $educationGradeName1 = $this->EducationGrades->get($studentsData->education_grade_id)->code;
+                            if($educationGradeName == $educationGradeName1){
+                                if($studentsData->student_status_id == 6 || $studentsData->student_status_id == 7){
+                                    $studentStatusesValidateRepeater = $studentsData->education_grade_id;
+                                }
                             }
                         }
-                    }
-                    $students =  $institutionStudents->find()->where(
-                        [
-                            $institutionStudents->aliasField('education_grade_id')
-                            => $studentStatusesValidateRepeater,
-                            $institutionStudents->aliasField('student_id') => $studentId
-                        ])
-                        ->first();
-                    if(empty($students)){
-                        $validation = 'no';
-                    }else{
-                        $validation = 'yes';
-                    }
-                    // if($statusStudentId->name == 'Repeated'){
-                    //     foreach($EducationGradesData AS $EducationGradesDataVal){
-                    //         $educationGradeName1 = $this->EducationGrades->get($EducationGradesDataVal)->code;
-                    //         // echo "<pre>";print_r($EducationGradesDataVal);die;
+                        $students =  $institutionStudents->find()->where(
+                            [
+                                $institutionStudents->aliasField('education_grade_id')
+                                => $studentStatusesValidateRepeater,
+                                $institutionStudents->aliasField('student_id') => $studentId
+                            ])
+                            ->first();
+                        if(empty($students)){
+                            $validation = 'no';
+                        }else{
+                            $validation = 'yes';
+                        }
+                        // if($statusStudentId->name == 'Repeated'){
+                        //     foreach($EducationGradesData AS $EducationGradesDataVal){
+                        //         $educationGradeName1 = $this->EducationGrades->get($EducationGradesDataVal)->code;
+                        //         // echo "<pre>";print_r($EducationGradesDataVal);die;
 
 
-                    //         // if($educationGradeName == $educationGradeName1){
-                    //             $students =  $institutionStudents->find()->where(
-                    //             [
-                    //                 $institutionStudents->aliasField('student_id') => $studentId,
-                    //                 $institutionStudents->aliasField('education_grade_id') => $EducationGradesDataVal
-                    //             ])
-                    //             ->first();
-                    //             if($students->student_status_id == 6 || $students->student_status_id == 7)
-                    //             {
-                    //                 $studentStatusesValidateRepeater = 'yes';
-                    //             }
-                    //         // }
-                    //     }
-                    // }
-                    if($validation == 'yes'){
-                        $message = __('This student has completed the education grade before. Please assign to a different grade.');
-                        $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-                        $event->stopPropagation();
-                        return false;
-                    }
+                        //         // if($educationGradeName == $educationGradeName1){
+                        //             $students =  $institutionStudents->find()->where(
+                        //             [
+                        //                 $institutionStudents->aliasField('student_id') => $studentId,
+                        //                 $institutionStudents->aliasField('education_grade_id') => $EducationGradesDataVal
+                        //             ])
+                        //             ->first();
+                        //             if($students->student_status_id == 6 || $students->student_status_id == 7)
+                        //             {
+                        //                 $studentStatusesValidateRepeater = 'yes';
+                        //             }
+                        //         // }
+                        //     }
+                        // }
+                        if($validation == 'yes'){
+                            $message = __('This student has completed the education grade before. Please assign to a different grade.');
+                            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                            $event->stopPropagation();
+                            return false;
+                        }
 
-                    $studentStatusesValidate = $this->studentIfExist($entity, $requestData);
-                    if($studentStatusesValidate == 'yes'){
-                        $message = __('This student has completed the education grade before. Please assign to a different grade');
-                        $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-                        $event->stopPropagation();
-                        return false;
+                        $studentStatusesValidate = $this->studentIfExist($entity, $requestData);
+                        if($studentStatusesValidate == 'yes'){
+                            $message = __('This student has completed the education grade before. Please assign to a different grade');
+                            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                            $event->stopPropagation();
+                            return false;
+                        }
                     }
                     //POCOR-7330 end
                     $event->stopPropagation();
