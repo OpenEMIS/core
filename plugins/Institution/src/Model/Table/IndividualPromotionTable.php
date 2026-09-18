@@ -823,16 +823,40 @@ class IndividualPromotionTable extends ControllerActionTable
             $studentStatusId = $statusToUpdate;
         }
 
+        // POCOR-9816: education_grade_id is NOT NULL on institution_students and
+        // student_status_updates -- promoting from the last grade of a programme ("no next
+        // grade") has no grade to put in a new record, so no new institution_students /
+        // institution_class_students row is created at all; only the existing record's status
+        // is flipped to PROMOTED below. This matches how the rest of the system represents that
+        // state (see UndoPromotedBehavior).
+        $hasNextGrade = !empty($entity->education_grade_id);
+
         // InstitutionStudents: Insert new record
-        $studentObj = [];
-        $studentObj['student_status_id'] = 1;
-        $studentObj['student_id'] = $entity->student_id;
-        $studentObj['education_grade_id'] = $entity->education_grade_id;
-        $studentObj['academic_period_id'] = $entity->academic_period_id;
-        $studentObj['end_date'] = $toPeriodData->end_date;
-        $studentObj['end_year']= $toPeriodData->end_year;
-        $studentObj['institution_id'] = $entity->institution_id;
-        $studentObj['previous_institution_student_id'] = $id;
+        $newInstitutionStudent = null;
+        if ($hasNextGrade) {
+            $studentObj = [];
+            $studentObj['student_status_id'] = 1;
+            $studentObj['student_id'] = $entity->student_id;
+            $studentObj['education_grade_id'] = $entity->education_grade_id;
+            $studentObj['academic_period_id'] = $entity->academic_period_id;
+            $studentObj['end_date'] = $toPeriodData->end_date;
+            $studentObj['end_year']= $toPeriodData->end_year;
+            $studentObj['institution_id'] = $entity->institution_id;
+            $studentObj['previous_institution_student_id'] = $id;
+
+            if ($toAcademicPeriodId == $fromAcademicPeriodId)
+            {
+                // if student is promoted/demoted in the middle of the academic period
+                $studentObj['start_date'] = $effectiveDate;
+                $studentObj['start_year'] = $effectiveDate->year;
+            } else {
+                $studentObj['start_date'] = $toPeriodData->start_date;
+                $studentObj['start_year'] = $toPeriodData->start_year;
+            }
+
+            $newInstitutionStudent = $this->newEntity($studentObj);
+        }
+        // End
 
         // StudentStatusUpdates: Insert new record
         $studentStatusUpdatesObj = $studentStatusUpdates->newEntity([]);
@@ -843,21 +867,12 @@ class IndividualPromotionTable extends ControllerActionTable
         $studentStatusUpdatesObj->security_user_id = $entity->student_id;
         $studentStatusUpdatesObj->institution_id = $entity->institution_id;
         $studentStatusUpdatesObj->academic_period_id = $entity->academic_period_id;
-        $studentStatusUpdatesObj->education_grade_id = $entity->education_grade_id;
+        // POCOR-9816: also NOT NULL -- fall back to the grade being promoted FROM when there's
+        // no next grade, so this still records "status changed while at grade X".
+        $studentStatusUpdatesObj->education_grade_id = $hasNextGrade
+            ? $entity->education_grade_id
+            : $originalStudent->education_grade_id;
         $studentStatusUpdatesObj->status_id = $statusToUpdate;
-
-        if ($toAcademicPeriodId == $fromAcademicPeriodId)
-        {
-            // if student is promoted/demoted in the middle of the academic period
-            $studentObj['start_date'] = $effectiveDate;
-            $studentObj['start_year'] = $effectiveDate->year;
-        } else {
-            $studentObj['start_date'] = $toPeriodData->start_date;
-            $studentObj['start_year'] = $toPeriodData->start_year;
-        }
-
-        $newInstitutionStudent = $this->newEntity($studentObj);
-        // End
 
         // InstitutionStudents: Update old record
         $existingInstitutionStudent = $this->find()
@@ -883,7 +898,7 @@ class IndividualPromotionTable extends ControllerActionTable
         // InstitutionClassStudents: Insert and update records
         //$classId = $entity->institution_class_id;
 
-        if (!empty($entity->institution_class_id))
+        if ($hasNextGrade && !empty($entity->institution_class_id))
         {
             $newClassStudent = [];
             $newClassStudent['student_id'] = $entity->student_id;
@@ -914,13 +929,15 @@ class IndividualPromotionTable extends ControllerActionTable
 //        $this->log($newInstitutionStudent, 'debug');
 
         if ($this->save($existingInstitutionStudent)) {
-            if ($this->save($newInstitutionStudent)) {
+            // POCOR-9816: nothing to save when there's no next grade -- $newInstitutionStudent
+            // is null in that case, so treat it as already "saved".
+            if (!$hasNextGrade || $this->save($newInstitutionStudent)) {
                 // update old class if exists
                 if (!empty($existingClassStudent)) {
                     $InstitutionClassStudents->save($existingClassStudent);
                 }
                 // insert new class if class is selected
-                if (!empty($entity->institution_class_id)) {
+                if ($hasNextGrade && !empty($entity->institution_class_id)) {
                     $InstitutionClassStudents->autoInsertClassStudent($newClassStudent);
 
                     //POCOR-7170
