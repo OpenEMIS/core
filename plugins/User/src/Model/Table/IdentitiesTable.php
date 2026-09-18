@@ -206,7 +206,19 @@ class IdentitiesTable extends ControllerActionTable
         $options['identity_number'] = $identity_number;
 
         $message = $this->checkCustomIdentityNumber($options);
-        if ($message == "") {
+        // POCOR-9808: this listener fires on EVERY save of an imported User entity - the Import
+        // Users flow saves the same entity more than once per row (once when it's created, again
+        // as the row's own final save), so without this check it created a duplicate Identity
+        // record for the same user/type/number on each subsequent save in the same request.
+        $alreadyExists = $this->find()
+            ->where([
+                'security_user_id' => $entity->id,
+                'identity_type_id' => $identity_type_id,
+                'number' => $identity_number,
+                'nationality_id' => $nationality_id,
+            ])
+            ->count() > 0;
+        if ($message == "" && !$alreadyExists) {
 
             $userIdentityEntity = $this->newEntity([
 
@@ -217,7 +229,26 @@ class IdentitiesTable extends ControllerActionTable
                 'created_user_id' => 1,
                 'created' => new Time()
             ]);
-            $this->save($userIdentityEntity);
+            // Not atomic: this fires from the Users entity's own afterSave event, which can
+            // itself be running inside another save's already-open transaction (e.g. the Import
+            // Users flow saves the same imported User entity more than once per row - once while
+            // creating it, once again as the row's final save). Letting this open its own nested
+            // transaction meant a failure here (or a later duplicate-identity re-save attempt for
+            // the same user in the same request) would trigger a rollback of that nested scope -
+            // which, without savepoints enabled, actually rolled back the whole underlying
+            // transaction, corrupting the connection for whatever save ran next in the request.
+            // POCOR-9808: this return value was never checked - a rejection here (e.g.
+            // checkDuplicateIdentity() finding a different existing identity that shares the same
+            // number + nationality, regardless of type) was silently discarded, leaving the
+            // just-created User with no matching user_identities row and no error surfaced
+            // anywhere. Log it so a future failure here is at least visible, even though the
+            // proper fix is preventing the row from reaching this point in the first place (see
+            // ImportUsersTable::alreadyPresentIdentityTypeName()).
+            $savedIdentity = $this->save($userIdentityEntity, ['atomic' => false]);
+            if (!$savedIdentity) {
+                Log::error('@IdentitiesTable::afterSaveUsers failed to save identity for security_user_id='
+                    . $entity->id . ': ' . json_encode($userIdentityEntity->getErrors()));
+            }
         }
     }
 

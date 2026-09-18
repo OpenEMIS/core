@@ -439,7 +439,7 @@ class ImportBehavior extends Behavior
      * @param EventInterface $event Event object
      * @param Entity $entity Entity object containing the uploaded file parameters
      * @param ArrayObject $data Event object
-     * @return Response             Response object
+     *            Response object
      */
     public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
@@ -584,6 +584,14 @@ class ImportBehavior extends Behavior
                 $extra['entityValidate'] = true;
                 $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
 
+                // POCOR-9796: some validation branches (e.g. account_type not matching any known
+                // code) record an error in rowInvalidCodeCols without also flipping entityValidate,
+                // which let patchEntity()/save() still run on incomplete/invalid data below and
+                // occasionally throw an uncaught error instead of surfacing the row as failed.
+                if ($rowInvalidCodeCols->count() > 0) {
+                    $extra['entityValidate'] = false;
+                }
+
                 if ($rowPass !== NULL && !$rowPass) {
                     $activeModel->setImportValidationFailed();
                 } else {
@@ -606,7 +614,19 @@ class ImportBehavior extends Behavior
                     unset($tempRow['entity']);
                 }
                 $feature = $this->_table->request->getData()['ImportStaff']['feature'] ?? null;
-                if ($extra['entityValidate'] == true) {
+                // POCOR-9796: patchEntity() (unlike save() below) never writes to the database -
+                // it only builds an in-memory entity and runs its validator, which is exactly what
+                // produces accurate per-field error messages. Skipping it whenever this row already
+                // had some other unrelated error (the old `entityValidate == true` gate around this
+                // whole block) left $tableEntity as a completely empty, never-patched entity - so its
+                // "required" errors were always artifacts of that emptiness, not of the real data,
+                // and worse, any *other* genuinely-blank required field on the same row (one with no
+                // dedicated per-column check of its own) never got reported at all. Always patch here
+                // - inside a try/catch, since this is exactly the "patchEntity on unexpected data
+                // shapes can throw" case the entityValidate flag was originally introduced to guard
+                // against - and keep the actual save() below gated behind entityValidate, so a row
+                // already known to have a problem is still never written to the database.
+                try {
                     //POCOR-9394[START]
                     //POCOR-9417[START]
                     $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -640,7 +660,25 @@ class ImportBehavior extends Behavior
                             ->select([$AcademicPeriods->aliasField('end_date')])
                             ->where([$AcademicPeriods->aliasField('id') => $academic_period_id])
                             ->first();
-                        $tempRow['end_date'] = $AcademicPeriodsData->end_date->format('d/m/Y');
+                        // POCOR-9796: $academic_period_id can be a raw, unresolved Academic Period
+                        // code (e.g. a blank/invalid cell value that the earlier per-column lookup
+                        // couldn't match to a real record) rather than an actual id, in which case
+                        // this find() returns null. Calling ->end_date on that used to throw
+                        // "Attempt to read property on null" - caught below, but only after
+                        // discarding the entire patchEntity() call, which left $tableEntity as a
+                        // completely empty, never-patched entity for the rest of this row. An empty
+                        // entity's validator only flags fields with an *unconditional*
+                        // requirePresence rule (e.g. Username, or any belongsTo foreign key like
+                        // Gender, auto-required by DefaultValidationBehavior) since their key is
+                        // genuinely absent from `[]` - every other field's rules (a blank Last Name,
+                        // Date of Birth, etc.) are silently skipped entirely, since CakePHP doesn't
+                        // evaluate a field's rules at all when its key is completely missing and
+                        // presence isn't required. That produced exactly backwards results: fields
+                        // that actually had a valid value (e.g. Gender) got a false "This field is
+                        // required", while fields that were genuinely blank (e.g. Date of Birth)
+                        // reported nothing. Guard against the null here instead, so patchEntity()
+                        // always runs against this row's real, complete data.
+                        $tempRow['end_date'] = $AcademicPeriodsData ? $AcademicPeriodsData->end_date->format('d/m/Y') : null;
                     } //POCOR-9417[END]
                     //POCOR-9394[END]
 
@@ -650,6 +688,11 @@ class ImportBehavior extends Behavior
                     // Log::debug('@ImportBehavior::processImport patchEntity with tempRow=' . json_encode($tempRow)); //[TEMP-LOG]
                     //$activeModel->patchEntity($tableEntity, $tempRow);
                     $tableEntity = $activeModel->patchEntity($tableEntity, $tempRow);
+                } catch (\Throwable $e) {
+                    // POCOR-9796: patchEntity() choked on this row's data shape - fall back to the
+                    // pre-existing behaviour (leave $tableEntity as the empty entity) rather than
+                    // letting the exception bubble up and abort the whole import.
+                    Log::error('@ImportBehavior::processImport patchEntity threw for row=' . $row . ': ' . $e->getMessage());
                 }
 
                 $errors = $tableEntity->getErrors();
@@ -700,7 +743,9 @@ class ImportBehavior extends Behavior
                             // Log::debug('@ImportBehavior::processImport merged_errors=' . json_encode($errors)); //[TEMP-LOG]
                             //$model->log('@ImportBehavior merged errors=' . json_encode($errors), 'debug');
                         }
-                    } catch (Exception $e) {
+                    } catch (\Throwable $e) {
+                        // POCOR-9796: catch any error (not just Exception) during save so a bad
+                        // row is reported in the Import Results screen instead of crashing the request.
                         $newEntity = false;
                         $message = $e->getMessage();
                         $matches = '';
@@ -727,8 +772,30 @@ class ImportBehavior extends Behavior
                 if (!empty($rowInvalidCodeCols) || $errors) { // row contains error or record is a duplicate based on unique key(s)
                     $rowCodeError = '';
                     $rowCodeErrorForExcel = [];
+                    // POCOR-9796: build the report from our own per-column checks ($rowInvalidCodeCols)
+                    // FIRST - those carry the actual, specific reason a value was rejected (e.g. "value
+                    // not in list", "Institution With This Code Not Found"). The generic Cake entity
+                    // validator below only ever produces its framework-default "This field is required"
+                    // for the same field whenever that field ended up empty on $tempRow, which used to
+                    // take priority and silently swallow the real explanation - always showing the
+                    // unhelpful generic message instead of the one that actually says what's wrong.
+                    if (!empty($rowInvalidCodeCols)) {
+                        foreach ($rowInvalidCodeCols as $field => $errMessage) {
+                            $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
+                            $rowCodeError .= '<li>' . $fieldName . ' => ' . $errMessage . '</li>';
+                            $rowCodeErrorForExcel[] = $fieldName . ' => ' . $errMessage;
+                        }
+                    }
+                    // POCOR-9796: patchEntity() now always runs (see the try/catch above), so $errors
+                    // always reflects this row's real, patched data - genuinely missing/invalid required
+                    // fields that have no dedicated per-column check of their own (e.g. a blank Last
+                    // Name) are only ever caught here, so this must not be conditioned on entityValidate
+                    // (that flag now only controls whether save() below is attempted).
                     if (!empty($errors)) {
                         foreach ($errors as $field => $arr) {
+                            if (isset($rowInvalidCodeCols[$field])) {
+                                continue; // already reported above with a more specific message
+                            }
                             $arr = array_reverse($arr, true);
                             if (in_array($field, $columns)) {
                                 $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
@@ -744,15 +811,6 @@ class ImportBehavior extends Behavior
                                     $rowCodeErrorForExcel[] = $arr[key($arr)];
                                 }
                                 $model->log('@ImportBehavior line ' . __LINE__ . ': ' . $activeModel->getRegistryAlias() . ' -> ' . $field . ' => ' . $arr[key($arr)], 'info');
-                            }
-                        }
-                    }
-                    if (!empty($rowInvalidCodeCols)) {
-                        foreach ($rowInvalidCodeCols as $field => $errMessage) {
-                            $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
-                            if (!isset($errors[$field])) {
-                                $rowCodeError .= '<li>' . $fieldName . ' => ' . $errMessage . '</li>';
-                                $rowCodeErrorForExcel[] = $fieldName . ' => ' . $errMessage;
                             }
                         }
                     }
@@ -1254,7 +1312,9 @@ class ImportBehavior extends Behavior
                     $objPHPExcel->setActiveSheetIndex(0);
                     $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
                     $objValidation->setType(DataValidation::TYPE_LIST);
-                    $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+                    // POCOR-9796: STYLE_STOP rejects values not in the reference list (STYLE_INFORMATION
+                    // only warned, letting free text like "abc" through for Account Type Code etc.)
+                    $objValidation->setErrorStyle(DataValidation::STYLE_STOP);
                     $objValidation->setAllowBlank(false);
                     $objValidation->setShowInputMessage(true);
                     $objValidation->setShowErrorMessage(true);
@@ -1998,12 +2058,13 @@ class ImportBehavior extends Behavior
                         $dateObject->setDate((int)$split[2], (int)$split[1], (int)$split[0]);
 
                         // compare the date input and new formatted date to cater (31/02/2016 changed to 02/03/2016)
-                        if ($val != $dateObject->format('d/m/Y')) {
+                        $roundTripped = $dateObject->format('d/m/Y');
+                        if ($val != $roundTripped) {
                             $rowInvalidCodeCols[$columnName] = __('You have entered an invalid date');
                             $rowPass = false;
                             $extra['entityValidate'] = false;
                         } else {
-                            $originalRow[$col] = $dateObject->format('d/m/Y');
+                            $originalRow[$col] = $roundTripped;
                         }
                     } else {
                         // string input without the correct format (not dd/mm/yyyy)
@@ -2169,9 +2230,31 @@ class ImportBehavior extends Behavior
             $tempRow['superAdmin'] = $superAdmin;
         }
 
-        if ($rowPass) {
+        // POCOR-9796: this used to only dispatch onImportModelSpecificValidation when $rowPass
+        // was still true - so a single earlier per-column problem (e.g. an invalid Guardian
+        // Gender code) skipped every model-specific check for the rest of the row, including an
+        // invalid/blank Institution Code, required-field checks, etc. That hid real problems
+        // instead of reporting them: the row was always going to fail either way (rowPass was
+        // already false), so there was nothing to protect by skipping this. Dispatch
+        // unconditionally now, and only let the result make $rowPass MORE false, never less -
+        // a row already known to be bad can't be "passed" by this. Wrapped in try/catch: some of
+        // the 30+ other import models implementing this event may not be written to tolerate
+        // already-partial row data, so catch and log rather than letting one abort the entire
+        // import; falls back to the pre-existing $rowPass either way.
+        try {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
-            $rowPass = $rowPassEvent->getResult();
+            $modelSpecificPass = $rowPassEvent->getResult();
+            if ($modelSpecificPass === false) {
+                $rowPass = false;
+                // Every other failure branch in this method also flips entityValidate off
+                // directly - relying only on processImport()'s later `rowInvalidCodeCols->count()
+                // > 0` check to gate save() is fragile: if a model-specific check ever returns
+                // false without also recording a message in rowInvalidCodeCols, the row would
+                // silently pass through to save() and get imported despite failing validation.
+                $extra['entityValidate'] = false;
+            }
+        } catch (\Throwable $e) {
+            Log::error('@ImportBehavior::_extractRecord onImportModelSpecificValidation threw for row=' . ($references['row'] ?? '?') . ': ' . $e->getMessage());
         }
 
         return $rowPass;

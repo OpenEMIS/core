@@ -995,8 +995,18 @@ class DirectoriesController extends AppController
                     $alias = substr($alias, 7);
                 }
                 $this->Navigation->addCrumb($model->getHeader($alias));
-                $directoryUrl =  $this->request->getAttribute('params')['pass'][0];
-                if($directoryUrl == 'index'){
+                $directoryUrl =  $this->request->getAttribute('params')['pass'][0] ?? null;
+                // POCOR-9796: the base "/Directory/Directories/" listing route has no pass
+                // segment at all (see plugins/Directory/config/routes.php), so pass[0] is
+                // undefined rather than the literal string 'index' there - treat it as index
+                // too, but only for the base listing itself. Other sub-action tabs (Student
+                // Profiles, Student Guardians, etc.) are also reached with no pass segment and
+                // must keep their "<name> - <tab>" header, so this can't be a blanket default.
+                $isBaseListing = ($directoryUrl === null && $alias === 'Directories');
+                // Import actions (e.g. ImportUsers) are bulk actions not tied to any single
+                // directory record, so they should never be prefixed with a leftover record
+                // name from a previously viewed profile still lingering in the session.
+                if($directoryUrl == 'index' || $isBaseListing || strpos($alias, 'Import') === 0){
                     $header = $model->getHeader($alias);
                 }else{
                     $header = $header . ' - ' . $model->getHeader($alias);
