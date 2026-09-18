@@ -133,7 +133,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->autoLinkRecordWithCases($linkedRecordEntity);
     }
 
-    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    public function indexBeforeActionbkp(EventInterface $event, ArrayObject $extra)
     {
         $this->field('linked_records', [
             'type' => 'custom_linked_records',
@@ -187,7 +187,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->controller->set(compact('institutionId'));
 
         $params = new ArrayObject([
-            'element' => ['filter' => ['name' => 'Cases.controls', 'order' => 2]],
+            'element' => ['filter' => ['name' => 'Cases.StudentAbsences/controls', 'order' => 2]],
             'options' => [],
             'query' => $this->request->getQuery()
         ]);
@@ -225,7 +225,144 @@ class InstitutionCasesTable extends ControllerActionTable
             // End POCOR-5188
         }
     }
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('linked_records', [
+            'type' => 'custom_linked_records',
+            'valueClass' => 'table-full-width',
+            'after' => 'description',
+            'visible' => 'false' // POCOR-7613
+        ]);
 
+        $this->field('created', [
+            'visible' => true,
+            'after' => 'linked_records'
+        ]);
+
+        if (is_null($this->request->getQuery('sort'))) {
+            $this->request = $this->request->withQueryParams([
+                'sort' => 'created',
+                'direction' => 'desc',
+            ]);
+        }
+
+        $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
+        $featureOptions = $WorkflowRules->getFeatureOptions();
+
+        $newFeatureOption = [];
+
+        // Order to follow what is defined at OptionsTrait
+        foreach ($this->getSelectOptions("WorkflowRules.features") as $key => $value) {
+            if (array_key_exists($key, $featureOptions)) {
+                $newFeatureOption[$key] = $featureOptions[$key];
+            }
+        }
+
+        $featureOptions = $newFeatureOption;
+
+        $featureOptions = ['-1' => '-- ' . __('All') . ' --'] + $featureOptions;
+
+        if (!is_null($this->request->getQuery('feature'))
+            && array_key_exists($this->request->getQuery('feature'), $featureOptions)) {
+            $selectedFeature = $this->request->getQuery('feature');
+        } else {
+            $selectedFeature = key($featureOptions);
+
+            $this->request = $this->request->withQueryParams([
+                'feature' => $selectedFeature
+            ]);
+        }
+
+        $this->controller->set(compact('featureOptions', 'selectedFeature'));
+
+        $selectedModel = $this->features[$selectedFeature];
+
+        $session = $this->request->getSession();
+        $institutionId = $session->read('Institution.Institutions.id');
+
+        if (empty($institutionId)) {
+            $institutionId = $this->getInstitutionID();
+        }
+
+        $this->controller->set(compact('institutionId'));
+
+        /*
+         * Filter toolbar parameters
+         */
+        $params = new ArrayObject([
+            'element' => [
+                'filter' => [
+                    'name' => 'Cases.StudentAbsences/controls',
+                    'order' => 2
+                ]
+            ],
+            'options' => [],
+            'query' => $this->request->getQuery()
+        ]);
+
+        if (!empty($selectedModel)) {
+            $featureModel = TableRegistry::getTableLocator()->get($selectedModel);
+
+            $featureModel->dispatchEvent(
+                'InstitutionCase.onSetFilterToolbarElement',
+                [$params, $institutionId],
+                $featureModel
+            );
+        }
+
+        /*
+         * Keep the filter query parameters
+         */
+        $this->request = $this->request->withQueryParams([
+            'query' => $params['query']
+        ]);
+
+        if (!empty($params['options'])) {
+            $this->controller->set($params['options']);
+        }
+
+        /*
+         * Create encoded query string
+         */
+        $queryString = $this->getQueryString();
+
+        $queryString['institution_id'] = $institutionId;
+        $queryString['feature'] = $selectedFeature;
+
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        /*
+         * Pass encoded query string to controller/view
+         */
+        $this->controller->set(compact('encodedQueryString'));
+
+        /*
+         * Keep original element configuration
+         */
+        $extra['elements'] = $params['element'] + $extra['elements'];
+
+        // Start POCOR-5188
+        $is_manual_exist = $this->getManualUrl('Institutions', 'Cases', 'Cases');
+
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
+
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
+    }
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $requestQuery = $this->request->getQuery('query');

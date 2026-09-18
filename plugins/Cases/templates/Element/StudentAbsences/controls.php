@@ -5,8 +5,13 @@
 				$baseUrl = $this->Url->build([
 					'plugin' => $this->request->getParam('plugin'),
 				    'controller' => $this->request->getParam('controller'),
-				    'action' => $this->request->getParam('action')
+				    'action' => $this->request->getParam('action'),
+				    0 => 'index',
+				    1 => $encodedQueryString
 				]);
+				if (!empty($encodedQueryString)) {
+				    $baseUrl .= '/' . $encodedQueryString;
+				}
 				$template = $this->ControllerAction->getFormTemplate();
 				$this->Form->templates($template);
 
