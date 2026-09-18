@@ -340,7 +340,12 @@ class IndividualPromotionTable extends ControllerActionTable
             case 'reconfirm':
                 $educationGradeId = $attr['entity']->education_grade_id;
                 $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $this->EducationGrades->get($educationGradeId)->programme_grade_name;
+                // POCOR-9816: promoting from the last grade of a programme leaves
+                // education_grade_id empty ("no next grade") -- guard against get(null)
+                // throwing RecordNotFoundException when rendering the reconfirm screen.
+                $attr['attr']['value'] = !empty($educationGradeId)
+                    ? $this->EducationGrades->get($educationGradeId)->programme_grade_name
+                    : __('No Grade');
                 break;
 
             default:
