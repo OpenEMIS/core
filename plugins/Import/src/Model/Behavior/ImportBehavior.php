@@ -1724,9 +1724,14 @@ class ImportBehavior extends Behavior
         $excelPath = $folder . DS . $excelFile;
         $filename = basename($excelPath);
 
+        // POCOR-9805: the previous headers ("Pragma: public", "Expires: 0", no explicit
+        // no-store/no-cache) don't reliably stop a browser or intermediary proxy from serving a
+        // cached copy of a prior download of this same filename - every template download reuses
+        // the exact same Content-Disposition filename, so a stale cached response looks
+        // indistinguishable from a fresh one until opened. Force an explicit no-cache response.
         header("Pragma: public", true);
         header("Expires: 0"); // set expiration time
-        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0");
         header("Content-Type: application/force-download");
         header("Content-Type: application/octet-stream");
         header("Content-Type: application/download");

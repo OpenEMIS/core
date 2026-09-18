@@ -1439,6 +1439,7 @@ class NavigationComponent extends Component
                 'selected' => [
                     'Students.Employments',
                     'Students.Qualifications',
+                    'Students.ImportStaffQualifications',
                     'Students.Licenses'
                 ] //POCOR-7528
             ],
@@ -1678,6 +1679,7 @@ class NavigationComponent extends Component
                 'selected' => [
                     'Staff.Employments',
                     'Staff.Qualifications',
+                    'Staff.ImportStaffQualifications',
                     'Staff.Extracurriculars',
                     'Staff.Memberships',
                     'Staff.Licenses',
@@ -1935,6 +1937,7 @@ class NavigationComponent extends Component
                 'selected' => [
                     'Directories.Employments',
                     'Directories.StaffQualifications',
+                    'Directories.ImportStaffQualifications',
                     'Directories.StaffExtracurriculars',
                     'Directories.StaffMemberships',
                     'Directories.StaffLicenses',

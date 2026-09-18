@@ -148,6 +148,8 @@ class GuardiansTable extends ControllerActionTable
             $studentId = $this->Session->read('Auth.User.id');
         } elseif ($this->controller->getName() == 'Students' && isset($this->request->getParam('pass')[1])) {
             $studentId = $this->getQueryString('student_id');
+        } elseif ($this->controller->getName() == 'Scholarships') {
+            $studentId = $this->getQueryString('applicant_id');
         } else {
             //$studentId = $this->Session->read('Student.Students.id');
             //echo "<pre>"; print_r($this->getQueryString('security_user_id')); die;
@@ -219,12 +221,24 @@ class GuardiansTable extends ControllerActionTable
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $queryString = $this->getQueryString('security_user_id') ?? $this->getQueryString('student_id');
+        $queryString = $this->getQueryString('security_user_id')
+            ?? $this->getQueryString('student_id')
+            ?? $this->getQueryString('applicant_id');
+
+        if ($queryString === null && in_array($this->controller->getName(), ['Guardians', 'GuardianNavs'])) {
+            // Self-service Guardian portal identifies the student via the logged-in session, not a query string.
+            $queryString = $this->Session->read('Auth.User.id');
+        }
 
         $search = $this->getSearchKey();
 
         // Add your custom WHERE condition here
-        $query->where(['student_id' => $queryString]);
+        if ($queryString !== null) {
+            $query->where(['student_id' => $queryString]);
+        } else {
+            // No identifying key could be resolved - deny by default instead of returning every student's guardians.
+            $query->where(['1 = 0']);
+        }
 
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
