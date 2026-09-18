@@ -22,8 +22,42 @@ class UndoPromotedBehavior extends UndoBehavior {
 	}
 
 	public function onGetPromotedStudents(EventInterface $event, $data) {
-		return $this->getStudents($data);
+		$list = $this->getStudents($data);
+		return $this->markAlreadyEnrolledElsewhere($list);
 	}
+
+	// POCOR-9816 start
+	// A student promoted with no next grade may later enrol at a different institution.
+	// getStudents() in UndoBehavior only flags records with a non-CURRENT status elsewhere,
+	// so this catches the CURRENT-status-at-another-institution case that it deliberately skips.
+	protected function markAlreadyEnrolledElsewhere($list) {
+		$institutionStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+		$StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+		$currentStatusId = $StudentStatuses->getIdByCode('CURRENT');
+		$alreadyEnrolledMessage = $this->_table->getMessage($this->_table->getAlias() . '.alreadyEnrolled');
+
+		foreach ($list as $key => $obj) {
+			if (!empty($obj->info_message)) {
+				continue;
+			}
+
+			$studentEnrollRecord = $institutionStudent->find()
+				->where([
+					$institutionStudent->aliasField('student_status_id') => $currentStatusId,
+					$institutionStudent->aliasField('student_id') => $obj->student_id
+				])
+				->first();
+
+			if (!empty($studentEnrollRecord) && $studentEnrollRecord->institution_id != $obj->institution_id) {
+				$obj->info_message = $alreadyEnrolledMessage;
+			}
+
+			$list[$key] = $obj;
+		}
+
+		return $list;
+	}
+	// POCOR-9816 end
 
 	public function processSavePromotedStudents(EventInterface $event, Entity $entity, ArrayObject $data) 
 	{
