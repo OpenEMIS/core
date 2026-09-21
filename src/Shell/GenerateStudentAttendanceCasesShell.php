@@ -3,6 +3,8 @@ namespace App\Shell;
 
 use Cake\Console\Shell;
 use Cake\I18n\FrozenTime;
+use Cake\ORM\Entity;
+use ArrayObject;
 use Workflow\Model\Behavior\WorkflowBehavior;
 use Exception;
 
@@ -138,6 +140,8 @@ class GenerateStudentAttendanceCasesShell extends Shell
             ->select([
                 'student_id' => $this->InstitutionStudentAbsenceDetails->aliasField('student_id'),
                 'institution_id' => $this->InstitutionStudentAbsenceDetails->aliasField('institution_id'),
+                'academic_period_id' => "MAX({$this->InstitutionStudentAbsenceDetails->aliasField('academic_period_id')})",
+                'latest_date' => "MAX({$dateField})",
                 'days_absent' => "COUNT(DISTINCT {$dateField})"
             ])
             ->where([
@@ -214,7 +218,40 @@ class GenerateStudentAttendanceCasesShell extends Shell
 
         $newEntity = $this->InstitutionCases->newEntity([]);
         $newEntity = $this->InstitutionCases->patchEntity($newEntity, $caseData, ['validate' => false]);
+        $saved = $this->InstitutionCases->save($newEntity);
 
-        return (bool)$this->InstitutionCases->save($newEntity);
+        if ($saved) {
+            // POCOR-7626: without this, the case only ever gets whoever WorkflowCaseBehavior's
+            // generic auto-assign happens to match first (e.g. System Administrator) - the
+            // primary autoLinkRecordWithCases() path dispatches the rule's configured Rule
+            // Events (e.g. "Assign to Principal") to override that with the real intended
+            // assignee; this fallback path was missing that step entirely. Handlers like
+            // onAssignToPrincipal only read institution_id/student_id/academic_period_id/date
+            // off the "linked record" entity, so a synthetic one built from the aggregated
+            // detail row works the same as a real InstitutionStudentAbsences entity.
+            $syntheticLinkedRecord = new Entity([
+                'institution_id' => $detail['institution_id'],
+                'student_id' => $detail['student_id'],
+                'academic_period_id' => $detail['academic_period_id'],
+                'date' => $detail['latest_date']
+            ], ['markNew' => false]);
+
+            $workflowRuleEntity = $this->WorkflowRules->get($workflowRuleId, ['contain' => ['WorkflowRuleEvents']]);
+            if (!empty($workflowRuleEntity->workflow_rule_events)) {
+                $ruleExtra = new ArrayObject(['assigneeFound' => false]);
+                foreach ($workflowRuleEntity->workflow_rule_events as $ruleEvent) {
+                    $this->InstitutionStudentAbsences->dispatchEvent(
+                        $ruleEvent->event_key,
+                        [$newEntity, $syntheticLinkedRecord, $ruleExtra],
+                        $this->InstitutionStudentAbsences
+                    );
+                    if ($ruleExtra['assigneeFound']) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return (bool)$saved;
     }
 }

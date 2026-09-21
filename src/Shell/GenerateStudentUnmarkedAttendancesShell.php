@@ -9,6 +9,7 @@ use Cake\I18n\Time;
 use Cake\I18n\FrozenTime;
 use Cake\I18n\Date;
 use Cake\Console\Shell;
+use Workflow\Model\Behavior\WorkflowBehavior;
 
 class GenerateStudentUnmarkedAttendancesShell extends Shell
 {
@@ -159,7 +160,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 					if(!empty($dataForAssigneeID)){
 						$assigneeId = $dataForAssigneeID->security_user_id;
 					}else{
-						$assigneeId = 0;
+						$assigneeId = WorkflowBehavior::AUTO_ASSIGN;
 					}
 					//POCOR-6363:: END
 					$recordId = $classAttendanceRecord['institution_class']['id'];
