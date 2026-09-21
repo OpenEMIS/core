@@ -690,7 +690,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
                 $query
                     ->innerJoin(
-                        [$this->alias() => $this->table()],
+                        [$this->getAlias() => $this->getTable()],
                         [$this->aliasField('id = ') . 'LinkedRecords.record_id']
                     )
                     ->where([

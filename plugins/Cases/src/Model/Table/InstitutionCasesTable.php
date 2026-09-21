@@ -267,13 +267,13 @@ class InstitutionCasesTable extends ControllerActionTable
         $selectedAcademicPeriod = $urlQuery['academic_period_id']
         ?? ($requestQuery['academic_period_id'] ?? null);
 
-    $selectedEducationGrades = $urlQuery['education_grade_id']
-        ?? ($requestQuery['education_grade_id'] ?? null);
+        $selectedEducationGrades = $urlQuery['education_grade_id']
+            ?? ($requestQuery['education_grade_id'] ?? null);
 
-    $selectedClassId = $urlQuery['institution_class_id']
-        ?? ($requestQuery['institution_class_id'] ?? null);
-        $selectedCategory = $urlQuery['category']
-    ?? ($requestQuery['category'] ?? '-1');
+        $selectedClassId = $urlQuery['institution_class_id']
+            ?? ($requestQuery['institution_class_id'] ?? null);
+            $selectedCategory = $urlQuery['category']
+        ?? ($requestQuery['category'] ?? '-1');
         // Get feature from URL first.
         // Example: ?feature=StudentAttendances&category=-1
         $selectedFeature = $urlQuery['feature']
@@ -292,12 +292,12 @@ class InstitutionCasesTable extends ControllerActionTable
 
         // Keep request query parameter in sync
         $this->request = $this->request->withQueryParams([
-        'feature' => $selectedFeature,
-        'academic_period_id' => $selectedAcademicPeriod,
-        'education_grade_id' => $selectedEducationGrades,
-        'institution_class_id' => $selectedClassId,
-        'category' => $selectedCategory,
-    ]);
+            'feature' => $selectedFeature,
+            'academic_period_id' => $selectedAcademicPeriod,
+            'education_grade_id' => $selectedEducationGrades,
+            'institution_class_id' => $selectedClassId,
+            'category' => $selectedCategory,
+        ]);
 
         $this->controller->set(compact(
             'featureOptions',
@@ -549,7 +549,7 @@ class InstitutionCasesTable extends ControllerActionTable
         }
 
         // Do not dispatch for StudentAttendances
-        if ($selectedFeature != 'StudentAttendances') {
+        //if ($selectedFeature != 'StudentAttendances') { // comment line in POCOR-7626
             if (!empty($featureModel)) {
                 $featureModel->dispatchEvent(
                     'InstitutionCase.onCaseIndexBeforeQuery',
@@ -557,7 +557,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     $featureModel
                 );
             }
-        }
+       // }
     }
 
     public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
