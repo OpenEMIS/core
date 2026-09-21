@@ -52,7 +52,7 @@
 				}
 
 				if (!empty($institutionClassOptions)) {
-					echo $this->Form->input('education_grade', array(
+					echo $this->Form->input('institution_class', array(
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $institutionClassOptions,

@@ -262,19 +262,47 @@ class InstitutionCasesTable extends ControllerActionTable
 
         $featureOptions = ['-1' => '-- ' . __('All') . ' --'] + $featureOptions;
 
-        if (!is_null($this->request->getQuery('feature'))
-            && array_key_exists($this->request->getQuery('feature'), $featureOptions)) {
-            $selectedFeature = $this->request->getQuery('feature');
-        } else {
-            $selectedFeature = key($featureOptions);
+        $requestQuery = $this->request->getQuery('query') ?? [];
+        $urlQuery = $this->request->getParam('?') ?? [];
+        $selectedAcademicPeriod = $urlQuery['academic_period_id']
+        ?? ($requestQuery['academic_period_id'] ?? null);
 
-            $this->request = $this->request->withQueryParams([
-                'feature' => $selectedFeature
-            ]);
+    $selectedEducationGrades = $urlQuery['education_grade_id']
+        ?? ($requestQuery['education_grade_id'] ?? null);
+
+    $selectedClassId = $urlQuery['institution_class_id']
+        ?? ($requestQuery['institution_class_id'] ?? null);
+        $selectedCategory = $urlQuery['category']
+    ?? ($requestQuery['category'] ?? '-1');
+        // Get feature from URL first.
+        // Example: ?feature=StudentAttendances&category=-1
+        $selectedFeature = $urlQuery['feature']
+            ?? ($requestQuery['feature'] ?? null);
+
+        // If no feature was provided, use "All"
+        if ($selectedFeature === null || $selectedFeature === '') {
+            $selectedFeature = '-1';
         }
 
-        $this->controller->set(compact('featureOptions', 'selectedFeature'));
+        // Make sure selected feature exists in the dropdown options.
+        // If not, default to "All".
+        if (!array_key_exists($selectedFeature, $featureOptions)) {
+            $selectedFeature = '-1';
+        }
 
+        // Keep request query parameter in sync
+        $this->request = $this->request->withQueryParams([
+        'feature' => $selectedFeature,
+        'academic_period_id' => $selectedAcademicPeriod,
+        'education_grade_id' => $selectedEducationGrades,
+        'institution_class_id' => $selectedClassId,
+        'category' => $selectedCategory,
+    ]);
+
+        $this->controller->set(compact(
+            'featureOptions',
+            'selectedFeature'
+        ));
         $selectedModel = $this->features[$selectedFeature];
 
         $session = $this->request->getSession();
@@ -335,7 +363,6 @@ class InstitutionCasesTable extends ControllerActionTable
          * Pass encoded query string to controller/view
          */
         $this->controller->set(compact('encodedQueryString'));
-
         /*
          * Keep original element configuration
          */
@@ -365,16 +392,44 @@ class InstitutionCasesTable extends ControllerActionTable
     }
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $requestQuery = $this->request->getQuery('query');
-        $selectedFeature = $requestQuery['feature'];
-        $featureModel = !empty($this->features[$selectedFeature]) ? TableRegistry::getTableLocator()->get($this->features[$selectedFeature]) : '';
-        //$featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
+        $requestQuery = $this->request->getQuery('query') ?? [];
+        $urlQuery = $this->request->getParam('?') ?? [];
 
-        //POCOR-7437 start
+        $selectedFeature = $urlQuery['feature']
+            ?? ($requestQuery['feature'] ?? -1);
+
+        if ($selectedFeature === null && is_array($requestQuery)) {
+            $selectedFeature = $requestQuery['feature'] ?? -1;
+        }
+
+        $selectedFeature = $selectedFeature ?: -1;
+
+        // Category filter
+        $selectedCategory = $this->request->getQuery('category');
+
+        if ($selectedCategory === null && is_array($requestQuery)) {
+            $selectedCategory = $requestQuery['category'] ?? -1;
+        }
+
+        $featureModel = '';
+
+        if (!empty($this->features[$selectedFeature])) {
+            $featureModel = TableRegistry::getTableLocator()->get(
+                $this->features[$selectedFeature]
+            );
+        }
+
+        // POCOR-7437
         $controllerName = $this->request->getParam('controller');
+
         if ($controllerName == "Profiles") {
+
             $userId = $this->getUserID();
-            $where = [$this->aliasField('created_user_id') => $userId];
+
+            $where = [
+                $this->aliasField('created_user_id') => $userId
+            ];
+
             $query
                 ->select([
                     $this->aliasField('id'),
@@ -388,6 +443,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     $this->aliasField('modified'),
                     $this->aliasField('created_user_id'),
                     $this->aliasField('created'),
+
                     $this->Assignees->aliasField('first_name'),
                     $this->Assignees->aliasField('middle_name'),
                     $this->Assignees->aliasField('last_name'),
@@ -396,16 +452,25 @@ class InstitutionCasesTable extends ControllerActionTable
                 ])
                 ->contain(['LinkedRecords'])
                 ->innerJoin(
-                    [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                     [
-                        [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                        //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']// comment cakephp 4
+                        $this->LinkedRecords->getAlias()
+                        => $this->LinkedRecords->getTable()
+                    ],
+                    [
+                        $this->LinkedRecords->aliasField('institution_case_id = ')
+                        . $this->aliasField('id'),
+
+                        $this->LinkedRecords->aliasField('feature = ')
+                        . '"' . $selectedFeature . '"'
                     ]
                 )
-                ->where($where)//POCOR-7668
+                ->where($where)
                 ->group($this->aliasField('id'));
-        } else {//POCOR-7437 end
-            if ($selectedFeature != -1) { //start POCOR-6210
+
+        } else {
+
+            if ($selectedFeature != -1) {
+
                 $query
                     ->select([
                         $this->aliasField('id'),
@@ -419,6 +484,7 @@ class InstitutionCasesTable extends ControllerActionTable
                         $this->aliasField('modified'),
                         $this->aliasField('created_user_id'),
                         $this->aliasField('created'),
+
                         $this->Assignees->aliasField('first_name'),
                         $this->Assignees->aliasField('middle_name'),
                         $this->Assignees->aliasField('last_name'),
@@ -427,14 +493,23 @@ class InstitutionCasesTable extends ControllerActionTable
                     ])
                     ->contain(['LinkedRecords'])
                     ->innerJoin(
-                        [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                         [
-                            [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                            [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                            $this->LinkedRecords->getAlias()
+                            => $this->LinkedRecords->getTable()
+                        ],
+                        [
+                            $this->LinkedRecords->aliasField('institution_case_id = ')
+                            . $this->aliasField('id'),
+
+                            $this->LinkedRecords->aliasField('feature = ')
+                            . '"' . $selectedFeature . '"'
                         ]
                     )
-                    ->where([$this->LinkedRecords->aliasField('record_id NOT IN') => 0])//start POCOR-6210
+                    ->where([
+                        $this->LinkedRecords->aliasField('record_id NOT IN') => 0
+                    ])
                     ->group($this->aliasField('id'));
+
             } else {
                 $query
                     ->select([
@@ -449,6 +524,7 @@ class InstitutionCasesTable extends ControllerActionTable
                         $this->aliasField('modified'),
                         $this->aliasField('created_user_id'),
                         $this->aliasField('created'),
+
                         $this->Assignees->aliasField('first_name'),
                         $this->Assignees->aliasField('middle_name'),
                         $this->Assignees->aliasField('last_name'),
@@ -457,21 +533,29 @@ class InstitutionCasesTable extends ControllerActionTable
                     ])
                     ->contain(['LinkedRecords'])
                     ->innerJoin(
-                        [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                         [
-                            [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                            //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                            $this->LinkedRecords->getAlias()
+                            => $this->LinkedRecords->getTable()
+                        ],
+                        [
+                            $this->LinkedRecords->aliasField('institution_case_id = ')
+                            . $this->aliasField('id'),
+
+                            //$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"'
                         ]
                     )
                     ->group($this->aliasField('id'));
-
             }
         }
 
-        // $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+        // Do not dispatch for StudentAttendances
         if ($selectedFeature != 'StudentAttendances') {
             if (!empty($featureModel)) {
-                $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+                $featureModel->dispatchEvent(
+                    'InstitutionCase.onCaseIndexBeforeQuery',
+                    [$requestQuery, $query],
+                    $featureModel
+                );
             }
         }
     }
