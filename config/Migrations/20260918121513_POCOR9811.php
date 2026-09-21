@@ -6,7 +6,7 @@ class POCOR9811 extends AbstractMigration
     public function up()
     {
         // Backup security_functions table
-        $this->execute('CREATE TABLE `zz_9811_security_functions` LIKE `security_functions`');
+        $this->execute('CREATE TABLE IF NOT EXISTS `zz_9811_security_functions` LIKE `security_functions`');
         $this->execute('INSERT INTO `zz_9811_security_functions` SELECT * FROM `security_functions`');
 
         $row = $this->fetchRow("
