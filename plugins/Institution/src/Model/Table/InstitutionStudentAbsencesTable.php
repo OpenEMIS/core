@@ -524,8 +524,8 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
         $selectedAcademicPeriod = $requestQuery['academic_period_id'];
         $academicPeriodOptions = $AcademicPeriods->getYearList();
-
-        // education_grade_id
+        
+        // POCOR-7626
         if (empty($requestQuery['education_grade_id'])) {
             $firstInstitutionEducationGradesResult = $InstitutionEducationGrades
                 ->find()
@@ -534,14 +534,16 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                     'name' => 'EducationGrades.name'
                 ])
                 ->contain(['EducationGrades'])
-                ->where(['institution_id IS' => $institutionId])
+                ->where([
+                    'institution_id IS' => $institutionId,
+                    'academic_period_id' => $selectedAcademicPeriod
+                ])
                 ->group('education_grade_id')
                 ->order(['education_grade_id'])
                 ->first();
 
             if (!empty($firstInstitutionEducationGradesResult)) {
-                //$requestQuery['education_grade_id'] = $firstInstitutionEducationGradesResult->id;
-                  $requestQuery['education_grade_id'] = 'all';
+                $requestQuery['education_grade_id'] = 0;
             } else {
                 $requestQuery['education_grade_id'] = -1;
             }
@@ -558,7 +560,10 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 'name' => 'EducationGrades.name'
             ])
             ->contain(['EducationGrades'])
-            ->where(['institution_id IS' => $institutionId])
+            ->where([
+                'institution_id IS' => $institutionId,
+                'academic_period_id' => $selectedAcademicPeriod
+            ])
             ->group('education_grade_id')
             ->all();
 
