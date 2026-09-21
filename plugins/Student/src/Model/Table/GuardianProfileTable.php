@@ -57,12 +57,6 @@ class GuardianProfileTable extends ControllerActionTable
                 'rule' => 'numeric',
                 'message' => 'Only numbers are allowed'
             ])
-            // Without this, isEmptyAllowed() is false for photo_content, so submitting the edit
-            // form without choosing a new photo falls through every branch in
-            // FileUploadBehavior::addEditBeforePatch() with nothing stripping the raw (empty)
-            // Laminas UploadedFile object out of the request data - it then reaches save() as-is
-            // and MysqlStatement chokes trying to bind it as a string. Same fix already applied
-            // to StaffUserTable for the same field/behavior combination.
             ->allowEmpty('photo_content');
     }
 
