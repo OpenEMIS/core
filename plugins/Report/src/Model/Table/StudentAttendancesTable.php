@@ -353,7 +353,7 @@ class StudentAttendancesTable extends AppTable
         $newFields[] = ['key' => 'education_grade_name', 'field' => 'education_grade_name', 'type' => 'string', 'label' => __('Education Grade')];
         $newFields[] = ['key' => 'class_name', 'field' => 'class_name', 'type' => 'string', 'label' => __('Class')];
         $newFields[] = ['key' => 'month_name', 'field' => 'month_name', 'type' => 'string', 'label' => __('Month')];
-        $newFields[] = ['key' => 'attendance_name', 'field' => 'attendance_name', 'type' => 'string', 'label' => __('Attendance Name')];
+        $newFields[] = ['key' => 'attendance_name', 'field' => 'attendance_name', 'type' => 'string', 'label' => __('Attendance Name (Period/Subject name)')];
 
         for ($i = 1; $i <= 31; $i++) {
             $newFields[] = ['key' => 'day_' . $i, 'field' => 'day_' . $i, 'type' => 'string', 'label' => __('Day ' . $i)];
