@@ -90,6 +90,15 @@ class StudentAttendancesTable extends AppTable
         $this->applyJoins($query, $academicPeriodId, $startDate, $endDate, $filterInstitutionIds);
         $this->applySelectFields($query);
 
+        // The period/subject generator produces one (period, subject) combination per class,
+        // independent of month, then it's cross-joined against every month in the selected date
+        // range - including months where that period/subject was never actually marked. Without
+        // this, a range spanning into a not-yet-marked month (e.g. the tail end of October when
+        // only September has been marked) produces a spurious, entirely blank row per student
+        // per period for that month. Suppress a month/period row unless at least one day has an
+        // actual value.
+        $dayColumnsNotBlank = implode(' OR ', array_map(fn($i) => "day_{$i} != ''", range(1, 31)));
+
         $query
             ->where($conditions)
             ->group([
@@ -100,6 +109,7 @@ class StudentAttendancesTable extends AppTable
                 'month_generator.year_name',
                 'month_generator.month_id',
             ])
+            ->having([$dayColumnsNotBlank])
             ->order([
                 'Institutions.code',
                 'Users.first_name',
@@ -259,7 +269,8 @@ class StudentAttendancesTable extends AppTable
             WHERE ap.id = {$academicPeriodId}
         ) d2
         WHERE m1 <= d2.end_date
-          AND m1 BETWEEN '{$startDate}' AND '{$endDate}'
+          AND LAST_DAY(m1) >= '{$startDate}'
+          AND m1 <= '{$endDate}'
         ORDER BY m1
         SQL;
     }
