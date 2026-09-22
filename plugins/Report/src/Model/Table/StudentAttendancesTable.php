@@ -373,18 +373,31 @@ class StudentAttendancesTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
+    // POCOR-9813 review: areas.lft/rght are nested-set (modified preorder tree) columns already
+    // maintained on this table - every descendant of a node satisfies `lft > node.lft AND rght <
+    // node.rght`, so all descendants can be fetched in one range query instead of one query per
+    // tree level via recursive parent_id lookups.
     public function getChildren($id, $idArray)
     {
         $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
-        $result = $Areas->find()
-            ->where([$Areas->aliasField('parent_id') => $id])
-            ->toArray();
+        $node = $Areas->find()
+            ->select(['lft', 'rght'])
+            ->where([$Areas->aliasField('id') => $id])
+            ->first();
 
-        foreach ($result as $value) {
-            $idArray[] = $value['id'];
-            $idArray = $this->getChildren($value['id'], $idArray);
+        if (empty($node)) {
+            return $idArray;
         }
 
-        return $idArray;
+        $descendants = $Areas->find()
+            ->select(['id'])
+            ->where([
+                $Areas->aliasField('lft') . ' >' => $node->lft,
+                $Areas->aliasField('rght') . ' <' => $node->rght,
+            ])
+            ->enableHydration(false)
+            ->toArray();
+
+        return array_merge($idArray, array_column($descendants, 'id'));
     }
 }
