@@ -565,29 +565,47 @@ class GuardiansTable extends ControllerActionTable
 //            die(print_r( $newButtons['view'], true));
         }
         if (isset($buttons['edit'])) {
-            $params = ['id' => $entity->_matchingData['Users']->id];
-            $encodedParams = $this->paramsEncode($params);
-            $editUrl = $buttons['view']['url'];
-            $editUrl['plugin'] = 'Directory';
-            $editUrl['controller'] = 'Directories';
-            $editUrl['action'] = 'Directories';
-            $editUrl['1'] = $encodedParams;
-            $editUrl['0'] = 'view';
-            if (isset($editUrl['?'])) {
-                unset($editUrl['?']);
-            }
-            if (isset($editUrl['2'])) {
-                unset($editUrl['2']);
-            }
-            if (isset($editUrl['3'])) {
-                unset($editUrl['3']);
-            }
-            if (isset($editUrl['queryString'])) {
-                unset($editUrl['queryString']);
-            }
             $newButtons['viewProfile'] = $buttons['edit'];
             $newButtons['viewProfile']['label'] = '<i class="fa fa-pencil"></i>' . __('View Profile');
-            $newButtons['viewProfile']['url'] = $editUrl;
+
+            if ($this->controller->getName() == 'Students') {
+                //POCOR-9811
+                // Keep the guardian profile inside Institution instead of redirecting to Directory,
+                // since principals/teachers viewing this tab do not have Directory access. Routed to
+                // its own GuardianProfile table/action.
+                $profileParams = $params;
+                $profileParams['id'] = $entity->_matchingData['Users']->id;
+                $encodedProfileParams = $this->paramsEncode($profileParams);
+                $newButtons['viewProfile']['url'] = [
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
+                    'action' => 'GuardianProfile',
+                    'view',
+                    $encodedProfileParams,
+                ];
+            } else {
+                $profileParams = ['id' => $entity->_matchingData['Users']->id];
+                $encodedProfileParams = $this->paramsEncode($profileParams);
+                $editUrl = $buttons['view']['url'];
+                $editUrl['plugin'] = 'Directory';
+                $editUrl['controller'] = 'Directories';
+                $editUrl['action'] = 'Directories';
+                $editUrl['1'] = $encodedProfileParams;
+                $editUrl['0'] = 'view';
+                if (isset($editUrl['?'])) {
+                    unset($editUrl['?']);
+                }
+                if (isset($editUrl['2'])) {
+                    unset($editUrl['2']);
+                }
+                if (isset($editUrl['3'])) {
+                    unset($editUrl['3']);
+                }
+                if (isset($editUrl['queryString'])) {
+                    unset($editUrl['queryString']);
+                }
+                $newButtons['viewProfile']['url'] = $editUrl;
+            }
 //            die(print_r( $newButtons['view'], true));
         }
 
