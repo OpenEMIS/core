@@ -29,6 +29,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use JWTAuth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class DirectoryRepository extends Controller
 {
@@ -1124,6 +1125,262 @@ class DirectoryRepository extends Controller
         }
     }
     //For POCOR-8194 End...
+
+    // POCOR-9822 start
+    /**
+     * Mirrors DirectoriesController::directoryExternalSearch() from OpenEMIS Core (CakePHP),
+     * so the v5 REST layer can expose the same external-identity search the Directory Add User
+     * wizard uses (UNHCR / Seychelles Civil Status / OpenEMIS Core), driven by whichever
+     * "External Data Source - Identity" is configured & enabled in Core.
+     *
+     * @param array $params first_name, last_name, openemis_no, identity_number, nationality_id,
+     *                       date_of_birth, limit, page, search_type (the `value` returned by
+     *                       checkExternalSearchConfiguration()).
+     * @return array
+     */
+    public function externalSearch($params)
+    {
+        $identityNumber = $params['identity_number'] ?? null;
+        $dateOfBirth = !empty($params['date_of_birth']) ? date('Y-m-d', strtotime($params['date_of_birth'])) : null;
+        $searchType = $params['search_type'] ?? '';
+
+        // POCOR-9590: 'Seychellois' is an alias for 'Seychelles Civil Status'
+        if ($searchType === 'Seychellois') {
+            $searchType = 'Seychelles Civil Status';
+        }
+
+        $attributes = DB::table('external_data_source_attributes')
+            ->where('external_data_source_type', $searchType)
+            ->pluck('value', 'attribute_field')
+            ->all();
+
+        $noData = ['data' => [], 'total' => 0];
+
+        try {
+            if ($searchType === 'UNHCR') {
+                $response = $this->getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth);
+            } elseif ($searchType === 'Seychelles Civil Status') {
+                $response = $this->getSeychellesData($attributes, $noData, $identityNumber, $dateOfBirth);
+            } elseif ($searchType === 'OpenEMIS Core') {
+                $response = $this->getOECoreData($attributes, $noData, $identityNumber);
+            } else {
+                // POCOR-9822: the generic JWT-bearer source (Core's "Custom"/"Jordan CSPD" config)
+                // is intentionally unsupported here — not in use, and its config values are
+                // encrypted with a Core-only key we don't want this app depending on.
+                Log::warning('Unsupported external search source requested', ['search_type' => $searchType]);
+                $response = $noData;
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to perform directory external search',
+                ['search_type' => $searchType, 'message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return ['error' => $e->getMessage()];
+        }
+
+        return $response;
+    }
+
+    private function getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth): array
+    {
+        $applicationId = $attributes['application_id'] ?? '';
+        $apiKey = $attributes['secret_code'] ?? '';
+        $url = $attributes['url'] ?? '';
+        $tokenUri = $url . 'login';
+        $userDataUri = $url . 'validate/identity-number';
+
+        $responseData = $noData;
+
+        $tokenResponse = Http::withHeaders([
+            'Authorization' => 'Basic ' . $applicationId,
+            'Content-Type' => 'application/json',
+        ])->post($tokenUri, ['api_key' => $apiKey]);
+
+        $token = $tokenResponse->successful() ? $tokenResponse->json('data.token') : null;
+
+        if ($token) {
+            $userResponse = Http::withHeaders([
+                'token' => $token,
+                'Content-Type' => 'application/json',
+            ])->post($userDataUri, [
+                'identity_number' => $identityNumber,
+                'date_of_birth' => $dateOfBirth,
+            ]);
+
+            if ($userResponse->successful() && $userResponse->json('result') !== null) {
+                $answer = [];
+                if ($userResponse->json('result')) {
+                    $answer['identity_number'] = $identityNumber;
+                }
+                $responseData = ['data' => [$answer]];
+            }
+        }
+
+        return $responseData;
+    }
+
+    private function getSeychellesData(array $attributes, array $noData, string $identityNumber, ?string $dateOfBirth = null): array
+    {
+        $responseData = $noData;
+
+        $clientId = $attributes['client_id'] ?? '';
+        $secret = $attributes['client_secret'] ?? '';
+        $tokenUri = rtrim($attributes['token_uri'] ?? '', '/');
+        $apiUrl = rtrim($attributes['api_url'] ?? '', '/');
+        $grantType = $attributes['grant_type'] ?? '';
+        $scopes = $attributes['scopes'] ?? '';
+
+        // POCOR-9590: normalize payload keys to lowercase, default to the well-known
+        // Seychelles field names when a mapping is not configured.
+        $mapFirst = strtolower(trim($attributes['first_name_mapping'] ?? 'givennames'));
+        $mapLast = strtolower(trim($attributes['last_name_mapping'] ?? 'presentsurname'));
+        $mapFull = strtolower(trim($attributes['full_name_mapping'] ?? 'fullname'));
+        $mapDob = strtolower(trim($attributes['date_of_birth_mapping'] ?? 'dob'));
+        $mapGender = strtolower(trim($attributes['gender_mapping'] ?? 'sex'));
+        $mapNationality = strtolower(trim($attributes['nationality_mapping'] ?? 'nationality'));
+
+        $tokenResponse = Http::asForm()->post($tokenUri, [
+            'grant_type' => $grantType,
+            'client_id' => $clientId,
+            'client_secret' => $secret,
+            'scope' => $scopes,
+        ]);
+
+        if (!$tokenResponse->successful() || empty($tokenResponse->json('access_token'))) {
+            return $responseData;
+        }
+
+        $accessToken = $tokenResponse->json('access_token');
+
+        $userResponse = Http::withHeaders([
+            'Authorization' => "Bearer {$accessToken}",
+            'Accept' => 'application/json',
+        ])->get($apiUrl . '/' . $identityNumber);
+
+        $payload = $userResponse->json() ?? [];
+        $record = $payload['record'] ?? $payload;
+
+        if (!$userResponse->successful() || empty($record)) {
+            return $responseData;
+        }
+
+        $raw = [];
+        foreach ($record as $key => $value) {
+            $raw[strtolower((string) $key)] = $value;
+        }
+
+        $mapped = [
+            'identity_number' => $identityNumber,
+            'first_name' => $raw[$mapFirst] ?? '',
+            'last_name' => $raw[$mapLast] ?? '',
+            'full_name' => $raw[$mapFull] ?? '',
+            'date_of_birth' => isset($raw[$mapDob]) ? substr((string) $raw[$mapDob], 0, 10) : '',
+            'gender' => $raw[$mapGender] ?? '',
+            'nationality' => $raw[$mapNationality] ?? '',
+        ];
+
+        if (empty($mapped['full_name'])) {
+            $mapped['full_name'] = trim(($mapped['first_name'] ?? '') . ' ' . ($mapped['last_name'] ?? ''));
+        }
+
+        $mapped['gender_id'] = $this->matchGenderId($mapped['gender']);
+        $mapped['nationality_id'] = $this->matchOrCreateNationalityId($mapped['nationality']);
+
+        if (isset($raw['postaladdress1'])) {
+            $mapped['address'] = $raw['postaladdress1'];
+        }
+        if (isset($raw['district'])) {
+            $mapped['district'] = $raw['district'];
+        }
+
+        return ['data' => [$mapped], 'total' => 1];
+    }
+
+    private function getOECoreData(array $attributes, array $noData, string $identityNumber): array
+    {
+        $username = $attributes['username'] ?? '';
+        $password = $attributes['password'] ?? '';
+        $apiKey = $attributes['api_key'] ?? '';
+        $url = rtrim($attributes['api_url'] ?? '', '/');
+        $tokenUri = $url . '/login';
+        $userDataEndpoint = $url . '/security-users';
+
+        $responseData = $noData;
+
+        $tokenResponse = Http::post($tokenUri, [
+            'username' => $username,
+            'password' => $password,
+            'api_key' => $apiKey,
+        ]);
+
+        $token = $tokenResponse->successful() ? $tokenResponse->json('data.token') : null;
+
+        if ($token) {
+            $userResponse = Http::withHeaders([
+                'authorization' => 'Bearer ' . $token,
+            ])->get($userDataEndpoint, ['openemis_no' => $identityNumber]);
+
+            $decodedData = $userResponse->json('data') ?? [];
+            if (isset($decodedData['data'])) {
+                $decodedData = $decodedData['data'];
+            }
+
+            if ($userResponse->successful()) {
+                $responseData = ['data' => [], 'total' => 0];
+                if (!empty($decodedData)) {
+                    foreach ($decodedData as &$answer) {
+                        $answer['identity_number'] = $answer['openemis_no'] ?? null;
+                        unset($answer['openemis_no']);
+                    }
+                    unset($answer);
+                    $responseData = ['data' => $decodedData, 'total' => count($decodedData)];
+                }
+            }
+        }
+
+        return $responseData;
+    }
+
+    private function matchGenderId(string $genderName): ?int
+    {
+        if (!$genderName) {
+            return null;
+        }
+        $genderName = strtolower(trim($genderName));
+
+        $gender = DB::table('genders')
+            ->select('id', 'name')
+            ->get()
+            ->first(fn ($g) => strtolower($g->name) === $genderName);
+
+        return $gender->id ?? null;
+    }
+
+    private function matchOrCreateNationalityId(?string $nationalityName): ?int
+    {
+        $nationalityName = trim((string) $nationalityName);
+        if ($nationalityName === '') {
+            return null;
+        }
+
+        $existing = DB::table('nationalities')
+            ->whereRaw('LOWER(name) = ?', [strtolower($nationalityName)])
+            ->first();
+
+        if ($existing) {
+            return (int) $existing->id;
+        }
+
+        return DB::table('nationalities')->insertGetId([
+            'name' => $nationalityName,
+            'visible' => 1,
+            'editable' => 1,
+            'created_user_id' => 1,
+            'created' => now(),
+        ]);
+    }
+
+    // POCOR-9822 end
 
 }
 

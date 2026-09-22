@@ -5601,4 +5601,68 @@ class InstitutionRepository extends Controller
     }
     //For POCOR-8384 End...
 
+    /**
+     * POCOR-9822
+     * @param int $nationalityId
+     * @param int $identityTypeId
+     * @return array List of ['value' => <source name or 'None'>, 'showExternalSearch' => bool]
+     */
+    public function checkExternalSearchConfiguration($nationalityId, $identityTypeId)
+    {
+        if (!$identityTypeId || !$nationalityId) {
+            return [['value' => 'None', 'showExternalSearch' => false]];
+        }
+
+        $regularResults = DB::table('config_items')
+            ->select('config_items.id', 'config_items.name')
+            ->where('config_items.type', 'External Data Source - Identity')
+            ->where('config_items.value', 1)
+            ->where('config_items.name', '!=', 'OpenEMIS Core')
+            ->join('nationalities', function ($join) use ($nationalityId, $identityTypeId) {
+                $join->on('nationalities.external_validation', '=', 'config_items.id')
+                    ->where('nationalities.id', '=', $nationalityId)
+                    ->where('nationalities.identity_type_id', '=', $identityTypeId);
+            })
+            ->get()
+            ->map(fn ($row) => (array) $row)
+            ->all();
+
+        $openEmisCoreItem = DB::table('config_items')
+            ->select('name')
+            ->where('type', 'External Data Source - Identity')
+            ->where('value', 1)
+            ->where('name', 'OpenEMIS Core')
+            ->first();
+
+        $coreResults = [];
+        if ($openEmisCoreItem) {
+            $match = DB::table('external_data_source_attributes')
+                ->where('external_data_source_type', 'OpenEMIS Core')
+                ->where('attribute_field', 'identity_type_id')
+                ->where('value', $identityTypeId)
+                ->first();
+
+            if ($match) {
+                $coreResults[] = ['name' => $openEmisCoreItem->name];
+            }
+        }
+
+        $results = array_merge($regularResults, $coreResults);
+
+        $resultArray = [];
+        foreach ($results as $row) {
+            $resultArray[] = [
+                'value' => $row['name'],
+                'showExternalSearch' => true,
+            ];
+        }
+
+        if (empty($resultArray)) {
+            $resultArray[] = ['value' => 'None', 'showExternalSearch' => false];
+        }
+
+        return $resultArray;
+    }
+    // POCOR-9822 end
+
 }

@@ -612,7 +612,10 @@ Route::group(
 
         // POCOR-8912 start
         Route::get('users/email/{email}', 'UserController@getUserByEmail'); // POCOR-8912
-        // POCOR-8912 end
+        
+        // POCOR-9822 start
+        Route::post('institutions/external-search/check-configuration', 'InstitutionController@checkConfigurationForExternalSearch');
+        Route::post('directories/external-search', 'DirectoryController@directoryExternalSearch');
 
         //POCOR-9694: OpenEMIS Runtime — action / aggregate endpoints (v4).
         //  Plain resource reads of tasks / task_jobs / task_failures go through CrudApiController under v5.

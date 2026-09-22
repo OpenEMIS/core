@@ -924,4 +924,39 @@ class DirectoryController extends Controller
         }
     }
     //For POCOR-8194 End...
+
+    /**
+     * POCOR-9822 
+     * @OA\Post(
+     *     path="/api/v5/directories/external-search",
+     *     summary="Search an external identity source",
+     *     description="Dispatches to the External Data Source - Identity configured in Core for the given search_type (the value returned by the config-check endpoint) and returns matching records.
+     * 
+     *     tags={"Directories"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="total", type="integer", example=1)
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function directoryExternalSearch(Request $request)
+    {
+        try {
+            $params = $request->input('params', $request->all());
+            $data = $this->directoryService->externalSearch($params);
+
+            return $this->sendSuccessResponse('Successful.', $data);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse($e->getMessage());
+        }
+    }
+    // POCOR-9822 end
 }

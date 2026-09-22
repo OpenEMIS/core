@@ -7769,4 +7769,44 @@ class InstitutionController extends Controller
         }
     }
     //For POCOR-8197 End...
+
+    /**
+     *
+     * POCOR-9822 
+     * @OA\Post(
+     *     path="/api/v5/institutions/external-search/check-configuration",
+     *     summary="Check external search configuration",
+     *     description="Returns whether an External Data Source - Identity is configured for the given nationality/identity type.",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(name="nationality_id", in="query", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="identity_type_id", in="query", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="value", type="string", example="UNHCR"),
+     *                     @OA\Property(property="showExternalSearch", type="boolean", example=true)
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function checkConfigurationForExternalSearch(Request $request)
+    {
+        try {
+            $params = $request->input('params', $request->all());
+            $data = $this->institutionService->checkExternalSearchConfiguration($params);
+
+            return $this->sendSuccessResponse('Successful.', $data);
+        } catch (Exception $e) {
+            return $this->sendErrorResponse($e->getMessage());
+        }
+    }
+    
 }
