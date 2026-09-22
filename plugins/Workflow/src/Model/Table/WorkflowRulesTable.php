@@ -363,7 +363,14 @@ class WorkflowRulesTable extends ControllerActionTable
         } else if ($action == 'add' || $action == 'edit') {
             $entity = $attr['attr']['entity'];
             if ($action == 'add') {
+                // POCOR-7626
                 $feature = $request->getQuery('feature');
+                if ($feature == null) {
+                    $requestData = $request->getData();
+                    if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('feature', $requestData[$this->getAlias()])) {
+                        $feature = $requestData[$this->getAlias()]['feature'];
+                    }
+                }
             } else if ($action == 'edit') {
                 $feature = $entity->feature;
             }
@@ -394,6 +401,19 @@ class WorkflowRulesTable extends ControllerActionTable
             }
 
             $workflowId = $entity->workflow_id;
+            if ($action == 'add' && empty($workflowId)) {
+                // POCOR-7626
+                $requestData = $request->getData();
+                if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('workflow_id', $requestData[$this->getAlias()])) {
+                    $workflowId = $requestData[$this->getAlias()]['workflow_id'];
+                }
+                if (empty($workflowId)) {
+                    $workflowOptions = $this->getWorkflowOptions($feature);
+                    if (count($workflowOptions) === 1) {
+                        $workflowId = key($workflowOptions);
+                    }
+                }
+            }
             $eventOptionsBySecurityRoles = $this->getAvailableEventOptionsBySecurityRoles($eventOptions, $workflowId);
             $eventSelectOptions = array_intersect_key($eventSelectOptions, $eventOptionsBySecurityRoles);
 
@@ -405,7 +425,8 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function addEditOnAddEvent(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
+        // POCOR-7626
+        if ($data->offsetExists($this->getAlias())) {
             if (array_key_exists('event_method_key', $data[$this->getAlias()])) {
                 $methodKey = $data[$this->getAlias()]['event_method_key'];
                 if (!empty($methodKey)) {

@@ -5,8 +5,13 @@
 				$baseUrl = $this->Url->build([
 					'plugin' => $this->request->getParam('plugin'),
 				    'controller' => $this->request->getParam('controller'),
-				    'action' => $this->request->getParam('action')
+				    'action' => $this->request->getParam('action'),
+				    0 => 'index',
+				    1 => $encodedQueryString
 				]);
+				if (!empty($encodedQueryString)) {
+				    $baseUrl .= '/' . $encodedQueryString;
+				}
 				$template = $this->ControllerAction->getFormTemplate();
 				$this->Form->templates($template);
 
@@ -47,7 +52,7 @@
 				}
 
 				if (!empty($institutionClassOptions)) {
-					echo $this->Form->input('education_grade', array(
+					echo $this->Form->input('institution_class', array(
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $institutionClassOptions,
