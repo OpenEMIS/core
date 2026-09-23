@@ -1543,10 +1543,10 @@ class StudentUserTable extends ControllerActionTable
         //POCOR-9590: delegate to controller when it supports the method (StudentsController); fall back for InstitutionsController and others
         $permission = method_exists($this->controller, 'syncUserPermission')
             ? $this->controller->syncUserPermission()
-            : ['Institutions', 'SyncUser', 'add'];
-        if ($this->AccessControl->check([$this->controller->getName(), 'SyncUser', 'execute'])) {
-            // return;
-        // }
+            : [$this->controller->getName(), 'SyncUser', 'execute'];
+        if (!$this->AccessControl->check($permission)) {
+            return;
+        }
         //POCOR-9590: institution_students.id is a UUID — the security_user_id lives under student_id
         $securityUserId = $entity->student_id ?? $entity->id;
         if (!$this->isSyncEligibleUser($securityUserId)) {
@@ -1563,17 +1563,19 @@ class StudentUserTable extends ControllerActionTable
             'institution_student_id' => $entity->id,
         ]);
 
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
-
         $syncButton = $toolbarButtons['back'];
         $syncButton['type']          = 'button';
         $syncButton['label']         = '<i class="fa fa-refresh"></i>';
         $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
         $syncButton['attr']['title'] = __('Sync');
-        $syncButton['url'][1] = $encodedQueryString;
+        $syncButton['url'] = [
+            'plugin'     => 'Institution',
+            'controller' => 'Institutions',
+            'action'     => 'SyncUser',
+            0            => 'execute',
+            1            => $encodedParams,
+        ];
         $toolbarButtons['sync'] = $syncButton;
-        }
     }
 
     //POCOR-9590: isSyncEligibleUser + getActiveExternalSourceIdentityTypeId moved to User\Model\Behavior\UserBehavior
