@@ -637,6 +637,7 @@ trait MessagesTrait
             'noData' => 'There are no available Students for revert Student Status.',
             'reconfirm' => 'Please review the information before proceeding with the operation.',
             'notUndo' => 'Not available to revert.',
+            'alreadyEnrolled' => 'Not available to revert. The student has already been enrolled at another institution.',
             'success' => 'Student records have been reverted successfully.',
             'failed' => 'Failed to revert student records.'
         ],
