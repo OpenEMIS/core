@@ -7774,7 +7774,7 @@ class InstitutionController extends Controller
      *
      * POCOR-9822 
      * @OA\Post(
-     *     path="/api/v5/institutions/external-search/check-configuration",
+     *     path="/api/v4/institutions/external-search/check-configuration",
      *     summary="Check external search configuration",
      *     description="Returns whether an External Data Source - Identity is configured for the given nationality/identity type.",
      *     tags={"Institutions"},

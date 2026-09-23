@@ -1201,12 +1201,11 @@ class DirectoryRepository extends Controller
      */
     private function resolveExternalSearchType($nationalityId, $identityTypeId): ?string
     {
-
-        /*if (!$nationalityId || !$identityTypeId) {
+        if (!$nationalityId || !$identityTypeId) {
             return null;
-        }*/
+        }
 
-        /*$names = DB::table('config_items')
+        $names = DB::table('config_items')
             ->select('config_items.name')
             ->where('config_items.type', 'External Data Source - Identity')
             ->where('config_items.value', 1)
@@ -1217,28 +1216,36 @@ class DirectoryRepository extends Controller
                     ->where('nationalities.identity_type_id', '=', $identityTypeId);
             })
             ->pluck('config_items.name')
-            ->all();*/
+            ->all();
 
         $openEmisCoreItem = DB::table('config_items')
-                        ->where('type', 'External Data Source - Identity')
-                        ->where('value', 1)
-                        ->first();
+            ->where('type', 'External Data Source - Identity')
+            ->where('value', 1)
+            ->where('name', 'OpenEMIS Core')
+            ->first();
 
         if ($openEmisCoreItem) {
             $match = DB::table('external_data_source_attributes')
-                ->where('external_data_source_type', $openEmisCoreItem->label)
+                ->where('external_data_source_type', 'OpenEMIS Core')
                 ->where('attribute_field', 'identity_type_id')
                 ->where('value', $identityTypeId)
                 ->first();
+
             if ($match) {
                 $names[] = $openEmisCoreItem->name;
             }
         }
 
         if (empty($names)) {
+            Log::warning('resolveExternalSearchType: no nationalities row maps this nationality_id/identity_type_id to an enabled External Data Source - Identity', [
+                'nationality_id' => $nationalityId,
+                'identity_type_id' => $identityTypeId,
+                'nationality_row' => (array) (DB::table('nationalities')->where('id', $nationalityId)->first() ?? []),
+            ]);
             return null;
         }
-        
+
+        // take the last matching enabled source
         return end($names);
     }
 
@@ -1320,6 +1327,21 @@ class DirectoryRepository extends Controller
             'scope' => $scopes,
         ]);
 
+        // POCOR-9822: some IdentityServer/OAuth clients are registered as client_secret_basic
+        // rather than client_secret_post — an 'invalid_client' response on the body-post attempt
+        // (which is what Core's own CakePHP wizard sends) means the server wants Basic auth instead.
+        if ($tokenResponse->status() === 400 && ($tokenResponse->json('error') === 'invalid_client')) {
+            Log::info('Seychelles external search: body-post client auth was rejected, retrying with Basic auth', [
+                'token_uri' => $tokenUri,
+            ]);
+            $tokenResponse = Http::asForm()
+                ->withBasicAuth($clientId, $secret)
+                ->post($tokenUri, [
+                    'grant_type' => $grantType,
+                    'scope' => $scopes,
+                ]);
+        }
+
         if (!$tokenResponse->successful() || empty($tokenResponse->json('access_token'))) {
             Log::warning('Seychelles external search: token request failed', [
                 'token_uri' => $tokenUri,
@@ -1345,7 +1367,6 @@ class DirectoryRepository extends Controller
                 'status' => $userResponse->status(),
                 'body' => $userResponse->body(),
             ]);
-            echo "<pre>"; print_r($apiUrl);die;
             return $responseData;
         }
 
