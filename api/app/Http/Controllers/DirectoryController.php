@@ -926,13 +926,15 @@ class DirectoryController extends Controller
     //For POCOR-8194 End...
 
     /**
-     * POCOR-9822 
+     * POCOR-9822
      * @OA\Post(
      *     path="/api/v5/directories/external-search",
      *     summary="Search an external identity source",
-     *     description="Dispatches to the External Data Source - Identity configured in Core for the given search_type (the value returned by the config-check endpoint) and returns matching records.
-     * 
+     *     description="Resolves whichever External Data Source - Identity is enabled in Core for the given nationality_id/identity_type_id (no search_type needed from the caller) and searches it. Supports UNHCR, Seychelles Civil Status, and OpenEMIS Core only.",
      *     tags={"Directories"},
+     *     @OA\Parameter(name="nationality_id", in="query", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="identity_type_id", in="query", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="identity_number", in="query", required=false, @OA\Schema(type="string")),
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",

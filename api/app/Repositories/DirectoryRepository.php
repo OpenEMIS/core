@@ -1126,27 +1126,33 @@ class DirectoryRepository extends Controller
     }
     //For POCOR-8194 End...
 
-    // POCOR-9822 start
+    
     /**
-     * Mirrors DirectoriesController::directoryExternalSearch() from OpenEMIS Core (CakePHP),
-     * so the v5 REST layer can expose the same external-identity search the Directory Add User
-     * wizard uses (UNHCR / Seychelles Civil Status / OpenEMIS Core), driven by whichever
-     * "External Data Source - Identity" is configured & enabled in Core.
-     *
+     *  POCOR-9822
      * @param array $params first_name, last_name, openemis_no, identity_number, nationality_id,
-     *                       date_of_birth, limit, page, search_type (the `value` returned by
-     *                       checkExternalSearchConfiguration()).
+     *                       identity_type_id, date_of_birth, limit, page. The caller does NOT pass
+     *                       search_type — the enabled External Data Source - Identity for the given
+     *                       nationality_id/identity_type_id is resolved here, the same way
+     *                       InstitutionRepository::checkExternalSearchConfiguration() finds it.
      * @return array
      */
     public function externalSearch($params)
     {
+
         $identityNumber = $params['identity_number'] ?? null;
         $dateOfBirth = !empty($params['date_of_birth']) ? date('Y-m-d', strtotime($params['date_of_birth'])) : null;
-        $searchType = $params['search_type'] ?? '';
+        $nationalityId = $params['nationality_id'] ?? null;
+        $identityTypeId = $params['identity_type_id'] ?? null;
 
-        // POCOR-9590: 'Seychellois' is an alias for 'Seychelles Civil Status'
-        if ($searchType === 'Seychellois') {
-            $searchType = 'Seychelles Civil Status';
+        $searchType = $this->resolveExternalSearchType($nationalityId, $identityTypeId);
+        $noData = ['data' => [], 'total' => 0];
+
+        if (empty($searchType)) {
+            Log::warning(
+                'External search: no External Data Source - Identity is enabled for this nationality/identity type',
+                ['nationality_id' => $nationalityId, 'identity_type_id' => $identityTypeId]
+            );
+            return $noData;
         }
 
         $attributes = DB::table('external_data_source_attributes')
@@ -1154,7 +1160,14 @@ class DirectoryRepository extends Controller
             ->pluck('value', 'attribute_field')
             ->all();
 
-        $noData = ['data' => [], 'total' => 0];
+        if (empty($attributes)) {
+            // Most common cause of a silent empty result: no rows in external_data_source_attributes
+            // for this exact external_data_source_type value on this environment/DB.
+            Log::warning(
+                'External search: no external_data_source_attributes configured for this search_type',
+                ['search_type' => $searchType]
+            );
+        }
 
         try {
             if ($searchType === 'UNHCR') {
@@ -1181,6 +1194,54 @@ class DirectoryRepository extends Controller
         return $response;
     }
 
+    /**
+     * POCOR-9822: resolves which External Data Source - Identity to use for a nationality/identity
+     * type combo, mirroring InstitutionRepository::checkExternalSearchConfiguration(). The caller
+     * doesn't pass search_type — if more than one enabled source matches, the last one is used.
+     */
+    private function resolveExternalSearchType($nationalityId, $identityTypeId): ?string
+    {
+
+        /*if (!$nationalityId || !$identityTypeId) {
+            return null;
+        }*/
+
+        /*$names = DB::table('config_items')
+            ->select('config_items.name')
+            ->where('config_items.type', 'External Data Source - Identity')
+            ->where('config_items.value', 1)
+            ->where('config_items.name', '!=', 'OpenEMIS Core')
+            ->join('nationalities', function ($join) use ($nationalityId, $identityTypeId) {
+                $join->on('nationalities.external_validation', '=', 'config_items.id')
+                    ->where('nationalities.id', '=', $nationalityId)
+                    ->where('nationalities.identity_type_id', '=', $identityTypeId);
+            })
+            ->pluck('config_items.name')
+            ->all();*/
+
+        $openEmisCoreItem = DB::table('config_items')
+                        ->where('type', 'External Data Source - Identity')
+                        ->where('value', 1)
+                        ->first();
+
+        if ($openEmisCoreItem) {
+            $match = DB::table('external_data_source_attributes')
+                ->where('external_data_source_type', $openEmisCoreItem->label)
+                ->where('attribute_field', 'identity_type_id')
+                ->where('value', $identityTypeId)
+                ->first();
+            if ($match) {
+                $names[] = $openEmisCoreItem->name;
+            }
+        }
+
+        if (empty($names)) {
+            return null;
+        }
+        
+        return end($names);
+    }
+
     private function getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth): array
     {
         $applicationId = $attributes['application_id'] ?? '';
@@ -1198,22 +1259,35 @@ class DirectoryRepository extends Controller
 
         $token = $tokenResponse->successful() ? $tokenResponse->json('data.token') : null;
 
-        if ($token) {
-            $userResponse = Http::withHeaders([
-                'token' => $token,
-                'Content-Type' => 'application/json',
-            ])->post($userDataUri, [
-                'identity_number' => $identityNumber,
-                'date_of_birth' => $dateOfBirth,
+        if (!$token) {
+            Log::warning('UNHCR external search: token request failed', [
+                'token_uri' => $tokenUri,
+                'status' => $tokenResponse->status(),
+                'body' => $tokenResponse->body(),
             ]);
+            return $responseData;
+        }
 
-            if ($userResponse->successful() && $userResponse->json('result') !== null) {
-                $answer = [];
-                if ($userResponse->json('result')) {
-                    $answer['identity_number'] = $identityNumber;
-                }
-                $responseData = ['data' => [$answer]];
+        $userResponse = Http::withHeaders([
+            'token' => $token,
+            'Content-Type' => 'application/json',
+        ])->post($userDataUri, [
+            'identity_number' => $identityNumber,
+            'date_of_birth' => $dateOfBirth,
+        ]);
+
+        if ($userResponse->successful() && $userResponse->json('result') !== null) {
+            $answer = [];
+            if ($userResponse->json('result')) {
+                $answer['identity_number'] = $identityNumber;
             }
+            $responseData = ['data' => [$answer]];
+        } else {
+            Log::warning('UNHCR external search: identity validation request failed or returned no result', [
+                'user_data_uri' => $userDataUri,
+                'status' => $userResponse->status(),
+                'body' => $userResponse->body(),
+            ]);
         }
 
         return $responseData;
@@ -1247,6 +1321,11 @@ class DirectoryRepository extends Controller
         ]);
 
         if (!$tokenResponse->successful() || empty($tokenResponse->json('access_token'))) {
+            Log::warning('Seychelles external search: token request failed', [
+                'token_uri' => $tokenUri,
+                'status' => $tokenResponse->status(),
+                'body' => $tokenResponse->body(),
+            ]);
             return $responseData;
         }
 
@@ -1261,6 +1340,12 @@ class DirectoryRepository extends Controller
         $record = $payload['record'] ?? $payload;
 
         if (!$userResponse->successful() || empty($record)) {
+            Log::warning('Seychelles external search: record lookup failed or returned no record', [
+                'api_url' => $apiUrl . '/' . $identityNumber,
+                'status' => $userResponse->status(),
+                'body' => $userResponse->body(),
+            ]);
+            echo "<pre>"; print_r($apiUrl);die;
             return $responseData;
         }
 
@@ -1315,27 +1400,40 @@ class DirectoryRepository extends Controller
 
         $token = $tokenResponse->successful() ? $tokenResponse->json('data.token') : null;
 
-        if ($token) {
-            $userResponse = Http::withHeaders([
-                'authorization' => 'Bearer ' . $token,
-            ])->get($userDataEndpoint, ['openemis_no' => $identityNumber]);
+        if (!$token) {
+            Log::warning('OpenEMIS Core external search: token request failed', [
+                'token_uri' => $tokenUri,
+                'status' => $tokenResponse->status(),
+                'body' => $tokenResponse->body(),
+            ]);
+            return $responseData;
+        }
 
-            $decodedData = $userResponse->json('data') ?? [];
-            if (isset($decodedData['data'])) {
-                $decodedData = $decodedData['data'];
-            }
+        $userResponse = Http::withHeaders([
+            'authorization' => 'Bearer ' . $token,
+        ])->get($userDataEndpoint, ['openemis_no' => $identityNumber]);
 
-            if ($userResponse->successful()) {
-                $responseData = ['data' => [], 'total' => 0];
-                if (!empty($decodedData)) {
-                    foreach ($decodedData as &$answer) {
-                        $answer['identity_number'] = $answer['openemis_no'] ?? null;
-                        unset($answer['openemis_no']);
-                    }
-                    unset($answer);
-                    $responseData = ['data' => $decodedData, 'total' => count($decodedData)];
+        $decodedData = $userResponse->json('data') ?? [];
+        if (isset($decodedData['data'])) {
+            $decodedData = $decodedData['data'];
+        }
+
+        if ($userResponse->successful()) {
+            $responseData = ['data' => [], 'total' => 0];
+            if (!empty($decodedData)) {
+                foreach ($decodedData as &$answer) {
+                    $answer['identity_number'] = $answer['openemis_no'] ?? null;
+                    unset($answer['openemis_no']);
                 }
+                unset($answer);
+                $responseData = ['data' => $decodedData, 'total' => count($decodedData)];
             }
+        } else {
+            Log::warning('OpenEMIS Core external search: security-users lookup failed', [
+                'user_data_endpoint' => $userDataEndpoint,
+                'status' => $userResponse->status(),
+                'body' => $userResponse->body(),
+            ]);
         }
 
         return $responseData;
