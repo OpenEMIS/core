@@ -1,3 +1,16 @@
+### 5.20.0 - 2026-09-23
+- Implemented: Upgrade repo ikrst-cakephp-webhooks to CakePHP v5
+- Implemented: Develop staff profile placeholders
+- Bug Fixed: Core>Institution>Students>Delete : Error 404 seen on clicking deleting student
+- Bug Fixed: Institution > Students > General > Guardian > View : User is redirected to Directory when trying to view Guardian profile and thus as a principal/teacher they are unable to see.
+- Bug Fixed: Directory >>Import Users :When a file with inadequate information was uploaded the system displayed 404 error .
+- Bug Fixed: Identities : 404 Error is displayed when user click on Cancel button at>>Directory>>Student name>>Identities
+- Bug Fixed: Institution> General > Profiles > Classes & Students : User sees failed as error message when trying to generate Classes profile.
+- Bug Fixed: api v5 documentation does not render
+- Bug Fixed: Attendances > Students : Reorder Education Grade and move it above Class. 
+- Bug Fixed: Institutions > Students > Undo : An exclamation mark with a message is displayed for Student who has already been enrolled at another institution
+- Bug Fixed: Institution>Cases: Cases are not triggered even when conditions are met
+
 ### 5.19.0 - 2026-09-14
 - Bug Fixed: Institutions > Scanned : UI buttons do now follow the system theme
 - Bug Fixed: SSO Plugin : Fix OAuth Compatibility Issues in CakePHP 5 and Assess Deprecated Authentication APIs

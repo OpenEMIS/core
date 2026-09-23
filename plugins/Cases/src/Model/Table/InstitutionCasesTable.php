@@ -76,7 +76,10 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         //POCOR-7367::Start
         //POCOR-7613 start
-        if ($this->request->getParam('controller') == "Profiles") {
+        // POCOR-9788: this table is now also saved from CLI shells (no bound HTTP request),
+        // so $this->request is undefined there - guard the same way established elsewhere
+        // in this codebase (e.g. WorkflowActionsTable.php, ControllerAction SecurityTrait).
+        if (property_exists($this, 'request') && $this->request && $this->request->getParam('controller') == "Profiles") {
             if ($entity->assignee_id == 0 || empty($entity->assignee_id)) {
                 $this->Alert->warning('Cases.noAssignee', ['reset' => true]);
                 return false;
@@ -130,7 +133,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->autoLinkRecordWithCases($linkedRecordEntity);
     }
 
-    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    public function indexBeforeActionbkp(EventInterface $event, ArrayObject $extra)
     {
         $this->field('linked_records', [
             'type' => 'custom_linked_records',
@@ -143,9 +146,11 @@ class InstitutionCasesTable extends ControllerActionTable
             'after' => 'linked_records'
         ]);
 
-        if (is_null($this->request->getQuery['sort'])) { // comment cakephp4
-            $this->request->getQuery['sort'] = 'created';
-            $this->request->getQuery['direction'] = 'desc';
+        if (is_null($this->request->getQuery('sort'))) { 
+            $this->request = $this->request->withQueryParams([
+                'sort' => 'created',
+                'direction' => 'desc',
+            ]);
         }
 
         $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
@@ -163,8 +168,8 @@ class InstitutionCasesTable extends ControllerActionTable
         $featureOptions = $newFeatureOption;
 
         $featureOptions = ['-1' => '-- ' . __('All') . ' --'] + $featureOptions;
-        if (!is_null($this->request->getQuery['feature']) && array_key_exists($this->request->getQuery('feature'), $featureOptions)) {
-            $selectedFeature = $this->request->getQuery['feature'];
+        if (!is_null($this->request->getQuery('feature')) && array_key_exists($this->request->getQuery('feature'), $featureOptions)) {
+            $selectedFeature = $this->request->getQuery('feature');
         } else {
             $selectedFeature = key($featureOptions);
             $this->request = $this->request->withQueryParams(['feature' => $selectedFeature]);
@@ -176,9 +181,13 @@ class InstitutionCasesTable extends ControllerActionTable
         $session = $this->request->getSession();
         $requestQuery = $this->request->getQuery();
         $institutionId = $session->read('Institution.Institutions.id');
+        if (empty($institutionId)) {
+            $institutionId = $this->getInstitutionID();
+        }
+        $this->controller->set(compact('institutionId'));
 
         $params = new ArrayObject([
-            'element' => ['filter' => ['name' => 'Cases.controls', 'order' => 2]],
+            'element' => ['filter' => ['name' => 'Cases.StudentAbsences/controls', 'order' => 2]],
             'options' => [],
             'query' => $this->request->getQuery()
         ]);
@@ -213,24 +222,214 @@ class InstitutionCasesTable extends ControllerActionTable
             $helpBtn['attr'] = $btnAttr;
             $helpBtn['attr']['title'] = __('Help');
             $extra['toolbarButtons']['help'] = $helpBtn;
-
-
             // End POCOR-5188
         }
     }
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('linked_records', [
+            'type' => 'custom_linked_records',
+            'valueClass' => 'table-full-width',
+            'after' => 'description',
+            'visible' => 'false' // POCOR-7613
+        ]);
 
+        $this->field('created', [
+            'visible' => true,
+            'after' => 'linked_records'
+        ]);
+
+        if (is_null($this->request->getQuery('sort'))) {
+            $this->request = $this->request->withQueryParams([
+                'sort' => 'created',
+                'direction' => 'desc',
+            ]);
+        }
+
+        $WorkflowRules = TableRegistry::getTableLocator()->get('Workflow.WorkflowRules');
+        $featureOptions = $WorkflowRules->getFeatureOptions();
+
+        $newFeatureOption = [];
+
+        // Order to follow what is defined at OptionsTrait
+        foreach ($this->getSelectOptions("WorkflowRules.features") as $key => $value) {
+            if (array_key_exists($key, $featureOptions)) {
+                $newFeatureOption[$key] = $featureOptions[$key];
+            }
+        }
+
+        $featureOptions = $newFeatureOption;
+
+        $featureOptions = ['-1' => '-- ' . __('All') . ' --'] + $featureOptions;
+
+        $requestQuery = $this->request->getQuery('query') ?? [];
+        $urlQuery = $this->request->getParam('?') ?? [];
+        $selectedAcademicPeriod = $urlQuery['academic_period_id']
+        ?? ($requestQuery['academic_period_id'] ?? null);
+
+        $selectedEducationGrades = $urlQuery['education_grade_id']
+            ?? ($requestQuery['education_grade_id'] ?? null);
+
+        $selectedClassId = $urlQuery['institution_class_id']
+            ?? ($requestQuery['institution_class_id'] ?? null);
+            $selectedCategory = $urlQuery['category']
+        ?? ($requestQuery['category'] ?? '-1');
+        // Get feature from URL first.
+        // Example: ?feature=StudentAttendances&category=-1
+        $selectedFeature = $urlQuery['feature']
+            ?? ($requestQuery['feature'] ?? null);
+
+        // If no feature was provided, use "All"
+        if ($selectedFeature === null || $selectedFeature === '') {
+            $selectedFeature = '-1';
+        }
+
+        // Make sure selected feature exists in the dropdown options.
+        // If not, default to "All".
+        if (!array_key_exists($selectedFeature, $featureOptions)) {
+            $selectedFeature = '-1';
+        }
+
+        // Keep request query parameter in sync
+        $this->request = $this->request->withQueryParams([
+            'feature' => $selectedFeature,
+            'academic_period_id' => $selectedAcademicPeriod,
+            'education_grade_id' => $selectedEducationGrades,
+            'institution_class_id' => $selectedClassId,
+            'category' => $selectedCategory,
+        ]);
+
+        $this->controller->set(compact(
+            'featureOptions',
+            'selectedFeature'
+        ));
+        $selectedModel = $this->features[$selectedFeature];
+
+        $session = $this->request->getSession();
+        $institutionId = $session->read('Institution.Institutions.id');
+
+        if (empty($institutionId)) {
+            $institutionId = $this->getInstitutionID();
+        }
+
+        $this->controller->set(compact('institutionId'));
+
+        /*
+         * Filter toolbar parameters
+         */
+        $params = new ArrayObject([
+            'element' => [
+                'filter' => [
+                    'name' => 'Cases.StudentAbsences/controls',
+                    'order' => 2
+                ]
+            ],
+            'options' => [],
+            'query' => $this->request->getQuery()
+        ]);
+
+        if (!empty($selectedModel)) {
+            $featureModel = TableRegistry::getTableLocator()->get($selectedModel);
+
+            $featureModel->dispatchEvent(
+                'InstitutionCase.onSetFilterToolbarElement',
+                [$params, $institutionId],
+                $featureModel
+            );
+        }
+
+        /*
+         * Keep the filter query parameters
+         */
+        $this->request = $this->request->withQueryParams([
+            'query' => $params['query']
+        ]);
+
+        if (!empty($params['options'])) {
+            $this->controller->set($params['options']);
+        }
+
+        /*
+         * Create encoded query string
+         */
+        $queryString = $this->getQueryString();
+
+        $queryString['institution_id'] = $institutionId;
+        $queryString['feature'] = $selectedFeature;
+
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        /*
+         * Pass encoded query string to controller/view
+         */
+        $this->controller->set(compact('encodedQueryString'));
+        /*
+         * Keep original element configuration
+         */
+        $extra['elements'] = $params['element'] + $extra['elements'];
+
+        // Start POCOR-5188
+        $is_manual_exist = $this->getManualUrl('Institutions', 'Cases', 'Cases');
+
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
+
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
+    }
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $requestQuery = $this->request->getQuery('query');
-        $selectedFeature = $requestQuery['feature'];
-        $featureModel = !empty($this->features[$selectedFeature]) ? TableRegistry::getTableLocator()->get($this->features[$selectedFeature]) : '';
-        //$featureModel = TableRegistry::getTableLocator()->get($this->features[$selectedFeature]);
+        $requestQuery = $this->request->getQuery('query') ?? [];
+        $urlQuery = $this->request->getParam('?') ?? [];
 
-        //POCOR-7437 start
+        $selectedFeature = $urlQuery['feature']
+            ?? ($requestQuery['feature'] ?? -1);
+
+        if ($selectedFeature === null && is_array($requestQuery)) {
+            $selectedFeature = $requestQuery['feature'] ?? -1;
+        }
+
+        $selectedFeature = $selectedFeature ?: -1;
+
+        // Category filter
+        $selectedCategory = $this->request->getQuery('category');
+
+        if ($selectedCategory === null && is_array($requestQuery)) {
+            $selectedCategory = $requestQuery['category'] ?? -1;
+        }
+
+        $featureModel = '';
+
+        if (!empty($this->features[$selectedFeature])) {
+            $featureModel = TableRegistry::getTableLocator()->get(
+                $this->features[$selectedFeature]
+            );
+        }
+
+        // POCOR-7437
         $controllerName = $this->request->getParam('controller');
+
         if ($controllerName == "Profiles") {
+
             $userId = $this->getUserID();
-            $where = [$this->aliasField('created_user_id') => $userId];
+
+            $where = [
+                $this->aliasField('created_user_id') => $userId
+            ];
+
             $query
                 ->select([
                     $this->aliasField('id'),
@@ -244,6 +443,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     $this->aliasField('modified'),
                     $this->aliasField('created_user_id'),
                     $this->aliasField('created'),
+
                     $this->Assignees->aliasField('first_name'),
                     $this->Assignees->aliasField('middle_name'),
                     $this->Assignees->aliasField('last_name'),
@@ -252,16 +452,25 @@ class InstitutionCasesTable extends ControllerActionTable
                 ])
                 ->contain(['LinkedRecords'])
                 ->innerJoin(
-                    [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                     [
-                        [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                        //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']// comment cakephp 4
+                        $this->LinkedRecords->getAlias()
+                        => $this->LinkedRecords->getTable()
+                    ],
+                    [
+                        $this->LinkedRecords->aliasField('institution_case_id = ')
+                        . $this->aliasField('id'),
+
+                        $this->LinkedRecords->aliasField('feature = ')
+                        . '"' . $selectedFeature . '"'
                     ]
                 )
-                ->where($where)//POCOR-7668
+                ->where($where)
                 ->group($this->aliasField('id'));
-        } else {//POCOR-7437 end
-            if ($selectedFeature != -1) { //start POCOR-6210
+
+        } else {
+
+            if ($selectedFeature != -1) {
+
                 $query
                     ->select([
                         $this->aliasField('id'),
@@ -275,6 +484,7 @@ class InstitutionCasesTable extends ControllerActionTable
                         $this->aliasField('modified'),
                         $this->aliasField('created_user_id'),
                         $this->aliasField('created'),
+
                         $this->Assignees->aliasField('first_name'),
                         $this->Assignees->aliasField('middle_name'),
                         $this->Assignees->aliasField('last_name'),
@@ -283,14 +493,23 @@ class InstitutionCasesTable extends ControllerActionTable
                     ])
                     ->contain(['LinkedRecords'])
                     ->innerJoin(
-                        [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                         [
-                            [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                            [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                            $this->LinkedRecords->getAlias()
+                            => $this->LinkedRecords->getTable()
+                        ],
+                        [
+                            $this->LinkedRecords->aliasField('institution_case_id = ')
+                            . $this->aliasField('id'),
+
+                            $this->LinkedRecords->aliasField('feature = ')
+                            . '"' . $selectedFeature . '"'
                         ]
                     )
-                    ->where([$this->LinkedRecords->aliasField('record_id NOT IN') => 0])//start POCOR-6210
+                    ->where([
+                        $this->LinkedRecords->aliasField('record_id NOT IN') => 0
+                    ])
                     ->group($this->aliasField('id'));
+
             } else {
                 $query
                     ->select([
@@ -305,6 +524,7 @@ class InstitutionCasesTable extends ControllerActionTable
                         $this->aliasField('modified'),
                         $this->aliasField('created_user_id'),
                         $this->aliasField('created'),
+
                         $this->Assignees->aliasField('first_name'),
                         $this->Assignees->aliasField('middle_name'),
                         $this->Assignees->aliasField('last_name'),
@@ -313,23 +533,31 @@ class InstitutionCasesTable extends ControllerActionTable
                     ])
                     ->contain(['LinkedRecords'])
                     ->innerJoin(
-                        [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                         [
-                            [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                            //[$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                            $this->LinkedRecords->getAlias()
+                            => $this->LinkedRecords->getTable()
+                        ],
+                        [
+                            $this->LinkedRecords->aliasField('institution_case_id = ')
+                            . $this->aliasField('id'),
+
+                            //$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"'
                         ]
                     )
                     ->group($this->aliasField('id'));
-
             }
         }
 
-        // $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
-        if ($selectedFeature != 'StudentAttendances') {
+        // Do not dispatch for StudentAttendances
+        //if ($selectedFeature != 'StudentAttendances') { // comment line in POCOR-7626
             if (!empty($featureModel)) {
-                $featureModel->dispatchEvent('InstitutionCase.onCaseIndexBeforeQuery', [$requestQuery, $query], $featureModel);
+                $featureModel->dispatchEvent(
+                    'InstitutionCase.onCaseIndexBeforeQuery',
+                    [$requestQuery, $query],
+                    $featureModel
+                );
             }
-        }
+       // }
     }
 
     public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
@@ -575,9 +803,21 @@ class InstitutionCasesTable extends ControllerActionTable
                                     'feature' => $feature
                                 ];
 
+                                // POCOR-9788: case_type_id/case_priority_id/description became required
+                                // (POCOR-7613) after this fallback was written, so save() was silently
+                                // failing validation for every feature without its own onSetCaseRecord
+                                // handler (e.g. StaffBehaviours) - default them so the case actually saves.
+                                $defaultCaseTypeId = TableRegistry::getTableLocator()->get('Cases.CaseTypes')
+                                    ->find()->where(['name' => 'Institution'])->first();
+                                $defaultCasePriorityId = TableRegistry::getTableLocator()->get('Cases.CasePriorities')
+                                    ->find()->where(['name' => 'Medium'])->first();
+
                                 $caseData = [
                                     'case_number' => '',
                                     'title' => $title,
+                                    'description' => $title,
+                                    'case_type_id' => $defaultCaseTypeId ? $defaultCaseTypeId->id : null,
+                                    'case_priority_id' => $defaultCasePriorityId ? $defaultCasePriorityId->id : null,
                                     'status_id' => $statusId,
                                     'assignee_id' => $assigneeId,
                                     'institution_id' => $institutionId,
@@ -1105,5 +1345,133 @@ class InstitutionCasesTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
         return $event->getSubject()->renderElement('Cases.comment', ['attr' => $attr]);
     }
-    //POCOR-7613 end
+
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $workflowModel = 'Institutions > Cases';
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+            $workModelId = $Workflows
+                ->find()
+                ->select(['id' => $workflowModelsTable->aliasField('id'),
+                    'workflow_id' => $Workflows->aliasField('id'),
+                    'is_school_based' => $workflowModelsTable->aliasField('is_school_based')])
+                ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
+                    [
+                        $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
+                    ])
+                ->where([$workflowModelsTable->aliasField('name') => $workflowModel])->first();
+            $workflowId = $workModelId->workflow_id;
+            $isSchoolBased = $workModelId->is_school_based;
+            $workflowStepsOptions = $workflowStepsTable
+                ->find()
+                ->select([
+                    'stepId' => $workflowStepsTable->aliasField('id'),
+                ])
+                ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                ->first();
+            $stepId = $workflowStepsOptions->stepId;
+            $session = $request->getSession();
+            $institutionId = $this->getInstitutionID();
+            if ($session->check('Institution.Institutions.id')) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+            $assigneeOptions = [];
+            if (!is_null($stepId)) {
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
+                $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
+                if (!empty($stepRoles)) {
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+                    if ($isSchoolBased) {
+                        if (is_null($institutionId)) {
+                            Log::write('debug', 'Institution Id not found.');
+                        } else {
+                            $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
+                            $securityGroupId = $institutionObj->security_group_id;
+                            $areaObj = $institutionObj->area;
+                            // School based assignee
+                            $where = [
+                                'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                                    ['Institutions.id' => $institutionId]],
+                                $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
+                            ];
+                            $schoolBasedAssigneeQuery = $SecurityGroupUsers
+                                ->find('userList', ['where' => $where])
+                                ->leftJoinWith('SecurityGroups.Institutions');
+                            $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+
+                            // Region based assignee
+                            $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                            $regionBasedAssigneeQuery = $SecurityGroupUsers
+                                ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+
+                            $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
+                            // End
+                            $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+                        }
+                    } else {
+                        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                        $assigneeQuery = $SecurityGroupUsers
+                            ->find('userList', ['where' => $where])
+                            ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                        $assigneeOptions = $assigneeQuery->toArray();
+                    }
+                }
+            }
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
+            $attr['onChangeReload'] = 'changeStatus';
+            return $attr;
+        }
+
+    }
+
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        $locator = TableRegistry::getTableLocator();;
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        // Parse plugin and table names if dot notation is used
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+    
 }

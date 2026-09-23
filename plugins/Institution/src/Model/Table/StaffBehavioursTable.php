@@ -26,6 +26,33 @@ class StaffBehavioursTable extends ControllerActionTable
     const TO_DO = 1; //POCOR-6670
     const IN_PROGRESS = 2; //POCOR-6670
     const DONE = 3; //POCOR-6670
+
+    // POCOR-7626: Rule Events offered on Workflow > Rules for the Staff Behaviours feature.
+    // Only the institution-level .
+    private $workflowRuleEvents = [
+        [
+            'value' => 'Workflow.onAssignToHomeRoomTeacher',
+            'text' => 'Assign to Home Room Teacher',
+            'description' => 'Triggering this rule will assign the case to the respective Home Room Teacher',
+            'method' => 'onAssignToHomeRoomTeacher',
+            'roleCode' => 'HOMEROOM_TEACHER'
+        ],
+        [
+            'value' => 'Workflow.onAssignToSecondaryTeacher',
+            'text' => 'Assign to Secondary Teacher',
+            'description' => 'Triggering this rule will assign the case to the respective Secondary Teacher',
+            'method' => 'onAssignToSecondaryTeacher',
+            'roleCode' => 'HOMEROOM_TEACHER'
+        ],
+        [
+            'value' => 'Workflow.onAssignToPrincipal',
+            'text' => 'Assign to Principal',
+            'description' => 'Triggering this rule will assign the case to Principal',
+            'method' => 'onAssignToPrincipal',
+            'roleCode' => 'PRINCIPAL'
+        ]
+    ];
+
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -84,7 +111,52 @@ class StaffBehavioursTable extends ControllerActionTable
         $events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
         $events['InstitutionCase.onIncludeCustomExcelFields'] = 'onIncludeCustomExcelFields';
         $events['InstitutionCase.onBuildCustomQuery'] = 'onBuildCustomQuery';
+
+        // POCOR-7626: without this, Workflow > Rules > Rule Events > Add Event shows
+        // "No options" for the Staff Behaviours feature - WorkflowRulesTable::getEvents()
+        // dispatches 'Workflow.getRuleEvents' on this table looking for a listener.
+        $events['Workflow.getRuleEvents'] = 'getWorkflowRuleEvents';
+        foreach ($this->workflowRuleEvents as $event) {
+            $events[$event['value']] = $event['method'];
+        }
         return $events;
+    }
+
+    public function getWorkflowRuleEvents(EventInterface $event, ArrayObject $eventsObject)
+    {
+        foreach ($this->workflowRuleEvents as $key => $attr) {
+            $attr['text'] = __($attr['text']);
+            $attr['description'] = __($attr['description']);
+            $eventsObject[] = $attr;
+        }
+    }
+
+    public function onAssignToPrincipal(EventInterface $event, Entity $caseEntity, Entity $linkedRecordEntity, ArrayObject $extra)
+    {
+        $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        $Cases = TableRegistry::getTableLocator()->get('Cases.InstitutionCases');
+
+        $institutionPrincipal = $InstitutionPositions->find()
+            ->select([
+                'principal_id' => 'InstitutionStaff.staff_id'
+            ])
+            ->matching('InstitutionStaff')
+            ->matching('StaffPositionTitles')
+            ->where([
+                'InstitutionStaff.institution_id' => $linkedRecordEntity->institution_id,
+                'StaffPositionTitles.name ' => 'Principal'
+            ])
+            ->first();
+
+        if (!empty($institutionPrincipal)) {
+            $staffId = $institutionPrincipal->principal_id;
+
+            if (!empty($staffId)) {
+                $caseEntity->assignee_id = $staffId;
+                $extra['assigneeFound'] = true;
+                $Cases->save($caseEntity);
+            }
+        }
     }
 
    /* public function validationDefault(Validator $validator): Validator
@@ -556,8 +628,7 @@ class StaffBehavioursTable extends ControllerActionTable
         ]);
         $title = '';
         $title .= $recordEntity->staff->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->staff_behaviour_category->name;
-
-        return [$title, true];
+        return $title;
     }
 
     public function onSetCustomCaseSummary(EventInterface $event, $id = null)

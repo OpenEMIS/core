@@ -53,7 +53,12 @@ class DirectoriesController extends AppController
             'TrainingResults' => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 
             'ImportUsers' => ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
-            'ImportSalaries' => ['className' => 'Staff.ImportSalaries', 'actions' => ['add']]
+            'ImportSalaries' => ['className' => 'Staff.ImportSalaries', 'actions' => ['add']],
+            // POCOR-9805: StaffController and StudentsController both register this same alias
+            // (StudentsController's own POCOR-9584 comment: "so Import button from Students >
+            // Qualifications works") - DirectoriesController never got the matching entry, so the
+            // "Import" button on Directory > [person] > Staff Qualifications 404'd for everyone.
+            'ImportStaffQualifications' => ['className' => 'Staff.ImportStaffQualifications', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Training.Training');
@@ -485,10 +490,25 @@ class DirectoriesController extends AppController
 
     // AngularJS
 
-    public function ImportStaffQualifications()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.ImportStaffQualifications']);
-    }
+    // POCOR-9805: previously had an explicit ImportStaffQualifications() method here calling
+    // $this->ControllerAction->process() directly (CakePHP's "v4" dispatch,
+    // ControllerActionV4Trait), which crashed two different ways:
+    //  1. ImportStaffQualificationsTable extends AppTable, not ControllerActionTable, so it
+    //     never gets the core `ControllerAction.ControllerAction` behavior that provides the
+    //     'add' action itself - v4's process() dispatches straight to
+    //     'ControllerAction.Model.add' with no listener registered, throwing
+    //     MissingActionException("Action DirectoriesController::add() could not be found").
+    //  2. Separately, ControllerActionV4Trait::process() never populates $this->model on the
+    //     ControllerAction component (it only keeps a local $model variable), so any shared
+    //     behavior code assuming it's set (e.g. ImportBehavior::beforeAction() calling
+    //     ->field(), which crashed with "Attempt to assign property fieldOrder on null" -
+    //     patched separately in ControllerActionComponent::field()) is fragile on this path too.
+    // StaffController and StudentsController both already run this exact same table
+    // successfully - via the OLDER "v3" $this->ControllerAction->models[] registration array
+    // (see initialize() above, 'ImportStaffQualifications' entry), which dynamically binds
+    // the model with the right actions instead of assuming the table configured itself for v4.
+    // Removing this explicit method lets the same already-working v3 path handle it here too,
+    // instead of two different broken v4 code paths.
 
     public function Addguardian()
     {
@@ -975,8 +995,18 @@ class DirectoriesController extends AppController
                     $alias = substr($alias, 7);
                 }
                 $this->Navigation->addCrumb($model->getHeader($alias));
-                $directoryUrl =  $this->request->getAttribute('params')['pass'][0];
-                if($directoryUrl == 'index'){
+                $directoryUrl =  $this->request->getAttribute('params')['pass'][0] ?? null;
+                // POCOR-9796: the base "/Directory/Directories/" listing route has no pass
+                // segment at all (see plugins/Directory/config/routes.php), so pass[0] is
+                // undefined rather than the literal string 'index' there - treat it as index
+                // too, but only for the base listing itself. Other sub-action tabs (Student
+                // Profiles, Student Guardians, etc.) are also reached with no pass segment and
+                // must keep their "<name> - <tab>" header, so this can't be a blanket default.
+                $isBaseListing = ($directoryUrl === null && $alias === 'Directories');
+                // Import actions (e.g. ImportUsers) are bulk actions not tied to any single
+                // directory record, so they should never be prefixed with a leftover record
+                // name from a previously viewed profile still lingering in the session.
+                if($directoryUrl == 'index' || $isBaseListing || strpos($alias, 'Import') === 0){
                     $header = $model->getHeader($alias);
                 }else{
                     $header = $header . ' - ' . $model->getHeader($alias);

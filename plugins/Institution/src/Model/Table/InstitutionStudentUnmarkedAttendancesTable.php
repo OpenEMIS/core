@@ -29,6 +29,32 @@ class InstitutionStudentUnmarkedAttendancesTable extends ControllerActionTable
     private $institutionId = null;
     private $staffId = null;
 
+    // POCOR-7626: Rule Events offered on Workflow > Rules for the Student Unmarked
+    // Attendances feature. Only the institution-level .
+    private $workflowRuleEvents = [
+        [
+            'value' => 'Workflow.onAssignToHomeRoomTeacher',
+            'text' => 'Assign to Home Room Teacher',
+            'description' => 'Triggering this rule will assign the case to the respective Home Room Teacher',
+            'method' => 'onAssignToHomeRoomTeacher',
+            'roleCode' => 'HOMEROOM_TEACHER'
+        ],
+        [
+            'value' => 'Workflow.onAssignToSecondaryTeacher',
+            'text' => 'Assign to Secondary Teacher',
+            'description' => 'Triggering this rule will assign the case to the respective Secondary Teacher',
+            'method' => 'onAssignToSecondaryTeacher',
+            'roleCode' => 'HOMEROOM_TEACHER'
+        ],
+        [
+            'value' => 'Workflow.onAssignToPrincipal',
+            'text' => 'Assign to Principal',
+            'description' => 'Triggering this rule will assign the case to Principal',
+            'method' => 'onAssignToPrincipal',
+            'roleCode' => 'PRINCIPAL'
+        ]
+    ];
+
     public function initialize(array $config): void
     {
         $this->setTable('institution_staff_leave_archived');
@@ -49,5 +75,55 @@ class InstitutionStudentUnmarkedAttendancesTable extends ControllerActionTable
         $this->addBehavior('Institution.StaffProfile');
     }
 
-    
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+
+        // POCOR-7626: without this, Workflow > Rules > Rule Events > Add Event shows
+        // "No options" for the Student Unmarked Attendances feature - WorkflowRulesTable::
+        // getEvents() dispatches 'Workflow.getRuleEvents' on this table looking for a listener.
+        $events['Workflow.getRuleEvents'] = 'getWorkflowRuleEvents';
+        foreach ($this->workflowRuleEvents as $event) {
+            $events[$event['value']] = $event['method'];
+        }
+        return $events;
+    }
+
+    public function getWorkflowRuleEvents(EventInterface $event, ArrayObject $eventsObject)
+    {
+        foreach ($this->workflowRuleEvents as $key => $attr) {
+            $attr['text'] = __($attr['text']);
+            $attr['description'] = __($attr['description']);
+            $eventsObject[] = $attr;
+        }
+    }
+
+    public function onAssignToPrincipal(EventInterface $event, Entity $caseEntity, Entity $linkedRecordEntity, ArrayObject $extra)
+    {
+        $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        $Cases = TableRegistry::getTableLocator()->get('Cases.InstitutionCases');
+
+        $institutionPrincipal = $InstitutionPositions->find()
+            ->select([
+                'principal_id' => 'InstitutionStaff.staff_id'
+            ])
+            ->matching('InstitutionStaff')
+            ->matching('StaffPositionTitles')
+            ->where([
+                'InstitutionStaff.institution_id' => $linkedRecordEntity->institution_id,
+                'StaffPositionTitles.name ' => 'Principal'
+            ])
+            ->first();
+
+        if (!empty($institutionPrincipal)) {
+            $staffId = $institutionPrincipal->principal_id;
+
+            if (!empty($staffId)) {
+                $caseEntity->assignee_id = $staffId;
+                $extra['assigneeFound'] = true;
+                $Cases->save($caseEntity);
+            }
+        }
+    }
+
 }
