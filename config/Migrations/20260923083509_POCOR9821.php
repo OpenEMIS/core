@@ -14,8 +14,8 @@ class POCOR9821 extends AbstractMigration
      */
     public function up(): void
     {
-        // $this->execute('CREATE TABLE IF NOT EXISTS `z_9821_security_functions` LIKE `security_functions`');
-        // $this->execute('INSERT IGNORE INTO `z_9821_security_functions` SELECT * FROM `security_functions`');
+        $this->execute('CREATE TABLE IF NOT EXISTS `z_9821_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT IGNORE INTO `z_9821_security_functions` SELECT * FROM `security_functions`');
 
         $this->execute("INSERT INTO `security_functions` (
                                   `id`,

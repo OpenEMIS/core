@@ -631,29 +631,6 @@ class StudentUserTable extends ControllerActionTable
         $tabElements = $this->setUserTabElements($options);
     }
 
-    private function setupToolbarButtonsBkp(Entity $entity, ArrayObject $extra)
-    {
-        $toolbarButtons = $extra['toolbarButtons'];
-        // $this->addSyncButton($entity, $extra);
-        $toolbarButtons['back']['url']['action'] = 'Students';
-
-        // Export execute permission.
-        if (!$this->AccessControl->check(['Institutions', 'StudentUser', 'excel'])) {
-            if (isset($toolbarButtons['export'])) {
-                unset($toolbarButtons['export']);
-            }
-        }
-        $status_can_be_changed = $this->checkStatusCanBeChanged($extra); //        POCOR-8003 refactured
-        
-        if ($status_can_be_changed) {
-            $this->addPromoteButton($entity, $extra);
-            $this->addTransferButton($entity, $extra);
-            $this->addWithdrawButton($entity, $extra);
-            $this->addSyncButton($entity, $extra);
-        }
-
-    }
-
     private function setupToolbarButtons(Entity $entity, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
@@ -1499,44 +1476,6 @@ class StudentUserTable extends ControllerActionTable
     }
 
     //POCOR-9590: Sync button on the student General view toolbar — visible only when user has a preferred identity matching the active external data source's identity_type_id
-    private function addSyncButtonBkp(Entity $entity, ArrayObject $extra)
-    {
-        //POCOR-9590: delegate to controller when it supports the method (StudentsController); fall back for InstitutionsController and others
-        $permission = method_exists($this->controller, 'syncUserPermission')
-            ? $this->controller->syncUserPermission()
-            : ['Institutions', 'Students', 'add'];
-        if (!$this->AccessControl->check($permission)) {
-            return;
-        }
-        //POCOR-9590: institution_students.id is a UUID — the security_user_id lives under student_id
-        $securityUserId = $entity->student_id ?? $entity->id;
-        if (!$this->isSyncEligibleUser($securityUserId)) {
-            return; //POCOR-9590: hide button for Local users (no preferred external identity, or no active source)
-        }
-
-        $toolbarButtons = $extra['toolbarButtons'];
-
-        //POCOR-9590: encode full context (user + institution + institution_student) so syncUser can redirect back to the same view
-        $encodedParams = $this->paramsEncode([
-            'user_id'                => $securityUserId,
-            'student_id'             => $securityUserId,
-            'institution_id'         => $this->getInstitutionID(),
-            'institution_student_id' => $entity->id,
-        ]);
-
-        $syncButton = $toolbarButtons['back'];
-        $syncButton['type']          = 'button';
-        $syncButton['label']         = '<i class="fa fa-refresh"></i>';
-        $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-        $syncButton['attr']['title'] = __('Sync');
-        $syncButton['url'] = [
-            'plugin'     => 'Student',
-            'controller' => 'Students',
-            'action'     => 'SyncUser',
-            0            => $encodedParams,
-        ];
-        $toolbarButtons['sync'] = $syncButton;
-    }
 
     private function addSyncButton(Entity $entity, ArrayObject $extra)
     {
