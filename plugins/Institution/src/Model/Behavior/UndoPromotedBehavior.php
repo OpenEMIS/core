@@ -22,8 +22,59 @@ class UndoPromotedBehavior extends UndoBehavior {
 	}
 
 	public function onGetPromotedStudents(EventInterface $event, $data) {
-		return $this->getStudents($data);
+		$list = $this->getStudents($data);
+		return $this->markAlreadyEnrolledElsewhere($list);
 	}
+
+	// POCOR-9816 start
+	// A student promoted with no next grade may later enrol at a different institution.
+	// getStudents() in UndoBehavior only flags records with a non-CURRENT status elsewhere,
+	// so this catches the CURRENT-status-at-another-institution case that it deliberately skips.
+	protected function markAlreadyEnrolledElsewhere($list) {
+		$institutionStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+		$StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+		$currentStatusId = $StudentStatuses->getIdByCode('CURRENT');
+		$alreadyEnrolledMessage = $this->_table->getMessage($this->_table->getAlias() . '.alreadyEnrolled');
+
+		$studentIds = [];
+		foreach ($list as $obj) {
+			if (empty($obj->info_message)) {
+				$studentIds[] = $obj->student_id;
+			}
+		}
+
+		// Batched instead of one find() per student -- this fires on every load of the Undo
+		// Promoted Students screen, and a per-row query doesn't scale to a large cohort.
+		$currentInstitutionByStudent = [];
+		if (!empty($studentIds)) {
+			$currentRecords = $institutionStudent->find()
+				->select(['student_id', 'institution_id'])
+				->where([
+					$institutionStudent->aliasField('student_status_id') => $currentStatusId,
+					$institutionStudent->aliasField('student_id IN') => $studentIds
+				])
+				->all();
+
+			foreach ($currentRecords as $record) {
+				$currentInstitutionByStudent[$record->student_id] = $record->institution_id;
+			}
+		}
+
+		foreach ($list as $key => $obj) {
+			if (!empty($obj->info_message)) {
+				continue;
+			}
+
+			if (isset($currentInstitutionByStudent[$obj->student_id]) && $currentInstitutionByStudent[$obj->student_id] != $obj->institution_id) {
+				$obj->info_message = $alreadyEnrolledMessage;
+			}
+
+			$list[$key] = $obj;
+		}
+
+		return $list;
+	}
+	// POCOR-9816 end
 
 	public function processSavePromotedStudents(EventInterface $event, Entity $entity, ArrayObject $data) 
 	{

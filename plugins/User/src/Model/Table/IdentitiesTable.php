@@ -60,6 +60,53 @@ class IdentitiesTable extends ControllerActionTable
         return $events;
     }
 
+    /**
+     * POCOR-9805: the generic "Cancel" back-button, for a model-alias-dispatched tab like this
+     * one (ControllerActionComponent::onInitializeButtons(), $this->triggerFrom == 'Model'),
+     * builds its URL as action=<model alias> ('Identities'), pass[0]='index' - but only carries
+     * the ORIGINAL request's pass params (which include the encoded security_user_id identifying
+     * whose Identities we're even looking at) over onto the back URL when going back to 'view',
+     * never to 'index':
+     *   if ($backAction != 'index') { $backUrl = array_merge($backUrl, $pass); }
+     * On the Add form (Cancel -> back to 'index'), that param is simply dropped, so the back URL
+     * ends up as .../Directories/Identities/index with NO identifying context at all. Directory >
+     * [person] > Identities > Add > Cancel landed on that URL, and IdentitiesTable's own index
+     * query (indexBeforeQuery(), via getUserID()) then builds a `security_user_id = NULL`
+     * condition with no IS NULL/IS NOT NULL wrapper, which CakePHP's query builder correctly
+     * refuses - InvalidArgumentException, rendered as this ticket's reported error page.
+     *
+     * A 'Model.custom.onUpdateToolbarButtons' listener (this codebase's usual pattern for
+     * rewriting a back-button URL - see ImportStaffQualificationsTable) never actually fired here
+     * for the 'add' action, confirmed by a [TEMP-LOG] check finding zero log entries even on a
+     * plain page load - that hook point isn't reached on this dispatch path. Set the back URL
+     * directly here in addBeforeAction() instead (the same proven approach already used by
+     * ReportCardGenerateTable::addBeforeAction() elsewhere in this codebase), which runs early
+     * enough to survive the framework's own (broken) construction of the same button.
+     *
+     * Scoped to the 'Directories' controller only - Identities is also reached via Institution's
+     * Staff/Students tabs and Personal profiles (StaffController, StudentsController,
+     * ProfilesController), whose own back-button URLs already work correctly today. Overriding
+     * unconditionally sent Cancel from those contexts to Directory too, which was wrong -
+     * confirmed regression once this got tested there.
+     */
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        if ($this->controller->getName() !== 'Directories') {
+            return;
+        }
+        $pass = $this->request->getParam('pass');
+        if (empty($pass[1])) {
+            return;
+        }
+        $extra['toolbarButtons']['back']['url'] = [
+            'plugin' => 'Directory',
+            'controller' => 'Directories',
+            'action' => 'Identities',
+            0 => 'index',
+            1 => $pass[1],
+        ];
+    }
+
     // The bootstrap-datepicker "date" fields (issue_date/expiry_date) render/accept text in
     // whatever format is configured in System Configurations > Date Format (e.g. "July 31, 2026"),
     // not just 'Y-m-d'. Cake's DateType::marshal() only ever accepts the strict 'Y-m-d' format, so
@@ -159,7 +206,19 @@ class IdentitiesTable extends ControllerActionTable
         $options['identity_number'] = $identity_number;
 
         $message = $this->checkCustomIdentityNumber($options);
-        if ($message == "") {
+        // POCOR-9808: this listener fires on EVERY save of an imported User entity - the Import
+        // Users flow saves the same entity more than once per row (once when it's created, again
+        // as the row's own final save), so without this check it created a duplicate Identity
+        // record for the same user/type/number on each subsequent save in the same request.
+        $alreadyExists = $this->find()
+            ->where([
+                'security_user_id' => $entity->id,
+                'identity_type_id' => $identity_type_id,
+                'number' => $identity_number,
+                'nationality_id' => $nationality_id,
+            ])
+            ->count() > 0;
+        if ($message == "" && !$alreadyExists) {
 
             $userIdentityEntity = $this->newEntity([
 
@@ -170,7 +229,26 @@ class IdentitiesTable extends ControllerActionTable
                 'created_user_id' => 1,
                 'created' => new Time()
             ]);
-            $this->save($userIdentityEntity);
+            // Not atomic: this fires from the Users entity's own afterSave event, which can
+            // itself be running inside another save's already-open transaction (e.g. the Import
+            // Users flow saves the same imported User entity more than once per row - once while
+            // creating it, once again as the row's final save). Letting this open its own nested
+            // transaction meant a failure here (or a later duplicate-identity re-save attempt for
+            // the same user in the same request) would trigger a rollback of that nested scope -
+            // which, without savepoints enabled, actually rolled back the whole underlying
+            // transaction, corrupting the connection for whatever save ran next in the request.
+            // POCOR-9808: this return value was never checked - a rejection here (e.g.
+            // checkDuplicateIdentity() finding a different existing identity that shares the same
+            // number + nationality, regardless of type) was silently discarded, leaving the
+            // just-created User with no matching user_identities row and no error surfaced
+            // anywhere. Log it so a future failure here is at least visible, even though the
+            // proper fix is preventing the row from reaching this point in the first place (see
+            // ImportUsersTable::alreadyPresentIdentityTypeName()).
+            $savedIdentity = $this->save($userIdentityEntity, ['atomic' => false]);
+            if (!$savedIdentity) {
+                Log::error('@IdentitiesTable::afterSaveUsers failed to save identity for security_user_id='
+                    . $entity->id . ': ' . json_encode($userIdentityEntity->getErrors()));
+            }
         }
     }
 

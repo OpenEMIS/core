@@ -1271,6 +1271,13 @@ class NavigationComponent extends Component
             'Institutions.Cases.index' => [
                 'title' => 'Cases',
                 'parent' => 'Institutions.Institutions.index',
+                 'selected' => [
+                    'Institutions.Cases',
+                    'Institutions.Cases.add',
+                    'Institutions.Cases.edit',
+                    'Institutions.Cases.view',
+                    'Institutions.Cases.delete'
+                ]
             ],
             'Institutions.Committees.index' => [
                 'title' => 'Committees',
@@ -1375,6 +1382,7 @@ class NavigationComponent extends Component
                     'Students.Nationalities',
                     'Students.Contacts',
                     'Students.Guardians',
+                    'Students.GuardianProfile',
                     'Students.Languages',
                     'Students.Attachments',
                     'Students.Comments',
@@ -1439,6 +1447,7 @@ class NavigationComponent extends Component
                 'selected' => [
                     'Students.Employments',
                     'Students.Qualifications',
+                    'Students.ImportStaffQualifications',
                     'Students.Licenses'
                 ] //POCOR-7528
             ],
@@ -1678,6 +1687,7 @@ class NavigationComponent extends Component
                 'selected' => [
                     'Staff.Employments',
                     'Staff.Qualifications',
+                    'Staff.ImportStaffQualifications',
                     'Staff.Extracurriculars',
                     'Staff.Memberships',
                     'Staff.Licenses',
@@ -1935,6 +1945,7 @@ class NavigationComponent extends Component
                 'selected' => [
                     'Directories.Employments',
                     'Directories.StaffQualifications',
+                    'Directories.ImportStaffQualifications',
                     'Directories.StaffExtracurriculars',
                     'Directories.StaffMemberships',
                     'Directories.StaffLicenses',

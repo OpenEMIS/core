@@ -1221,5 +1221,11 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Siblings']);
     }
+    
+    //POCOR-9811
+    public function GuardianProfile()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianProfile']);
+    }
 
 }

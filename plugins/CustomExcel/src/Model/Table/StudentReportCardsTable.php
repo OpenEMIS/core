@@ -412,6 +412,13 @@ class StudentReportCardsTable extends AppTable
     //6680 starts
     public function getParent($id, $idArray)
     {
+        //POCOR-9808: base case for reaching the top of the area hierarchy -- a root-level
+        //area's parent_id is null, and recursing with $id === null passed a bare null into
+        //where(), which CakePHP 5 rejects ("missing operator (IS, IS NOT)"). Without this
+        //check the recursion also had no way to terminate other than by crashing.
+        if ($id === null) {
+            return $idArray;
+        }
         $Areas = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
         $result = $Areas->find()->where([$Areas->aliasField('id') => $id])->toArray();
         foreach ($result as $key => $value) {

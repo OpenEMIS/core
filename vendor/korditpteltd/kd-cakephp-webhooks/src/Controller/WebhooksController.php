@@ -1,31 +1,43 @@
 <?php
+
 namespace Webhook\Controller;
-use Cake\ORM\TableRegistry;
+
 use Cake\Controller\Controller;
+use Cake\ORM\Locator\LocatorAwareTrait;
 
 class WebhooksController extends Controller
 {
-	public function initialize()
+    use LocatorAwareTrait;
+
+    public function initialize(): void
     {
-		parent::initialize();
+        parent::initialize();
+
         $this->loadComponent('Auth');
         $this->loadComponent('RequestHandler');
-	}
+    }
 
     public function listWebhooks($eventKey)
     {
-        $WebhooksTable = TableRegistry::get('Webhook.Webhooks');
-        $webhooksList = $WebhooksTable
+        $webhooksTable = $this->fetchTable('Webhook.Webhooks');
+
+        $webhooksList = $webhooksTable
             ->find('activeWebhooks', ['event_key' => $eventKey])
-            ->hydrate(false)
+            ->disableHydration()
             ->toArray();
 
-        $username = $this->Auth->user()['username'];
+        $user = $this->Auth->user();
+        $username = $user['username'] ?? '';
+
         foreach ($webhooksList as $key => $value) {
-            $webhooksList[$key] = str_replace('{username}', $username, $value);
+            $webhooksList[$key] = str_replace(
+                '{username}',
+                $username,
+                $value
+            );
         }
 
-        $this->set(['data' => $webhooksList]);
-        $this->set('_serialize', ['data']);
+        $this->set('data', $webhooksList);
+        $this->viewBuilder()->setOption('serialize', ['data']);
     }
 }

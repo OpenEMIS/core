@@ -612,14 +612,32 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		return !empty($principalData) ? $principalData->extract('id')->toList() : [];
 	}
 
-	public function getDeputyPrincipalRoleId()
+	/**
+     * POCOR-9808: rewritten to match getPrincipalRoleId()'s pattern -- the exact-name match
+     * on 'Vice Principal' returned null wherever a tenant's position titles are qualified
+     * (e.g. "Vice Principal (Grade A Primary)", "Deputy Principal - Teaching"), which then
+     * crashed ReportCardsTable::getInstitutionSecurityStaff() when it received null instead
+     * of a valid id/array (CakePHP 5's query builder rejects a bare null in a where() array
+     * mixed with a raw SQL condition). Now fuzzy-matches and returns an array, like Principal.
+     */
+	public function getDeputyPrincipalRoleId($staffRoleId = null)
     {
-        $deputyPrincipalData = $this->find()
+        $query = $this->find()
             ->select([$this->getPrimaryKey()])
-            ->where([$this->aliasField('name') => 'Vice Principal'])
-            ->first();
+            ->where([
+                'OR' => [
+                    [$this->aliasField('name') . ' LIKE' => '%Vice Principal%'],
+                    [$this->aliasField('name') . ' LIKE' => '%Deputy Principal%'],
+                ],
+            ]);
 
-        return (!empty($deputyPrincipalData))? $deputyPrincipalData->id: null;
+        if (!empty($staffRoleId)) {
+            $query->andWhere([$this->aliasField('security_role_id') => $staffRoleId]);
+        }
+
+        $deputyPrincipalData = $query->all();
+
+        return !empty($deputyPrincipalData) ? $deputyPrincipalData->extract('id')->toList() : [];
 	}
 
 
