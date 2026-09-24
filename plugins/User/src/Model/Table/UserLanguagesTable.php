@@ -116,7 +116,13 @@ class UserLanguagesTable extends ControllerActionTable
     {
         $userId = $this->getUserID();
 
-        $query->where([$this->aliasField('security_user_id') => $userId]);
+        //POCOR-9819 -- Start
+        if (!empty($userId)) {
+            $query->where([
+                $this->aliasField('security_user_id') => $userId
+            ]);
+        }
+        //POCOR-9819 -- End
 
         // Start POCOR-5188
         if ($this->request->getParam('controller') == 'Staff') {
