@@ -2035,6 +2035,12 @@ class StaffTable extends ControllerActionTable
      * on a hardcoded array). The Add Staff page does not go through this
      * table's lifecycle at all (custom Angular wizard + AJAX save), so
      * there is deliberately no add-side wiring here.
+     *
+     * Reordering happens WITHIN each section only (see
+     * reorderWithinSections()) - this table's Position tab has no section
+     * headers today, so this is currently a no-op safeguard, but keeps the
+     * same guarantee as InstitutionsTable/StaffUserTable/StudentUserTable
+     * if headers are ever added here.
      */
     private function applyFieldConfigurations(string $module): void
     {
@@ -2050,26 +2056,59 @@ class StaffTable extends ControllerActionTable
             ->order([$fieldConfigTable->aliasField('order') => 'ASC'])
             ->all();
 
-        $orderedNames = [];
+        $adminOrder = [];
+        $rank = 0;
         foreach ($configs as $config) {
             if (!in_array($config->field_name, $baseOrder, true)) {
                 continue;
             }
-            $orderedNames[] = $config->field_name;
+            $adminOrder[$config->field_name] = $rank++;
 
             if (empty($config->is_mandatory) && empty($config->visible)) {
                 $this->field($config->field_name, ['visible' => false]);
             }
         }
 
-        $queue = $orderedNames;
-        $configurable = array_flip($orderedNames);
-        $result = [];
-        foreach ($baseOrder as $name) {
-            $result[] = isset($configurable[$name]) ? array_shift($queue) : $name;
-        }
+        $this->setFieldOrder($this->reorderWithinSections($baseOrder, $adminOrder));
+    }
 
-        $this->setFieldOrder($result);
+    /**
+     * POCOR-4477: reorders $baseOrder to match $adminOrder (field_name =>
+     * rank, lower = earlier), but only WITHIN each contiguous run between
+     * section-header entries (fields with 'type' => 'section') - never
+     * moves a configurable field across a section boundary. Non-configurable
+     * fields within a run keep their original relative position (same
+     * "slot substitution" as before, just scoped per-run).
+     */
+    private function reorderWithinSections(array $baseOrder, array $adminOrder): array
+    {
+        $result = [];
+        $currentRun = [];
+
+        $flush = function () use (&$result, &$currentRun, $adminOrder) {
+            $configurable = array_values(array_filter($currentRun, function ($name) use ($adminOrder) {
+                return isset($adminOrder[$name]);
+            }));
+            usort($configurable, function ($a, $b) use ($adminOrder) {
+                return $adminOrder[$a] <=> $adminOrder[$b];
+            });
+            foreach ($currentRun as $name) {
+                $result[] = isset($adminOrder[$name]) ? array_shift($configurable) : $name;
+            }
+            $currentRun = [];
+        };
+
+        foreach ($baseOrder as $name) {
+            if (($this->fields[$name]['type'] ?? null) === 'section') {
+                $flush();
+                $result[] = $name;
+            } else {
+                $currentRun[] = $name;
+            }
+        }
+        $flush();
+
+        return $result;
     }
 
     public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)

@@ -1687,7 +1687,8 @@ class InstitutionsTable extends ControllerActionTable
      *
      * Returns $baseOrder with the subset of names that are both in
      * $baseOrder and in field_configurations re-sequenced to match the
-     * admin-configured order; everything else (section headers, fields
+     * admin-configured order, WITHIN each section only (see
+     * reorderWithinSections()); everything else (section headers, fields
      * outside Fields Configurations) keeps its original slot.
      */
     private function applyFieldConfigurations(array $baseOrder): array
@@ -1698,24 +1699,63 @@ class InstitutionsTable extends ControllerActionTable
             ->order([$fieldConfigTable->aliasField('order') => 'ASC'])
             ->all();
 
-        $orderedNames = [];
+        $adminOrder = [];
+        $rank = 0;
         foreach ($configs as $config) {
             if (!in_array($config->field_name, $baseOrder, true)) {
                 continue;
             }
-            $orderedNames[] = $config->field_name;
+            $adminOrder[$config->field_name] = $rank++;
 
             if (empty($config->is_mandatory) && empty($config->visible)) {
                 $this->field($config->field_name, ['visible' => false]);
             }
         }
 
-        $queue = $orderedNames;
-        $configurable = array_flip($orderedNames);
+        return $this->reorderWithinSections($baseOrder, $adminOrder);
+    }
+
+    /**
+     * POCOR-4477: reorders $baseOrder to match $adminOrder (field_name =>
+     * rank, lower = earlier), but only WITHIN each contiguous run between
+     * section-header entries (fields with 'type' => 'section', eg
+     * 'information_section', 'location_section') - never moves a
+     * configurable field across a section boundary into a different
+     * section's slot. The Fields Configurations admin screen presents a
+     * flat list with no concept of these page sections, so an admin
+     * reordering fields across what happen to be different sections on the
+     * real page has no way to know that's what they're doing; without this
+     * constraint, fields end up rendered under the wrong header entirely.
+     * Non-configurable fields within a run keep their original relative
+     * position (same "slot substitution" as before, just scoped per-run).
+     */
+    private function reorderWithinSections(array $baseOrder, array $adminOrder): array
+    {
         $result = [];
+        $currentRun = [];
+
+        $flush = function () use (&$result, &$currentRun, $adminOrder) {
+            $configurable = array_values(array_filter($currentRun, function ($name) use ($adminOrder) {
+                return isset($adminOrder[$name]);
+            }));
+            usort($configurable, function ($a, $b) use ($adminOrder) {
+                return $adminOrder[$a] <=> $adminOrder[$b];
+            });
+            foreach ($currentRun as $name) {
+                $result[] = isset($adminOrder[$name]) ? array_shift($configurable) : $name;
+            }
+            $currentRun = [];
+        };
+
         foreach ($baseOrder as $name) {
-            $result[] = isset($configurable[$name]) ? array_shift($queue) : $name;
+            if (($this->fields[$name]['type'] ?? null) === 'section') {
+                $flush();
+                $result[] = $name;
+            } else {
+                $currentRun[] = $name;
+            }
         }
+        $flush();
 
         return $result;
     }
