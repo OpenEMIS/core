@@ -1787,8 +1787,7 @@ class InstitutionsTable extends AppTable
                         'Report.InstitutionInfrastructureSummaryReport'
                     ])) {
                         /*POCOR-6304 Starts*/
-                        // POCOR-9823: always offer "All Institutions" (even with a single accessible
-                        // institution) so non-superadmin roles get the option too.
+                        //POCOR-9823
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                         /*POCOR-6304 Ends*/
                     } else {
@@ -2340,8 +2339,7 @@ class InstitutionsTable extends AppTable
                 'institution_status' => 'Statuses.name'
             ])->where($conditions);
 
-        // POCOR-9823: "All Institutions" must still be scoped to the officer's own access -
-        // never export institutions outside their assigned area/security group.
+        //POCOR-9823
         if (!$superAdmin) {
             $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
         }

@@ -82,8 +82,7 @@ class StaffTransfersTable extends AppTable {
         if (!empty($where)) { //POCOR-8247
             $conditions[] = $where;
         }
-        // POCOR-9823: scope "All Institutions" (and unfiltered) exports to the officer's own access,
-        // matching a transfer if either the new or the previous institution is accessible to them.
+        //POCOR-9823
         if (!$superAdmin) {
             $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $accessibleInstitutionIds = $Institutions->find('list', ['keyField' => 'id', 'valueField' => 'id'])

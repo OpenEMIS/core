@@ -123,7 +123,7 @@ class StaffAttendancesTable extends ControllerActionTable
             ->group(['security_users.id', 'month_generator.year_name', 'month_generator.month_id'])
             ->order(['Institutions.code', 'security_users.openemis_no', 'month_generator.year_name', 'month_generator.month_id']);
 
-        // POCOR-9823: scope "All Institutions" (and unfiltered) exports to the officer's own access.
+        //POCOR-9823
         if (!$superAdmin) {
             $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
         }

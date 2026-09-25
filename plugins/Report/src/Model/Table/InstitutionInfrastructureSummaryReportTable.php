@@ -252,7 +252,7 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
             ->join($join)
             ->where($where);
 
-        // POCOR-9823: scope "All Institutions" (and unfiltered) exports to the officer's own access.
+        //POCOR-9823
         if (!$superAdmin) {
             $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => 'institutions.id']);
         }
