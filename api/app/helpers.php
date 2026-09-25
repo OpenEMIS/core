@@ -633,63 +633,64 @@ if(!function_exists('hashing')){
 // POCOR-8915 end
 
 //For POCOR-8104 Start...
+// POCOR-9829: rewritten to match the CakePHP UsersTable::getUniqueOpenemisId()
+// algorithm (POCOR-9540) - a MAX(numeric)+1 query with a REGEXP filter, no
+// zero-padded string comparison and no dereferencing of possibly-null rows.
+// The old version broke whenever security_users_openemis_no had fewer than 5
+// digits stored, or was empty/inaccessible: it looked up the freshly computed
+// (unpadded) candidate against zero-padded stored values, which never matched,
+// then read a property off the resulting null.
 if(!function_exists('getNewOpenemisNo')){
     function getNewOpenemisNo()
     {
         $configItem = ConfigItem::where('code', 'openemis_id_prefix')->first();
-        if($configItem){
-            $value = $configItem->value;
-            $prefix = explode(",", $value);
-            if($prefix[1] > 0){
-                $prefix = $prefix[1];
-            } else {
-                $prefix = '';
-            }
+        $value = $configItem->value ?? '';
+        $parts = explode(",", $value);
+        $prefix = (isset($parts[1]) && $parts[1] > 0) ? (string) $parts[0] : '';
 
-            $latest = SecurityUsers::orderBy('id', 'DESC')->first();
-            $latestOpenemisNo = $latest->openemis_no;
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $prefixLength = strlen($prefix);
+        $pattern = $prefix !== '' ? ('^' . preg_quote($prefix, '/') . '[0-9]+$') : '^[0-9]+$';
+        $castExpr = $prefix !== ''
+            ? 'MAX(CAST(SUBSTRING(openemis_no, ' . ($prefixLength + 1) . ') AS UNSIGNED))'
+            : 'MAX(CAST(openemis_no AS UNSIGNED))';
 
+        $row = DB::selectOne(
+            'SELECT COALESCE(' . $castExpr . ', 0) + 1 AS next_no'
+            . ' FROM security_users'
+            . ' WHERE openemis_no IS NOT NULL AND openemis_no REGEXP ?',
+            [$pattern]
+        );
+        $nextSuffix = isset($row->next_no) ? (string) $row->next_no : '1';
 
-            if (empty($prefix)) {
-                $latestDbStamp = $latestOpenemisNo;
-            } else {
-                $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
-            }
+        $attempts = 0;
+        while ($attempts < 100) {
+            $newOpenemisNo = $prefix . $nextSuffix;
 
-            $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
+            // withoutGlobalScope('hideSuperAdmins'): the MAX() query above is
+            // raw SQL and already sees every row including super_admin ones;
+            // this check must match that scope exactly (and match CakePHP's
+            // equivalent $this->exists() check, which has no such filter) or
+            // a super_admin row could occupy the candidate id invisibly.
+            $existsInUsers = SecurityUsers::withoutGlobalScope('hideSuperAdmins')
+                ->where('openemis_no', $newOpenemisNo)->exists();
+            $existsInTemp = OpenemisTemp::where('openemis_no', $newOpenemisNo)->exists();
 
-
-            $currentStamp = time();
-            if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
-                $newStamp = $latestDbStamp + 1;
-            } else {
-                $newStamp = $currentStamp;
-            }
-            $newOpenemisNo = $prefix.$newStamp;
-
-            $resultOpenemisTemp = OpenemisTemp::orderBy('id', 'DESC')->first();
-
-            if(strlen($resultOpenemisTemp->openemis_no) < 5){
-                $resultOpenemisTemp = SecurityUsers::orderBy('id', 'DESC')->first();
-            }
-
-            $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
-
-            $newOpenemisNo = $resultOpenemisNoTemp+1;
-            $newOpenemisNo=$prefix.$newOpenemisNo;
-
-            $resultOpenemisTemps = OpenemisTemp::where('openemis_no', $newOpenemisNo)->first();
-
-            if(empty($resultOpenemisTemps->openemis_no)){
-                $storeOpenemisTemp = OpenemisTemp::insert([
+            if (!$existsInUsers && !$existsInTemp) {
+                OpenemisTemp::insert([
                     'openemis_no' => $newOpenemisNo,
-                    'ip_address' => $_SERVER['REMOTE_ADDR'],
-                    'created' => Carbon::now()->toDateTimeString()
+                    'ip_address' => $ipAddress,
+                    'created' => Carbon::now()->toDateTimeString(),
                 ]);
+
+                return $newOpenemisNo;
             }
 
-            return $newOpenemisNo;
+            $nextSuffix = bcadd($nextSuffix, '1');
+            $attempts++;
         }
+
+        throw new \RuntimeException('Unable to generate a unique OpenEMIS ID after 100 attempts.');
     }
 }
 
