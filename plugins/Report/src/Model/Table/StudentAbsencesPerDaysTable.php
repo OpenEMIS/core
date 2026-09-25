@@ -28,6 +28,7 @@ class StudentAbsencesPerDaysTable extends AppTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Institution.EducationGrades', 'foreignKey' =>'education_grade_id']);
         $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity'); //POCOR-9823
         $this->addBehavior('Excel', [
             'excludes' => [
                 'start_year',

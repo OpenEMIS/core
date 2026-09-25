@@ -24,6 +24,7 @@ class StaffLeaveTable extends AppTable {
 
         $this->addBehavior('Excel');
         $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity'); //POCOR-9823
         $this->addBehavior('AcademicPeriod.Period');
     }
 

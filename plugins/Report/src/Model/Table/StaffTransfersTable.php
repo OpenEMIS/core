@@ -40,6 +40,8 @@ class StaffTransfersTable extends AppTable {
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $superAdmin = $requestData->super_admin; //POCOR-9823
+        $userId = $requestData->user_id; //POCOR-9823
         $where = []; //POCOR-8247
 
         $institutionIds = [];
@@ -75,9 +77,28 @@ class StaffTransfersTable extends AppTable {
                 'authorized_date' => $this->aliasField('created')
             ])
             ->contain(['Users.IdentityTypes','NewPositions.StaffPositionTitles','NewInstitutions','PreviousInstitutions','CreatedUser']);
-            if (!empty($where)) { //POCOR-8247
-                $query->where($where);
-            }
+
+        $conditions = [];
+        if (!empty($where)) { //POCOR-8247
+            $conditions[] = $where;
+        }
+        // POCOR-9823: scope "All Institutions" (and unfiltered) exports to the officer's own access,
+        // matching a transfer if either the new or the previous institution is accessible to them.
+        if (!$superAdmin) {
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $accessibleInstitutionIds = $Institutions->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                ->find('byAccess', ['userId' => $userId])
+                ->toArray();
+            $conditions[] = [
+                'OR' => [
+                    'NewInstitutions.id IN' => $accessibleInstitutionIds,
+                    'PreviousInstitutions.id IN' => $accessibleInstitutionIds,
+                ]
+            ];
+        }
+        if (!empty($conditions)) {
+            $query->where($conditions);
+        }
     }
 
     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)

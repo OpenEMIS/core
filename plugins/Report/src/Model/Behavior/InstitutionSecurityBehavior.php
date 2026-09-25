@@ -23,7 +23,7 @@ class InstitutionSecurityBehavior extends Behavior {
 		// The cloning of the table registry object is just in case in the main model, the table registry object is
 		// use on the same model which might cause the alias to be different
 		$institutionTableClone1 = clone TableRegistry::getTableLocator()->get('Institution.Institutions');
-		$institutionTableClone1->getAlias('InstitutionSecurityArea');
+		$institutionTableClone1->setAlias('InstitutionSecurityArea'); //POCOR-9823: was getAlias() (no-op), so the clone kept the default 'Institutions' alias and silently collided with any outer query also aliased 'Institutions', turning the EXISTS correlation into a self-referencing tautology
 		// find from security areas
 		$institutionsSecurityArea = $institutionTableClone1->find()
 			->innerJoin(['Areas' => 'areas'], [
@@ -43,7 +43,7 @@ class InstitutionSecurityBehavior extends Behavior {
 			->select(['id' => $institutionTableClone1->aliasField('id')]);
 		
 		$institutionTableClone2 = clone TableRegistry::getTableLocator()->get('Institution.Institutions');
-		$institutionTableClone2->getAlias('InstitutionSecurity');
+		$institutionTableClone2->setAlias('InstitutionSecurity'); //POCOR-9823: was getAlias() (no-op), see above
 
 		// find from security group institutions
 		$institutionSecurity = $institutionTableClone2->find()

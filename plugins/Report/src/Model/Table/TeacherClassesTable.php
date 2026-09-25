@@ -44,6 +44,7 @@ class TeacherClassesTable extends AppTable
         ]);
 
         $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity'); //POCOR-9823
         $this->addBehavior('Excel', [
             'pages'      => false,
             'autoFields' => false

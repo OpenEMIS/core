@@ -1787,23 +1787,14 @@ class InstitutionsTable extends AppTable
                         'Report.InstitutionInfrastructureSummaryReport'
                     ])) {
                         /*POCOR-6304 Starts*/
-                        if (count($institutionList) > 1) {
-                            $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
-                        } else {
-                            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
-                        }
+                        // POCOR-9823: always offer "All Institutions" (even with a single accessible
+                        // institution) so non-superadmin roles get the option too.
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                         /*POCOR-6304 Ends*/
                     } else {
                         /*POCOR-6304 Starts*/
-                        if (count($institutionList) > 1) {
-                            $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
-                        } else {
-                            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
-                        }
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                         /*POCOR-6304 Ends*/
-                    }
-                    if(!$superAdmin){
-                        $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                     }
                     if(in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport'])) { //POCOR-8417
                         $attr['attr']['multiple'] = true;
@@ -2347,7 +2338,13 @@ class InstitutionsTable extends AppTable
                 'area_code' => 'Areas.code',
                 'area_administrative_code' => 'AreaAdministratives.code',
                 'institution_status' => 'Statuses.name'
-            ])->where($conditions);  
+            ])->where($conditions);
+
+        // POCOR-9823: "All Institutions" must still be scoped to the officer's own access -
+        // never export institutions outside their assigned area/security group.
+        if (!$superAdmin) {
+            $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
+        }
     }
 
     public
