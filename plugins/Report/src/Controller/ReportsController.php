@@ -165,6 +165,7 @@ class ReportsController extends AppController
                 'Report.StudentAbsences' => __('Student Absence'),
                 'Report.StudentAbsencesPerDays' => __('Student Absences per Day'), //POCOR-7276
                 'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
+                'Report.StudentAttendanceWeeklyReport' => __('Student Attendance Weekly Report'), //POCOR-9831
                 'Report.StudentBehaviours' => __('Student Behaviours'),
                 'Report.BodyMasses' => __('Student Body Masses'),
                 'Report.InstitutionStudents' => __('Students'),
