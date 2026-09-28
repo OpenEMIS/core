@@ -116,7 +116,12 @@ class StudentBehavioursTable extends AppTable  {
                 $this->aliasField('institution_id') . ' IN' => $filterInstitutionIds
             ]);
         }
-     
+
+        //POCOR-9823
+        if (!$superAdmin) {
+            $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
+        }
+
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 $time = new Time($row->time_of_behaviour);

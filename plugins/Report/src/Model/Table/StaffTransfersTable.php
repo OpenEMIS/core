@@ -88,10 +88,12 @@ class StaffTransfersTable extends AppTable {
             $accessibleInstitutionIds = $Institutions->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                 ->find('byAccess', ['userId' => $userId])
                 ->toArray();
+            // CakePHP throws when an IN clause is given an empty list (see ComparisonExpression::_stringExpression);
+            // default to a non-matching id so a user with no accessible institutions gets an empty result, not a 500.
             $conditions[] = [
                 'OR' => [
-                    'NewInstitutions.id IN' => $accessibleInstitutionIds,
-                    'PreviousInstitutions.id IN' => $accessibleInstitutionIds,
+                    'NewInstitutions.id IN' => !empty($accessibleInstitutionIds) ? $accessibleInstitutionIds : [0],
+                    'PreviousInstitutions.id IN' => !empty($accessibleInstitutionIds) ? $accessibleInstitutionIds : [0],
                 ]
             ];
         }
