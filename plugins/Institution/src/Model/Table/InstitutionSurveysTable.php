@@ -1319,22 +1319,12 @@ class InstitutionSurveysTable extends ControllerActionTable
         if (isset($roleId)) {
             $where = [
                 $this->aliasField('assignee_id') => $userId,
-                'Assignees.super_admin IS NOT' => 1,
-
-                // POCOR-XXXX: Do not show surveys after end date
-                'OR' => [
-                    $this->aliasField('end_date IS') => null,
-                    $this->aliasField('end_date >=') => date('Y-m-d')
-                ]
+                // $workflowStepsRoles->aliasField('security_role_id') => $roleId,
+                'Assignees.super_admin IS NOT' => 1, //POCOR-7102
             ];
         }
         if ($isSuperAdmin) {
-            $where = [
-                'OR' => [
-                    $this->aliasField('end_date IS') => null,
-                    $this->aliasField('end_date >=') => date('Y-m-d')
-                ]
-            ];
+            $where = [];
         }
         //POCOR-9429: This check is added to restrict users which don't have any roles assigned.
         if (!isset($roleId) && !$isSuperAdmin) {
