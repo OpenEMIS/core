@@ -633,64 +633,73 @@ if(!function_exists('hashing')){
 // POCOR-8915 end
 
 //For POCOR-8104 Start...
-// POCOR-9829: rewritten to match the CakePHP UsersTable::getUniqueOpenemisId()
-// algorithm (POCOR-9540) - a MAX(numeric)+1 query with a REGEXP filter, no
-// zero-padded string comparison and no dereferencing of possibly-null rows.
-// The old version broke whenever security_users_openemis_no had fewer than 5
-// digits stored, or was empty/inaccessible: it looked up the freshly computed
-// (unpadded) candidate against zero-padded stored values, which never matched,
-// then read a property off the resulting null.
 if(!function_exists('getNewOpenemisNo')){
     function getNewOpenemisNo()
     {
         $configItem = ConfigItem::where('code', 'openemis_id_prefix')->first();
-        $value = $configItem->value ?? '';
-        $parts = explode(",", $value);
-        $prefix = (isset($parts[1]) && $parts[1] > 0) ? (string) $parts[0] : '';
-
-        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        $prefixLength = strlen($prefix);
-        $pattern = $prefix !== '' ? ('^' . preg_quote($prefix, '/') . '[0-9]+$') : '^[0-9]+$';
-        $castExpr = $prefix !== ''
-            ? 'MAX(CAST(SUBSTRING(openemis_no, ' . ($prefixLength + 1) . ') AS UNSIGNED))'
-            : 'MAX(CAST(openemis_no AS UNSIGNED))';
-
-        $row = DB::selectOne(
-            'SELECT COALESCE(' . $castExpr . ', 0) + 1 AS next_no'
-            . ' FROM security_users'
-            . ' WHERE openemis_no IS NOT NULL AND openemis_no REGEXP ?',
-            [$pattern]
-        );
-        $nextSuffix = isset($row->next_no) ? (string) $row->next_no : '1';
-
-        $attempts = 0;
-        while ($attempts < 100) {
-            $newOpenemisNo = $prefix . $nextSuffix;
-
-            // withoutGlobalScope('hideSuperAdmins'): the MAX() query above is
-            // raw SQL and already sees every row including super_admin ones;
-            // this check must match that scope exactly (and match CakePHP's
-            // equivalent $this->exists() check, which has no such filter) or
-            // a super_admin row could occupy the candidate id invisibly.
-            $existsInUsers = SecurityUsers::withoutGlobalScope('hideSuperAdmins')
-                ->where('openemis_no', $newOpenemisNo)->exists();
-            $existsInTemp = OpenemisTemp::where('openemis_no', $newOpenemisNo)->exists();
-
-            if (!$existsInUsers && !$existsInTemp) {
-                OpenemisTemp::insert([
-                    'openemis_no' => $newOpenemisNo,
-                    'ip_address' => $ipAddress,
-                    'created' => Carbon::now()->toDateTimeString(),
-                ]);
-
-                return $newOpenemisNo;
+        if($configItem){
+            $value = $configItem->value;
+            $prefix = explode(",", $value);
+            if($prefix[1] > 0){
+                $prefix = $prefix[1];
+            } else {
+                $prefix = '';
             }
 
-            $nextSuffix = bcadd($nextSuffix, '1');
-            $attempts++;
-        }
+            $latest = SecurityUsers::orderBy('id', 'DESC')->first();
+            $latestOpenemisNo = $latest->openemis_no;
 
-        throw new \RuntimeException('Unable to generate a unique OpenEMIS ID after 100 attempts.');
+
+            if (empty($prefix)) {
+                $latestDbStamp = $latestOpenemisNo;
+            } else {
+                $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
+            }
+
+            $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
+
+
+            $currentStamp = time();
+            if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
+                $newStamp = $latestDbStamp + 1;
+            } else {
+                $newStamp = $currentStamp;
+            }
+            $newOpenemisNo = $prefix.$newStamp;
+
+            $resultOpenemisTemp = OpenemisTemp::orderBy('id', 'DESC')->first();
+
+            // POCOR-9829: guard against $resultOpenemisTemp still being null
+            // (e.g. security_users_openemis_no has no rows yet) - the original
+            // `strlen($resultOpenemisTemp->openemis_no)` crashed here with a
+            // property access on null.
+            if (empty($resultOpenemisTemp) || strlen($resultOpenemisTemp->openemis_no) < 5) {
+                $resultOpenemisTemp = SecurityUsers::orderBy('id', 'DESC')->first();
+            }
+
+            // POCOR-9829: same null guard, plus preserve the existing
+            // zero-padded width (e.g. "00012") instead of losing it to numeric
+            // addition, which silently produced "13" instead of "00013" and
+            // broke the established id format for every id generated after it.
+            $lastOpenemisNo = $resultOpenemisTemp->openemis_no ?? ($prefix . '00000');
+            $resultOpenemisNoTemp = substr($lastOpenemisNo, strlen($prefix));
+            $padWidth = strlen($resultOpenemisNoTemp);
+
+            $newOpenemisNo = str_pad((string) ((int) $resultOpenemisNoTemp + 1), $padWidth, '0', STR_PAD_LEFT);
+            $newOpenemisNo = $prefix.$newOpenemisNo;
+
+            $resultOpenemisTemps = OpenemisTemp::where('openemis_no', $newOpenemisNo)->first();
+
+            if(empty($resultOpenemisTemps->openemis_no)){
+                $storeOpenemisTemp = OpenemisTemp::insert([
+                    'openemis_no' => $newOpenemisNo,
+                    'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
+                    'created' => Carbon::now()->toDateTimeString()
+                ]);
+            }
+
+            return $newOpenemisNo;
+        }
     }
 }
 
