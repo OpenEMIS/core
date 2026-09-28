@@ -121,6 +121,8 @@ class UserLanguagesTable extends ControllerActionTable
             $query->where([
                 $this->aliasField('security_user_id') => $userId
             ]);
+        } else {
+            $query->where(['1 = 0']);
         }
         //POCOR-9819 -- End
 
