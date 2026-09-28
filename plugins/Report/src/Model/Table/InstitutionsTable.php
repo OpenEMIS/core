@@ -2128,12 +2128,17 @@ class InstitutionsTable extends AppTable
                     $attr['date_options']['startDate'] = max($startDate, $periodStart)->format($editableDateFormat);
                     $attr['date_options']['endDate'] = $maxEndDate->format($editableDateFormat);
                     $attr['attr']['required'] = true;
+                    // first load (no End Date chosen yet): default to one week after Start Date
                     $attr['value'] = $defaultEndDate->format($editableDateFormat);
                     if (!empty($requestData['report_end_date'])) {
                         $endDate = \DateTime::createFromFormat('!' . $editableDateFormat, $requestData['report_end_date']);
-                        // keep the user's End Date only while it still fits after Start Date
                         if ($endDate !== false && $endDate >= $startDate && $endDate <= $maxEndDate) {
+                            // keep the user's End Date while it still fits after Start Date
                             $attr['value'] = $requestData['report_end_date'];
+                        } else {
+                            // Start Date changed and the chosen End Date no longer fits: move it to the
+                            // latest allowed date (Start + 30 days / period end) instead of resetting to one week
+                            $attr['value'] = $maxEndDate->format($editableDateFormat);
                         }
                     }
                 }
