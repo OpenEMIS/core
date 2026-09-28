@@ -700,6 +700,16 @@ if(!function_exists('getNewOpenemisNo')){
 
             return $newOpenemisNo;
         }
+
+        // POCOR-9829: the original fell through here with no return when the
+        // 'openemis_id_prefix' config row is missing, so the function
+        // implicitly returned null - callers treated that as a successful
+        // result (e.g. DirectoryRepository::getUniqueOpenemisId() returned
+        // {"openemis_no": null} with no error), which is a plausible root
+        // cause of students being created with a null openemis_no. Throw
+        // instead, so it surfaces as the same handled error every caller
+        // already catches.
+        throw new \RuntimeException("Unable to generate OpenEMIS ID: 'openemis_id_prefix' config item not found.");
     }
 }
 
