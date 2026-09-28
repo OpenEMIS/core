@@ -110,25 +110,14 @@ class StudentAttendanceWeeklyReportTable extends AppTable
             return;
         }
 
-        //POCOR-9831: derived table of (class, grade, slot index) - one row per slot of each class/grade
-        $slotRows = [];
-        foreach ($slots as $pairKey => $pairSlots) {
-            [$classId, $gradeId] = array_map('intval', explode('|', $pairKey));
-            foreach (array_keys($pairSlots) as $index) {
-                $slotRows[] = empty($slotRows)
-                    ? "SELECT {$classId} AS institution_class_id, {$gradeId} AS education_grade_id, {$index} AS slot_index"
-                    : "SELECT {$classId}, {$gradeId}, {$index}";
-            }
-        }
-        $slotSql = implode(' UNION ALL ', $slotRows);
-
+        //POCOR-9831: query returns one row per student/class; assembleRows() expands each into
+        //            one row per slot of its class/grade (no SQL-side slot table)
         $alias = $this->getAlias();
         $query
             ->select([
                 'student_id'           => $this->aliasField('student_id'),
                 'institution_class_id' => $this->aliasField('institution_class_id'),
                 'education_grade_id'   => $this->aliasField('education_grade_id'),
-                'slot_index'           => 'Slots.slot_index',
                 'institution_code'     => 'Institutions.code',
                 'institution_name'     => 'Institutions.name',
                 'education_grade'      => 'EducationGrades.name',
@@ -138,10 +127,6 @@ class StudentAttendanceWeeklyReportTable extends AppTable
                 'middle_name'          => 'Users.middle_name',
                 'third_name'           => 'Users.third_name',
                 'last_name'            => 'Users.last_name',
-            ])
-            ->innerJoin(['Slots' => "({$slotSql})"], [
-                'Slots.institution_class_id = ' . $this->aliasField('institution_class_id'),
-                'Slots.education_grade_id = ' . $this->aliasField('education_grade_id'),
             ])
             ->innerJoin(['Users' => 'security_users'], ['Users.id = ' . $this->aliasField('student_id')])
             ->innerJoin(['Institutions' => 'institutions'], ['Institutions.id = ' . $this->aliasField('institution_id')])
@@ -155,21 +140,33 @@ class StudentAttendanceWeeklyReportTable extends AppTable
                 'Users.first_name'        => 'ASC',
                 'Users.last_name'         => 'ASC',
                 $this->aliasField('student_id') => 'ASC',
-                'Slots.slot_index'        => 'ASC',
             ]);
+        $this->applyAccessScope($query, $requestData);
 
+        $academicPeriodId = (int)$requestData->academic_period_id;
+        $processId = $settings['process']->id ?? null;
+        $query->formatResults(function (CollectionInterface $results) use ($dates, $slots, $academicPeriodId, $processId) {
+            $rows = $this->assembleRows($results->toList(), $dates, $slots, $academicPeriodId);
+            if ($processId !== null) {
+                //POCOR-9831: count() saw one row per student; progress must use the expanded row total
+                TableRegistry::getTableLocator()->get('Report.ReportProgress')
+                    ->updateAll(['total_records' => count($rows)], ['id' => $processId]);
+            }
+            return $rows;
+        });
+    }
+
+    /**
+     * POCOR-9831: non super admins only see institutions they have access to.
+     */
+    private function applyAccessScope(Query $query, $requestData): void
+    {
         if (empty($requestData->super_admin)) {
-            //POCOR-9831: non super admins only see institutions they have access to
             $query->find('byAccess', [
                 'user_id' => $requestData->user_id,
                 'institution_field_alias' => $this->aliasField('institution_id'),
             ]);
         }
-
-        $academicPeriodId = (int)$requestData->academic_period_id;
-        $query->formatResults(function (CollectionInterface $results) use ($dates, $slots, $academicPeriodId) {
-            return $this->assembleRows($results->toList(), $dates, $slots, $academicPeriodId);
-        });
     }
 
     /**
@@ -308,15 +305,16 @@ class StudentAttendanceWeeklyReportTable extends AppTable
         $endDate = end($dates)->format('Y-m-d');
 
         //POCOR-9831: class/grade pairs that actually have students in scope
-        $pairs = $this->find()
+        $pairQuery = $this->find()
             ->select([
                 'institution_class_id' => $this->aliasField('institution_class_id'),
                 'education_grade_id'   => $this->aliasField('education_grade_id'),
             ])
             ->where($this->getScopeConditions($requestData, $this->getAlias()))
             ->distinct([$this->aliasField('institution_class_id'), $this->aliasField('education_grade_id')])
-            ->disableHydration()
-            ->toArray();
+            ->disableHydration();
+        $this->applyAccessScope($pairQuery, $requestData); //POCOR-9831: same institution access as the main query
+        $pairs = $pairQuery->toArray();
         if (empty($pairs)) {
             return [];
         }
@@ -418,8 +416,9 @@ class StudentAttendanceWeeklyReportTable extends AppTable
     }
 
     /**
-     * Fill the day columns and totals of each student x slot row from bulk-fetched
-     * marked records and absence details (two queries for the whole result set).
+     * Expand each student/class row into one row per slot of its class/grade, and fill the
+     * day columns and totals from bulk-fetched marked records and absence details (two
+     * queries for the whole result set).
      */
     private function assembleRows(array $rows, array $dates, array $slots, int $academicPeriodId): array
     {
@@ -459,47 +458,51 @@ class StudentAttendanceWeeklyReportTable extends AppTable
 
         $absenceCodes = TableRegistry::getTableLocator()->get('Institution.AbsenceTypes')->getCodeList();
 
-        foreach ($rows as $row) {
-            $classId = (int)$row->institution_class_id;
-            $gradeId = (int)$row->education_grade_id;
-            $slot = $slots["{$classId}|{$gradeId}"][(int)$row->slot_index];
+        $expandedRows = [];
+        foreach ($rows as $studentRow) {
+            $classId = (int)$studentRow->institution_class_id;
+            $gradeId = (int)$studentRow->education_grade_id;
+            $studentRow->student_name = trim(implode(' ', array_filter([$studentRow->first_name, $studentRow->middle_name, $studentRow->third_name, $studentRow->last_name])));
 
-            $row->student_name = trim(implode(' ', array_filter([$row->first_name, $row->middle_name, $row->third_name, $row->last_name])));
-            $row->attendance_by = $slot['attendance_by'];
-            $row->slot_label = $slot['label'];
+            foreach ($slots["{$classId}|{$gradeId}"] ?? [] as $slot) {
+                $row = clone $studentRow;
+                $row->attendance_by = $slot['attendance_by'];
+                $row->slot_label = $slot['label'];
 
-            $totals = ['present' => 0, 'late' => 0, 'absent' => 0];
-            foreach ($dates as $key => $date) {
-                $day = $date->format('Y-m-d');
-                $markKey = "{$classId}|{$gradeId}|{$day}|{$slot['mr_period']}|{$slot['mr_subject_id']}";
-                $absenceKey = "{$row->student_id}|{$classId}|{$day}|{$slot['abd_period']}|{$slot['abd_subject_id']}";
+                $totals = ['present' => 0, 'late' => 0, 'absent' => 0];
+                foreach ($dates as $key => $date) {
+                    $day = $date->format('Y-m-d');
+                    $markKey = "{$classId}|{$gradeId}|{$day}|{$slot['mr_period']}|{$slot['mr_subject_id']}";
+                    $absenceKey = "{$row->student_id}|{$classId}|{$day}|{$slot['abd_period']}|{$slot['abd_subject_id']}";
 
-                if (!isset($markIndex[$markKey])) {
-                    $status = 'NOTMARKED';
-                } elseif ($markIndex[$markKey] === 1) {
-                    $status = 'NO CLASS';
-                } elseif (isset($absenceIndex[$absenceKey])) {
-                    $status = $absenceCodes[$absenceIndex[$absenceKey]] ?? 'PRESENT';
-                } else {
-                    $status = 'PRESENT';
-                }
-                $row->{$key} = $status;
+                    if (!isset($markIndex[$markKey])) {
+                        $status = 'NOTMARKED';
+                    } elseif ($markIndex[$markKey] === 1) {
+                        $status = 'NO CLASS';
+                    } elseif (isset($absenceIndex[$absenceKey])) {
+                        $status = $absenceCodes[$absenceIndex[$absenceKey]] ?? 'PRESENT';
+                    } else {
+                        $status = 'PRESENT';
+                    }
+                    $row->{$key} = $status;
 
-                //POCOR-9611: LATE counts as present and late; NO CLASS / NOTMARKED count nowhere
-                if ($status === 'PRESENT' || $status === 'LATE') {
-                    $totals['present']++;
+                    //POCOR-9611: LATE counts as present and late; NO CLASS / NOTMARKED count nowhere
+                    if ($status === 'PRESENT' || $status === 'LATE') {
+                        $totals['present']++;
+                    }
+                    if ($status === 'LATE') {
+                        $totals['late']++;
+                    }
+                    if ($status === 'EXCUSED' || $status === 'UNEXCUSED') {
+                        $totals['absent']++;
+                    }
                 }
-                if ($status === 'LATE') {
-                    $totals['late']++;
-                }
-                if ($status === 'EXCUSED' || $status === 'UNEXCUSED') {
-                    $totals['absent']++;
-                }
+                $row->total_present = $totals['present'];
+                $row->total_late = $totals['late'];
+                $row->total_absent = $totals['absent'];
+                $expandedRows[] = $row;
             }
-            $row->total_present = $totals['present'];
-            $row->total_late = $totals['late'];
-            $row->total_absent = $totals['absent'];
         }
-        return $rows;
+        return $expandedRows;
     }
 }

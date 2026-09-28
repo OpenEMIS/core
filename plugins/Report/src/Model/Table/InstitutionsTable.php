@@ -108,7 +108,7 @@ class InstitutionsTable extends AppTable
                     'rule' => ['forOneMonthDate'],
                     'on' => function ($context) {
                         $feature = $context['data']['feature'];
-                        return in_array($feature, ['Report.StudentAttendanceSummary', 'Report.StudentAbsences']);
+                        return in_array($feature, ['Report.StudentAttendanceSummary', 'Report.StudentAbsences', 'Report.StudentAttendanceWeeklyReport']); //POCOR-9831
                     },
                     'message' => __('Date range should be one month only')
                 ]
@@ -2120,8 +2120,8 @@ class InstitutionsTable extends AppTable
                     if ($startDate === false) {
                         $startDate = $this->getWeeklyReportDefaultStartDate($selectedPeriod);
                     }
-                    // range is driven only by Start/End Date, up to the academic period end
-                    $maxEndDate = $periodEnd;
+                    // same one-month cap as the other date-range reports in this file
+                    $maxEndDate = min((clone $startDate)->modify('+30 days'), $periodEnd);
                     $defaultEndDate = min((clone $startDate)->modify('+6 days'), $periodEnd);
 
                     $attr['type'] = 'date';
