@@ -1584,71 +1584,163 @@ class ValidationBehavior extends Behavior
         return ($found == 0);
     }
 
+    /**
+     * Prevents two assignments on the same staff / institution / position from overlapping in time.
+     *
+     * POCOR-9832: the original implementation blocked any edit to a record that overlapped a sibling,
+     * which made a pair of legitimately concurrent assignments (for example Full-Time 0.5 + Part-Time 0.5
+     * on one position, permitted by checkFTE) impossible to ever close - no end date satisfied the rule.
+     * Three constraints are applied on top of the original behaviour:
+     *
+     *  - the rule is skipped when the period is being narrowed (start date unchanged, end date being set
+     *    or brought earlier). Closing an assignment cannot create a new overlap, so validating it only
+     *    stops the user from correcting data that already existed before the edit.
+     *  - assignments that have already ended (staff_status_id <> ASSIGNED) no longer block a new period.
+     *  - the overlap test is the standard interval comparison rather than four partially redundant branches.
+     *
+     * Concurrent capacity on a single position remains the responsibility of checkFTE().
+     */
     public static function checkStaffExistWithinPeriod($field, array $globalData)
     {
-        // The logic below will prevent duplicate record that will be produce if the user amend the start or end date for a staff that is inactive when there is an active staff
-        // in the same institution
+        $data = $globalData['data'];
 
-        $recordId = $globalData['data']['id'];
-        $institutionId = $globalData['data']['institution_id'];
-        $newEndDate = date('Y-m-d', strtotime($globalData['data']['end_date']));
-        $newStartDate = date('Y-m-d', strtotime($globalData['data']['start_date']));
-        $staffId = $globalData['data']['staff_id'];
-        $positionId = $globalData['data']['institution_position_id'];
+        $recordId = array_key_exists('id', $data) ? $data['id'] : null;
+        $institutionId = array_key_exists('institution_id', $data) ? $data['institution_id'] : null;
+        $staffId = array_key_exists('staff_id', $data) ? $data['staff_id'] : null;
+        $positionId = array_key_exists('institution_position_id', $data) ? $data['institution_position_id'] : null;
+
+        $newStartDate = self::formatStaffPeriodDate(array_key_exists('start_date', $data) ? $data['start_date'] : null);
+        $newEndDate = self::formatStaffPeriodDate(array_key_exists('end_date', $data) ? $data['end_date'] : null);
+
+        // Without a usable start date there is no period to compare. Presence and date-order are enforced
+        // by requirePresence / ruleCompareDateReverse, so this rule stays out of the way.
+        if (empty($newStartDate)) {
+            return true;
+        }
 
         $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
 
-        $condition = [
+        // POCOR-9832: allow an assignment period to be narrowed or left unchanged.
+        if (!empty($recordId)) {
+            $existingRecord = $InstitutionStaffTable->find()
+                ->where([$InstitutionStaffTable->aliasField('id') => $recordId])
+                ->first();
+
+            if (!empty($existingRecord)) {
+                $oldStartDate = self::formatStaffPeriodDate($existingRecord->start_date);
+                $oldEndDate = self::formatStaffPeriodDate($existingRecord->end_date);
+
+                $startUnchanged = ($oldStartDate === $newStartDate);
+
+                // An absent end date means "end date not being changed" - the
+                // Change in Assignment record carries NULL for every change type
+                // other than End of Assignment. Legacy behaviour never blocked
+                // that case, so it is preserved deliberately: this fix only ever
+                // loosens the rule, it never introduces a new rejection.
+                $endNotExtended = empty($newEndDate)
+                    || empty($oldEndDate)
+                    || $newEndDate <= $oldEndDate;
+
+                if ($startUnchanged && $endNotExtended) {
+                    return true;
+                }
+            }
+        }
+
+        // Without a staff member or a position there is nothing to compare. On a
+        // create the request may not carry every key, so this fails open rather
+        // than matching on a NULL.
+        if (empty($staffId) || empty($positionId)) {
+            return true;
+        }
+
+        // A position belongs to exactly one institution, so institution_id is
+        // redundant here - it is applied when supplied and dropped when it is
+        // not, rather than silently matching nothing on a NULL.
+        $conditions = [
             $InstitutionStaffTable->aliasField('staff_id') => $staffId,
             $InstitutionStaffTable->aliasField('institution_position_id') => $positionId,
-            $InstitutionStaffTable->aliasField('id').' IS NOT' => $recordId,
-            $InstitutionStaffTable->aliasField('institution_id') => $institutionId
+            $InstitutionStaffTable->aliasField('id') . ' IS NOT' => $recordId
         ];
-        $count = 0;
 
-        if ($newStartDate !== false) {
-            if (empty($newEndDate)) {
-                $count = $InstitutionStaffTable->find()
-                    ->where($condition)
-                    ->where([
-                        'OR' => [
-                            [$InstitutionStaffTable->aliasField('end_date').' IS NULL'],
-                            [
-                                $InstitutionStaffTable->aliasField('start_date').' >=' => $newStartDate,
-                            ]
-                        ]
-                    ]);
-            } else {
-                $count = $InstitutionStaffTable->find()
-                    ->where($condition)
-                    ->where([
-                        'OR' => [
-                            [
-                                $InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
-                                $InstitutionStaffTable->aliasField('end_date').' IS NULL'
-                            ],
-                            [
-                                $InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
-                                $InstitutionStaffTable->aliasField('end_date').' IS NULL'
-                            ],
-                            [
-                                $InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
-                                $InstitutionStaffTable->aliasField('end_date').' >=' => $newEndDate,
-                            ],
-                            [
-                                $InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
-                                $InstitutionStaffTable->aliasField('end_date').' >=' => $newStartDate,
-                            ],
-                        ]
-                    ]);
+        if (!empty($institutionId)) {
+            $conditions[$InstitutionStaffTable->aliasField('institution_id')] = $institutionId;
+        }
+
+        // POCOR-9832: an assignment that has already been ended cannot occupy a period.
+        $assignedStatusId = self::getAssignedStaffStatusId();
+        if (!empty($assignedStatusId)) {
+            $conditions[$InstitutionStaffTable->aliasField('staff_status_id')] = $assignedStatusId;
+        }
+
+        // POCOR-9832: standard interval overlap - sibling.start <= newEnd AND sibling.end >= newStart,
+        // where a sibling with no end date is treated as running indefinitely.
+        $overlapConditions = [
+            'OR' => [
+                [$InstitutionStaffTable->aliasField('end_date') . ' IS' => null],
+                [$InstitutionStaffTable->aliasField('end_date') . ' >=' => $newStartDate]
+            ]
+        ];
+
+        if (!empty($newEndDate)) {
+            $overlapConditions[$InstitutionStaffTable->aliasField('start_date') . ' <='] = $newEndDate;
+        }
+
+        $overlapping = $InstitutionStaffTable->find()
+            ->where($conditions)
+            ->where($overlapConditions)
+            ->count();
+
+        return ($overlapping == 0);
+    }
+
+    /**
+     * POCOR-9832: normalises the mixed date representations (Y-m-d string, localised string, Date,
+     * DateTime, null) that reach the staff period rules into Y-m-d, or null when there is no usable value.
+     */
+    private static function formatStaffPeriodDate($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+
+        $timestamp = strtotime((string)$value);
+
+        return ($timestamp === false) ? null : date('Y-m-d', $timestamp);
+    }
+
+    /**
+     * POCOR-9832: resolves the ASSIGNED staff status id, returning null when it cannot be determined so
+     * that the caller falls back to checking every sibling rather than silently checking none.
+     */
+    private static $assignedStaffStatusId = [];
+
+    private static function getAssignedStaffStatusId()
+    {
+        try {
+            $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+
+            // memoised per connection so a batch of validations (staff import,
+            // bulk approval) issues one lookup rather than one per row.
+            $cacheKey = $StaffStatuses->getConnection()->configName();
+            if (array_key_exists($cacheKey, self::$assignedStaffStatusId)) {
+                return self::$assignedStaffStatusId[$cacheKey];
             }
-            if ($count->count() > 0) {
-                return false;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
+
+            $statuses = $StaffStatuses->findCodeList();
+            self::$assignedStaffStatusId[$cacheKey] = array_key_exists('ASSIGNED', $statuses)
+                ? $statuses['ASSIGNED']
+                : null;
+
+            return self::$assignedStaffStatusId[$cacheKey];
+        } catch (\Exception $e) {
+            Log::warning('ValidationBehavior::getAssignedStaffStatusId - ' . $e->getMessage());
+
+            return null;
         }
     }
 
