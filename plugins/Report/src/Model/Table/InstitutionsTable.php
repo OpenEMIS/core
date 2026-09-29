@@ -1880,6 +1880,11 @@ class InstitutionsTable extends AppTable
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
         $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
+        //POCOR-9831: on first load academic_period_id is not posted yet (the dropdown only displays the
+        //            current period), so fall back to it or Start/End Date stay hidden until a reload
+        if (empty($selectedAcademicPeriodId) && $feature == 'Report.StudentAttendanceWeeklyReport') {
+            $selectedAcademicPeriodId = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods')->getCurrent();
+        }
         [, $editableDateFormat] = $this->getSystemDateFormats();
         if ($feature) {
             $attr['value'] = self::NO_FILTER;
@@ -2063,6 +2068,11 @@ class InstitutionsTable extends AppTable
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
         $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
+        //POCOR-9831: on first load academic_period_id is not posted yet (the dropdown only displays the
+        //            current period), so fall back to it or Start/End Date stay hidden until a reload
+        if (empty($selectedAcademicPeriodId) && $feature == 'Report.StudentAttendanceWeeklyReport') {
+            $selectedAcademicPeriodId = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods')->getCurrent();
+        }
         [, $editableDateFormat] = $this->getSystemDateFormats();
         if ($feature) {
             $attr['value'] = self::NO_FILTER;
