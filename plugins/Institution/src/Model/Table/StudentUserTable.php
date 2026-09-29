@@ -649,6 +649,7 @@ class StudentUserTable extends ControllerActionTable
             $this->addPromoteButton($entity, $extra);
             $this->addTransferButton($entity, $extra);
             $this->addWithdrawButton($entity, $extra);
+            $this->addSyncButton($entity, $extra);
         }
 
     }
@@ -1475,12 +1476,13 @@ class StudentUserTable extends ControllerActionTable
     }
 
     //POCOR-9590: Sync button on the student General view toolbar — visible only when user has a preferred identity matching the active external data source's identity_type_id
+
     private function addSyncButton(Entity $entity, ArrayObject $extra)
     {
         //POCOR-9590: delegate to controller when it supports the method (StudentsController); fall back for InstitutionsController and others
         $permission = method_exists($this->controller, 'syncUserPermission')
             ? $this->controller->syncUserPermission()
-            : ['Institutions', 'Students', 'add'];
+            : [$this->controller->getName(), 'SyncUser', 'execute'];
         if (!$this->AccessControl->check($permission)) {
             return;
         }
@@ -1506,10 +1508,11 @@ class StudentUserTable extends ControllerActionTable
         $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
         $syncButton['attr']['title'] = __('Sync');
         $syncButton['url'] = [
-            'plugin'     => 'Student',
-            'controller' => 'Students',
+            'plugin'     => 'Institution',
+            'controller' => 'Institutions',
             'action'     => 'SyncUser',
-            0            => $encodedParams,
+            0            => 'execute',
+            1            => $encodedParams,
         ];
         $toolbarButtons['sync'] = $syncButton;
     }
