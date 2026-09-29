@@ -1140,6 +1140,9 @@ class InstitutionsTable extends AppTable
                 $attr['select'] = false;
                 $attr['onChangeReload'] = true;
                 if (empty($data['academic_period_id'])) {
+                    if ($feature == 'Report.StudentAttendances') { //POCOR-9813: preselect current period so the date filters match it on first load
+                        $attr['attr']['value'] = $currentPeriod;
+                    }
                     $request = $request->withData('academic_period_id', $currentPeriod);
                     $request = $request->withData('institution_id', -1);
                     $request = $request->withData('education_level_id', -1);
@@ -1900,6 +1903,10 @@ class InstitutionsTable extends AppTable
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
         $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
+        //POCOR-9813: academic period is not posted on first load, fall back to the current period so the date filters are displayed
+        if (empty($selectedAcademicPeriodId) && $feature == 'Report.StudentAttendances') {
+            $selectedAcademicPeriodId = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods')->getCurrent();
+        }
         [, $editableDateFormat] = $this->getSystemDateFormats();
         if ($feature) {
             $attr['value'] = self::NO_FILTER;
@@ -2071,6 +2078,10 @@ class InstitutionsTable extends AppTable
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
         $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
+        //POCOR-9813: academic period is not posted on first load, fall back to the current period so the date filters are displayed
+        if (empty($selectedAcademicPeriodId) && $feature == 'Report.StudentAttendances') {
+            $selectedAcademicPeriodId = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods')->getCurrent();
+        }
         [, $editableDateFormat] = $this->getSystemDateFormats();
         if ($feature) {
             $attr['value'] = self::NO_FILTER;
