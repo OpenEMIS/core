@@ -3,7 +3,7 @@
 use Phinx\Migration\AbstractMigration;
 
 /**
- * POCOR-9772 (placeholder ticket number - update if a different ticket has been assigned)
+ * POCOR-4456
  *
  * Adds a "Slider Type" choice (Number / Text) to the Appraisals "Slider" criteria field type.
  * - Number: existing Min/Max/Step behaviour (unchanged).

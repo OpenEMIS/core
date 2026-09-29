@@ -46,17 +46,34 @@ class AppraisalBehavior extends Behavior
             return;
         }
 
+        $criteriaIds = [];
+        foreach ($data['appraisal_slider_answers'] as $answerData) {
+            if (!isset($answerData['answer']) || $answerData['answer'] === '' || empty($answerData['appraisal_criteria_id'])) {
+                continue;
+            }
+            $criteriaIds[] = $answerData['appraisal_criteria_id'];
+        }
+
+        if (empty($criteriaIds)) {
+            return;
+        }
+
         $AppraisalCriterias = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalCriterias');
+
+        // Single batched lookup instead of one query per submitted slider answer.
+        $criteriasById = $AppraisalCriterias->find()
+            ->contain(['AppraisalSliders', 'AppraisalSliderOptions'])
+            ->where([$AppraisalCriterias->aliasField('id') . ' IN' => array_unique($criteriaIds)])
+            ->all()
+            ->indexBy('id')
+            ->toArray();
 
         foreach ($data['appraisal_slider_answers'] as $key => $answerData) {
             if (!isset($answerData['answer']) || $answerData['answer'] === '' || empty($answerData['appraisal_criteria_id'])) {
                 continue;
             }
 
-            $criteria = $AppraisalCriterias->find()
-                ->contain(['AppraisalSliders', 'AppraisalSliderOptions'])
-                ->where([$AppraisalCriterias->aliasField('id') => $answerData['appraisal_criteria_id']])
-                ->first();
+            $criteria = $criteriasById[$answerData['appraisal_criteria_id']] ?? null;
 
             if (!$criteria || empty($criteria->appraisal_slider) || $criteria->appraisal_slider->slider_type !== 'TEXT') {
                 continue;

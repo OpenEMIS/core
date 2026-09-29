@@ -266,7 +266,8 @@ class AppraisalCriteriasTable extends ControllerActionTable
     public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->AppraisalDropdownOptions->getAlias()
+            $this->AppraisalDropdownOptions->getAlias(),
+            $this->AppraisalSliderOptions->getAlias()
         ];
     }
 
