@@ -29,15 +29,12 @@ if ($session->check('System.User.roles')) {
             <i class="fa fa-home"></i>
         </a>
         <!--POCOR-7210  start -->
-        <?php if ($SystemNotices): ?>
-		    <a class="btn" href="<?= $this->Url->build(['plugin' => 'System', 'controller' => 'Systems', 'action' => 'SystemNotices']) ?>">
-		        <i class="fa fa-envelope"></i>
-		    </a>
-		<?php else: ?>
-		    <a class="btn" href="<?= $this->Url->build(['plugin' => 'System', 'controller' => 'Systems', 'action' => 'SystemNotices']) ?>">
-		        <i class="fa fa-envelope fa-lg notification-dot"></i>
-		    </a>
-		<?php endif; ?> <!-- POCOR-7210 end -->
+        <?php //POCOR-9820: show the red dot only when the component explicitly reports unread notices
+        $hasUnreadNotices = isset($SystemNotices) && $SystemNotices === false; ?>
+		<a class="btn" href="<?= $this->Url->build(['plugin' => 'System', 'controller' => 'Systems', 'action' => 'SystemNotices']) ?>">
+		    <i class="fa fa-envelope<?= $hasUnreadNotices ? ' fa-lg notification-dot' : '' ?>"></i>
+		</a>
+		<!-- POCOR-7210 end -->
 
     </div>
 	
