@@ -1590,13 +1590,18 @@ class ValidationBehavior extends Behavior
      * POCOR-9832: the original implementation blocked any edit to a record that overlapped a sibling,
      * which made a pair of legitimately concurrent assignments (for example Full-Time 0.5 + Part-Time 0.5
      * on one position, permitted by checkFTE) impossible to ever close - no end date satisfied the rule.
-     * Three constraints are applied on top of the original behaviour:
+     * One constraint is applied on top of the original behaviour:
      *
      *  - the rule is skipped when the period is being narrowed (start date unchanged, end date being set
-     *    or brought earlier). Closing an assignment cannot create a new overlap, so validating it only
-     *    stops the user from correcting data that already existed before the edit.
-     *  - assignments that have already ended (staff_status_id <> ASSIGNED) no longer block a new period.
+     *    to an earlier or equal date than it already was). Closing an assignment cannot create a new
+     *    overlap, so validating it only stops the user from correcting data that already existed before
+     *    the edit. Clearing a previously-set end date is NOT narrowing - it reopens the period to run
+     *    indefinitely, which is exactly the shape of change the rule exists to catch.
      *  - the overlap test is the standard interval comparison rather than four partially redundant branches.
+     *
+     * Sibling status is deliberately NOT filtered here: an assignment that has already ended still
+     * occupies the historical dates it was recorded against, and the narrowing bypass above is what
+     * unblocks the reported bug, not a status exemption.
      *
      * Concurrent capacity on a single position remains the responsibility of checkFTE().
      */
@@ -1604,7 +1609,15 @@ class ValidationBehavior extends Behavior
     {
         $data = $globalData['data'];
 
-        $recordId = array_key_exists('id', $data) ? $data['id'] : null;
+        // This rule is shared (via Institution.StaffValidation) by StaffTable,
+        // StaffSalariesTable (both mapped directly onto institution_staff, so their
+        // own 'id' is already an institution_staff id) and StaffPositionProfilesTable
+        // (mapped onto the separate institution_staff_position_profiles table, whose
+        // 'id' is NOT an institution_staff id). institution_staff_id is the one key
+        // that reliably names the institution_staff row across all three.
+        $recordId = array_key_exists('institution_staff_id', $data) && !empty($data['institution_staff_id'])
+            ? $data['institution_staff_id']
+            : (array_key_exists('id', $data) ? $data['id'] : null);
         $institutionId = array_key_exists('institution_id', $data) ? $data['institution_id'] : null;
         $staffId = array_key_exists('staff_id', $data) ? $data['staff_id'] : null;
         $positionId = array_key_exists('institution_position_id', $data) ? $data['institution_position_id'] : null;
@@ -1632,14 +1645,17 @@ class ValidationBehavior extends Behavior
 
                 $startUnchanged = ($oldStartDate === $newStartDate);
 
-                // An absent end date means "end date not being changed" - the
-                // Change in Assignment record carries NULL for every change type
-                // other than End of Assignment. Legacy behaviour never blocked
-                // that case, so it is preserved deliberately: this fix only ever
-                // loosens the rule, it never introduces a new rejection.
-                $endNotExtended = empty($newEndDate)
-                    || empty($oldEndDate)
-                    || $newEndDate <= $oldEndDate;
+                // Narrowing means: the record already had no end date (still open,
+                // nothing to narrow) OR the new end date is present and on/before the
+                // one already saved. A new end date that is empty/cleared, or later
+                // than the saved one, is an extension - not narrowing - even though
+                // the "absent end date" shape also covers change types that never
+                // touch end_date at all. That ambiguity belongs to the caller (it
+                // should resend the existing end_date when it isn't being changed),
+                // not to this rule; here an empty new end date against an existing
+                // one is treated as the more dangerous case.
+                $endNotExtended = empty($oldEndDate)
+                    || (!empty($newEndDate) && $newEndDate <= $oldEndDate);
 
                 if ($startUnchanged && $endNotExtended) {
                     return true;
@@ -1665,12 +1681,6 @@ class ValidationBehavior extends Behavior
 
         if (!empty($institutionId)) {
             $conditions[$InstitutionStaffTable->aliasField('institution_id')] = $institutionId;
-        }
-
-        // POCOR-9832: an assignment that has already been ended cannot occupy a period.
-        $assignedStatusId = self::getAssignedStaffStatusId();
-        if (!empty($assignedStatusId)) {
-            $conditions[$InstitutionStaffTable->aliasField('staff_status_id')] = $assignedStatusId;
         }
 
         // POCOR-9832: standard interval overlap - sibling.start <= newEnd AND sibling.end >= newStart,
@@ -1711,37 +1721,6 @@ class ValidationBehavior extends Behavior
         $timestamp = strtotime((string)$value);
 
         return ($timestamp === false) ? null : date('Y-m-d', $timestamp);
-    }
-
-    /**
-     * POCOR-9832: resolves the ASSIGNED staff status id, returning null when it cannot be determined so
-     * that the caller falls back to checking every sibling rather than silently checking none.
-     */
-    private static $assignedStaffStatusId = [];
-
-    private static function getAssignedStaffStatusId()
-    {
-        try {
-            $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
-
-            // memoised per connection so a batch of validations (staff import,
-            // bulk approval) issues one lookup rather than one per row.
-            $cacheKey = $StaffStatuses->getConnection()->configName();
-            if (array_key_exists($cacheKey, self::$assignedStaffStatusId)) {
-                return self::$assignedStaffStatusId[$cacheKey];
-            }
-
-            $statuses = $StaffStatuses->findCodeList();
-            self::$assignedStaffStatusId[$cacheKey] = array_key_exists('ASSIGNED', $statuses)
-                ? $statuses['ASSIGNED']
-                : null;
-
-            return self::$assignedStaffStatusId[$cacheKey];
-        } catch (\Exception $e) {
-            Log::warning('ValidationBehavior::getAssignedStaffStatusId - ' . $e->getMessage());
-
-            return null;
-        }
     }
 
     public static function checkFTE($field, array $globalData)
