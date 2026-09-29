@@ -93,15 +93,9 @@ class UserTabBehavior extends Behavior
             unset($url[2]);
         }
         if ($userId) {
-            $queryString = is_array($queryString) ? $queryString : [];
             $queryString['user_id'] = $userId;
         }
-        // POCOR-9819: same guard as addDeleteBeforeAction() - don't clobber the id
-        // $model->url('index') already carried forward with an encoded empty array
-        // when nothing new was resolved here.
-        if (!empty($queryString)) {
-            $url[1] = $model->paramsEncode($queryString);
-        }
+        $url[1] = $model->paramsEncode($queryString);
         return $url;
     }
 
