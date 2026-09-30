@@ -625,14 +625,15 @@ class ImportUsersTable extends AppTable
         // POCOR-9827: POCOR-8835's migration (20250203010101_POCOR8835.php) renamed the
         // 'openemis_no' import_mapping column to 'username' for User.Users, but this lookup was
         // never updated to match, so $flipped['openemis_no'] was an undefined array key and the
-        // OpenEMIS ID never made it into the Passed report's Username column.
+        // Username column in the Passed report stayed blank.
         $key = $flipped['username'];
-        if ($clonedEntity->openemis_no != $clonedEntity->username) {
-            $tempPassedRecord['data'][$key] =
-                "Openemis No: {$clonedEntity->openemis_no}\nUsername: {$clonedEntity->username}"; // POCOR-8835
-        } else {
-            $tempPassedRecord['data'][$key] = $clonedEntity->openemis_no;
-        }
+        $tempPassedRecord['data'][$key] = $clonedEntity->username;
+        // POCOR-9827: the OpenEMIS ID is reported in its own column (appended past the
+        // importable columns by ImportBehavior::_generateDownloadableFile()) rather than folded
+        // into the Username cell above, so the Passed file stays re-importable unmodified even
+        // when an admin supplied a username that differs from the generated OpenEMIS ID.
+        $tempPassedRecord['extraColumnLabels'] = [__('OpenEMIS ID')];
+        $tempPassedRecord['extraColumnValues'] = [$clonedEntity->openemis_no];
         // POCOR-8835 end
         // POCOR-9364 start
         if ($this->generatedPassword) {

@@ -1365,6 +1365,22 @@ class ImportBehavior extends Behavior
             $newHeader = $header;
             if ($type == 'failed') {
                 $newHeader[] = $this->getExcelLabel('general', 'errors');
+            } elseif ($type == 'passed') {
+                // POCOR-9827: model-specific onImportSetModelPassedRecord() handlers can append
+                // extra, display-only columns (e.g. the generated OpenEMIS ID) to the Passed
+                // sheet without adding them to the model's import_mapping/$columns. Because
+                // these land past $totalColumns (see checkRowCells()/isCorrectTemplate(), both
+                // bounded by count($columns)), they are silently ignored if the Passed file is
+                // re-uploaded unmodified -- the same mechanism the 'errors' column above already
+                // relies on for the Failed sheet.
+                foreach ($data as $record) {
+                    if (!empty($record['extraColumnLabels'])) {
+                        foreach ($record['extraColumnLabels'] as $label) {
+                            $newHeader[] = $label;
+                        }
+                        break;
+                    }
+                }
             }
             $dataSheetName = $this->getExcelLabel('general', 'data');
 
@@ -1380,6 +1396,11 @@ class ImportBehavior extends Behavior
                     $values[] = $record['errorForExcel'];
                 } else {
                     $values = $record['data'];
+                    if (!empty($record['extraColumnValues'])) {
+                        foreach ($record['extraColumnValues'] as $extraValue) {
+                            $values[] = $extraValue;
+                        }
+                    }
                 }
                 $rowNumber = $index + $rowData;  // POCOR-9364
                 $activeSheet->getRowDimension(($index + $rowData))->setRowHeight(15);
