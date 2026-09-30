@@ -2597,6 +2597,13 @@ class InstitutionsController extends AppController
         // 2) Determine current institution
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 // URL for “Back to Subjects” in InstitutionsController
+        // POCOR-9836: preserve the Programme/Class selection the user had on the
+        // index page (carried here as query params) so returning to the list
+        // doesn't reset back to the first Programme/Class.
+        $indexQuery = array_intersect_key(
+            $this->request->getQueryParams(),
+            array_flip(['academic_period_id', 'class_id'])
+        );
         $indexUrl = [
             'plugin'     => 'Institution',
             'controller' => 'Institutions',
@@ -2606,6 +2613,7 @@ class InstitutionsController extends AppController
                 'id'             => $institutionId,
                 'institution_id'=> $institutionId,
             ]),
+            '?'          => $indexQuery,
         ];
         // 3) Authorization checks
         $isAdmin = $this->AccessControl->isAdmin();
