@@ -630,6 +630,109 @@ class StaffUserTable extends ControllerActionTable
 
         $this->fields['identity_type_id']['type'] = 'readonly';
         $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
+
+        // POCOR-4477: last thing in this hook - see applyFieldConfigurations() below.
+        // Safe here because RecordBehavior's addEdit.afterAction (which also
+        // touches field order) fires before this table's own edit.afterAction.
+        $this->applyFieldConfigurations('Staff');
+    }
+
+    /**
+     * POCOR-4477 Phase 2: applies admin-configured visibility/order (Fields
+     * Configurations) to the real Staff View/Edit pages. Only fields marked
+     * non-mandatory AND hidden get hidden - a field configured visible=1 is
+     * left as whatever the page already resolves, so this never
+     * force-reveals something hidden for other reasons. Since this is only
+     * ever called from an action-specific hook, a plain 'visible' => false
+     * is safely scoped to that single request's action.
+     *
+     * No pre-existing hardcoded setFieldOrder() array exists on this table,
+     * so the base order is read directly off $this->fields' current
+     * 'order' values instead of a literal array - safe only because this
+     * is called LAST, after all other field-ordering logic for that
+     * action has already run (see call sites).
+     *
+     * field_configurations module='Staff' has 30 rows split across two
+     * different tables (this one for security_users/user_contacts fields,
+     * Institution.Staff for institution_staff fields) - the intersection
+     * check below means each table only ever reorders/hides the subset of
+     * rows that are genuinely present on its own page.
+     *
+     * Reordering happens WITHIN each section only (see
+     * reorderWithinSections()) - this page's sections (information_section,
+     * identity_section, location_section, etc.) come from the shared
+     * User.User behavior, not this table, and the admin's flat Fields
+     * Configurations list has no concept of them, so an unconstrained
+     * reorder can otherwise pull a field into a completely different
+     * section's slot, rendering it under the wrong header.
+     */
+    private function applyFieldConfigurations(string $module): void
+    {
+        $currentOrder = $this->fields;
+        uasort($currentOrder, function ($a, $b) {
+            return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+        });
+        $baseOrder = array_keys($currentOrder);
+
+        $fieldConfigTable = TableRegistry::getTableLocator()->get('Configuration.ConfigFieldsConfigurations');
+        $configs = $fieldConfigTable->find()
+            ->where(['module' => $module])
+            ->order([$fieldConfigTable->aliasField('order') => 'ASC'])
+            ->all();
+
+        $adminOrder = [];
+        $rank = 0;
+        foreach ($configs as $config) {
+            if (!in_array($config->field_name, $baseOrder, true)) {
+                continue;
+            }
+            $adminOrder[$config->field_name] = $rank++;
+
+            if (empty($config->is_mandatory) && empty($config->visible)) {
+                $this->field($config->field_name, ['visible' => false]);
+            }
+        }
+
+        $this->setFieldOrder($this->reorderWithinSections($baseOrder, $adminOrder));
+    }
+
+    /**
+     * POCOR-4477: reorders $baseOrder to match $adminOrder (field_name =>
+     * rank, lower = earlier), but only WITHIN each contiguous run between
+     * section-header entries (fields with 'type' => 'section') - never
+     * moves a configurable field across a section boundary. Non-configurable
+     * fields within a run keep their original relative position (same
+     * "slot substitution" as before, just scoped per-run).
+     */
+    private function reorderWithinSections(array $baseOrder, array $adminOrder): array
+    {
+        $result = [];
+        $currentRun = [];
+
+        $flush = function () use (&$result, &$currentRun, $adminOrder) {
+            $configurable = array_values(array_filter($currentRun, function ($name) use ($adminOrder) {
+                return isset($adminOrder[$name]);
+            }));
+            usort($configurable, function ($a, $b) use ($adminOrder) {
+                return $adminOrder[$a] <=> $adminOrder[$b];
+            });
+            foreach ($currentRun as $name) {
+                $result[] = isset($adminOrder[$name]) ? array_shift($configurable) : $name;
+            }
+            $currentRun = [];
+        };
+
+        foreach ($baseOrder as $name) {
+            if (($this->fields[$name]['type'] ?? null) === 'section') {
+                $flush();
+                $result[] = $name;
+            } else {
+                $currentRun[] = $name;
+            }
+        }
+        $flush();
+
+        return $result;
     }
 
     public function onGetIsHomeroom(EventInterface $event, Entity $entity)
@@ -1021,6 +1124,17 @@ class StaffUserTable extends ControllerActionTable
             $this->controller->set('contentHeader', $StaffName . ' - ' . 'Overview');
         } catch (RecordNotFoundException $e) {
             Log::write('error', $e->getMessage());
+        }
+
+        // POCOR-4477: deliberately placed in the generic afterAction (not
+        // viewAfterAction) - CustomField.Record's own view.afterAction
+        // listener runs at priority 100, after viewAfterAction, and resets
+        // field order via setupCustomFields(). The generic afterAction event
+        // only fires once the whole per-action lifecycle (including that
+        // priority-100 listener) has completed, so this is the first safe
+        // point to have the last word on order for the view page.
+        if ($this->action == 'view') {
+            $this->applyFieldConfigurations('Staff');
         }
     }
 

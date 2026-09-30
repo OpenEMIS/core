@@ -73,6 +73,29 @@ class ConfigItemsBehavior extends Behavior
            $typeValue = $this->model->request->getQueryParams()['type'];
         }
 
+        //POCOR-4477 start
+        // Same pattern as the Themes branch below: this type gets its own
+        // second dropdown (Institution/Staff/Student, defaulting to
+        // Institution) instead of the plain generic filter every other type
+        // gets in the final elseif below.
+        if ($typeValue == 'Fields Configurations') {
+            $fieldConfigTable = TableRegistry::getTableLocator()->get('Configuration.ConfigFieldsConfigurations');
+            $moduleOptions = $fieldConfigTable::MODULES;
+            $this->model->request = $this->model->request->withQueryParams(
+                array_merge($this->model->request->getQueryParams(),
+                ['type_value' => $typeValue]));
+            $this->model->advancedSelectOptions($typeOptions, $selectedType);
+            $this->model->controller->set('typeOptions', $typeOptions);
+            $controlElement = $toolbarElements[0];
+            $selectedModule = $this->model->request->getQueryParams()['module'] ?? 'Institution';
+            $controlElement['data'] = [
+                'typeOptions' => $typeOptions,
+                'fieldConfigModules' => $moduleOptions,
+                'selectedFieldConfigModule' => $selectedModule];
+            $controlElement['order'] = 1;
+            return $controlElement;
+        }
+        //POCOR-4477 end
         //POCOR-8951 start
         if($typeValue == 'Themes'){
             $productThemes = $ConfigItem

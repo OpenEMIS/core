@@ -24,6 +24,7 @@ use Cake\Utility\Text;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Institution\Model\Traits\StudentCreationCheckTrait;
 use Institution\Model\Traits\RouteInstitutionIdTrait;
+use User\Controller\SyncUserTrait; //POCOR-9821
 use Exception;
 use PHPExcel_IOFactory;
 use Cake\Auth\DefaultPasswordHasher;
@@ -46,6 +47,12 @@ class InstitutionsController extends AppController
     use UtilityTrait;
     use StudentCreationCheckTrait; //POCOR-9385: single source of truth for the student-creation entry-grade gate
     use RouteInstitutionIdTrait; //POCOR-7692: shared ':institutionId' route param decode (Houses/Associations add-edit links)
+    use SyncUserTrait;
+
+    public function syncUserPermission(): array
+    {
+        return [$this->getName(), 'SyncUser', 'execute'];
+    }
     // POCOR-8231 start
     const STUDENT = 1;
     const STAFF = 2;
