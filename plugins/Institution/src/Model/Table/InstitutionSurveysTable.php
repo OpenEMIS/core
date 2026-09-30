@@ -1321,12 +1321,8 @@ class InstitutionSurveysTable extends ControllerActionTable
         
         $today = FrozenDate::now()->format('Y-m-d');
         $endDateCondition = [
-            'OR' => [
-                $SurveyStatuses->aliasField('date_disabled IS') => null,
-                $SurveyStatuses->aliasField('date_disabled >=') => $today
-            ]
+            $SurveyStatuses->aliasField('date_disabled >=') => $today
         ];
-
 
         if (isset($roleId)) {
             $where = [
@@ -1389,7 +1385,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     $SurveyStatuses->aliasField('date_disabled >=') => $today
                 ]
             )
-
+            ->group($this->aliasField('id'))
             ->where($where)
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
