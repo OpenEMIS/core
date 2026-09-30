@@ -147,16 +147,22 @@ class CompetencyPeriodsTable extends ControllerActionTable
 
     public function addOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        if ($this->request->getQuery('queryString') && !$this->request->getQuery('period') && !$this->request->getQuery('template')) {
+        if (
+            $this->request->getQuery('queryString')
+            && !$this->request->getQuery('period')
+            && !$this->request->getQuery('template')
+        ) {
             $queryString = $this->getQueryString();
-            $this->request->data[$this->getAlias()]['academic_period_id'] = $queryString['academic_period_id'];
-            $this->request->data[$this->getAlias()]['competency_template_id'] = $queryString['competency_template_id'];
+
+            $entity->academic_period_id = $queryString['academic_period_id'];
+            $entity->competency_template_id = $queryString['competency_template_id'];
         } else {
             if ($this->request->getQuery('period')) {
-                $this->request->data[$this->getAlias()]['academic_period_id'] = $this->request->getQuery('period');
+                $entity->academic_period_id = $this->request->getQuery('period');
             }
+
             if ($this->request->getQuery('template')) {
-                $this->request->data[$this->getAlias()]['competency_template_id'] = $this->request->getQuery('template');
+                $entity->competency_template_id = $this->request->getQuery('template');
             }
         }
     }
