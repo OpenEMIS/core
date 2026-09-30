@@ -248,7 +248,7 @@ class OpenEmisBehavior extends Behavior
         }
     }
 
-    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, ?Entity $entity, ArrayObject $extra) //POCOR-4477: nullable entity, same fix as deleteAfterAction (POCOR-9257) - editBeforeQuery can legitimately filter the row out
     {
         if (!$entity) {
             $this->_table->Alert->warning('general.notExists');

@@ -83,6 +83,12 @@ class ConfigurationsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigStaffReleases']);
     }
+    //POCOR-4477 start
+    public function FieldsConfigurations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigFieldsConfigurations']);
+    }
+    //POCOR-4477 end
 
     public function implementedEvents(): array
     {
