@@ -60,6 +60,29 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     }
                 ]
             ])
+            // POCOR-9838: start_date/end_date must fall within the selected (new) academic period
+            ->add('start_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'on' => function ($context) {
+                        return array_key_exists('start_date', $context['data']) && !empty($context['data']['start_date']);
+                    }
+                ],
+                'ruleCompareDate' => [
+                    'rule' => ['compareDate', 'end_date', false],
+                    'on' => function ($context) {
+                        return array_key_exists('end_date', $context['data']) && !empty($context['data']['end_date']);
+                    }
+                ]
+            ])
+            ->add('end_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'on' => function ($context) {
+                        return array_key_exists('end_date', $context['data']) && !empty($context['data']['end_date']);
+                    }
+                ]
+            ])
 // POCOR-8946
 //            ->add('institution_id', 'rulecompareStudentGenderWithInstitution', [
 //                'rule' => ['compareStudentGenderWithInstitution'],
@@ -1131,11 +1154,38 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
+            $academicPeriodId = $entity->academic_period_id;
 
-            if (in_array($action, ['edit', 'approve']) && !empty($entity->start_date)) {
-                $attr['type'] = 'readonly';
-                $attr['value'] = $entity->start_date->format('Y-m-d');
-                $attr['attr']['value'] = $this->formatDate($entity->start_date);
+            if (!empty($academicPeriodId)) {
+                $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+                $periodStartDate = $academicPeriod->start_date;
+                $periodEndDate = $academicPeriod->end_date;
+
+                [, $editableDateFormat] = $this->getSystemDateFormats();
+                $attr['type'] = 'date';
+                $attr['date_options'] = [
+                    'startDate' => $periodStartDate->format($editableDateFormat),
+                    'endDate' => $periodEndDate->format($editableDateFormat),
+                    'todayBtn' => false
+                ];
+
+                // POCOR-9838: default to today (clamped to the academic period) on initial
+                // add, and otherwise show whatever was actually saved on the transfer record.
+                // On 'add', $entity is the student's CURRENT institution_student record (see
+                // setupFields()), so its start_date is that enrollment's start date -- not a
+                // saved transfer value -- and must never be used as the default here.
+                if (in_array($action, ['edit', 'approve']) && !empty($entity->start_date)) {
+                    $attr['value'] = $entity->start_date->format('Y-m-d');
+                } else {
+                    $today = new Date();
+                    $defaultDate = $today;
+                    if ($today < $periodStartDate) {
+                        $defaultDate = $periodStartDate;
+                    } elseif ($today > $periodEndDate) {
+                        $defaultDate = $periodEndDate;
+                    }
+                    $attr['value'] = $defaultDate->format('Y-m-d');
+                }
             } else {
                 $attr['type'] = 'hidden';
             }
@@ -1147,11 +1197,31 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
+            $academicPeriodId = $entity->academic_period_id;
 
-            if (in_array($action, ['edit', 'approve']) && !empty($entity->end_date)) {
-                $attr['type'] = 'readonly';
-                $attr['value'] = $entity->end_date->format('Y-m-d');
-                $attr['attr']['value'] = $this->formatDate($entity->end_date);
+            if (!empty($academicPeriodId)) {
+                $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+                $periodStartDate = $academicPeriod->start_date;
+                $periodEndDate = $academicPeriod->end_date;
+
+                [, $editableDateFormat] = $this->getSystemDateFormats();
+                $attr['type'] = 'date';
+                $attr['date_options'] = [
+                    'startDate' => $periodStartDate->format($editableDateFormat),
+                    'endDate' => $periodEndDate->format($editableDateFormat),
+                    'todayBtn' => false
+                ];
+
+                // POCOR-9838: default to the academic period end date until the user has
+                // saved an explicit end date. On 'add', $entity is the student's CURRENT
+                // institution_student record (see setupFields()), so its end_date belongs to
+                // that enrollment, not a saved transfer value -- same reasoning as start_date
+                // above.
+                if (in_array($action, ['edit', 'approve']) && !empty($entity->end_date)) {
+                    $attr['value'] = $entity->end_date->format('Y-m-d');
+                } else {
+                    $attr['value'] = $periodEndDate->format('Y-m-d');
+                }
             } else {
                 $attr['type'] = 'hidden';
             }
