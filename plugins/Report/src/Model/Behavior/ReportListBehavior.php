@@ -480,6 +480,29 @@ class ReportListBehavior extends Behavior {
 	        $name = $reportName;
 		}
 		/*POCOR-6439 ends*/
+		//POCOR-9831: short name - the generic one lists every selected institution and can exceed report_progress.name (200)
+		if ($feature == 'Report.StudentAttendanceWeeklyReport') {
+			$reportData = $data[$alias];
+			$academicPeriodData = $AcademicPeriod->get($reportData['academic_period_id']);
+			$institutionIds = [];
+			if (is_array($reportData['institution_id'] ?? null) && isset($reportData['institution_id']['_ids'])) {
+				$institutionIds = array_values(array_filter((array)$reportData['institution_id']['_ids'], function ($id) {
+					return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+				}));
+			}
+			if (count($institutionIds) == 1) {
+				$institutionLabel = $Institutions->get($institutionIds[0])->code;
+			} elseif (count($institutionIds) > 1) {
+				$institutionLabel = count($institutionIds) . ' ' . __('Institutions');
+			} else {
+				$institutionLabel = __('All Institutions');
+			}
+			$gradeId = $reportData['education_grade_id'] ?? -1;
+			$gradeName = ($gradeId > 0) ? $EducationGrades->get($gradeId)->name : __('All Grades');
+			$reportStartDate = date("Ymd", strtotime($reportData['report_start_date']));
+			$reportEndDate = date("Ymd", strtotime($reportData['report_end_date']));
+			$name = mb_substr($alias . ': ' . $featureList[$feature] . ' - ' . $academicPeriodData->name . ' - ' . $institutionLabel . ' - ' . $gradeName . ' - ' . $reportStartDate . ' - ' . $reportEndDate, 0, 200);
+		}
 
 		$params = $data[$alias];
 
