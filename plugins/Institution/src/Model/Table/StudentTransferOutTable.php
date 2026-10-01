@@ -69,7 +69,10 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     }
                 ],
                 'ruleCompareDate' => [
-                    'rule' => ['compareDate', 'end_date', false],
+                    // POCOR-9838: equals=true allows start_date == end_date -- both legitimately
+                    // default to the academic period's end date when it has already passed, and
+                    // a same-day enrollment window is valid.
+                    'rule' => ['compareDate', 'end_date', true],
                     'on' => function ($context) {
                         return array_key_exists('end_date', $context['data']) && !empty($context['data']['end_date']);
                     }
@@ -1150,6 +1153,44 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
+    /**
+     * Parses a raw submitted date string (as posted by the editable-date-format text input,
+     * e.g. "October 01, 2026") into a Date object, or null if missing/unparseable. Mirrors the
+     * format-detection already used in beforeMarshal() above, but returns a value usable before
+     * marshalling -- needed so onUpdateFieldStartDate()/onUpdateFieldEndDate() can inspect what
+     * was actually posted on a redisplay after a failed save (POCOR-9838).
+     */
+    private function parseSubmittedDate($rawValue)
+    {
+        if (empty($rawValue) || !is_string($rawValue)) {
+            return null;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+            return new Date($rawValue);
+        }
+
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+        $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+        try {
+            try {
+                $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+            } catch (\Exception $e) {
+                $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+            }
+            if ($date !== false && $date !== null) {
+                return new Date($date->format('Y-m-d'));
+            }
+        } catch (\Exception $e) {
+            // unparseable -- treat as not submitted
+        }
+
+        return null;
+    }
+
     public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
@@ -1177,11 +1218,27 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 if (in_array($action, ['edit', 'approve']) && !empty($entity->start_date)) {
                     $attr['value'] = $entity->start_date->format('Y-m-d');
                 } else {
-                    $today = new Date();
-                    $defaultDate = $today;
-                    if ($today < $periodStartDate) {
+                    // On 'add', prefer whatever the user actually left on the form on a
+                    // redisplay after some other field failed validation, instead of silently
+                    // recomputing (and overwriting) a fresh default every time.
+                    $postedStartDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.start_date'));
+                    $postedRequestedDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.requested_date'));
+
+                    if ($postedStartDate && (!$postedRequestedDate || $postedStartDate >= $postedRequestedDate)) {
+                        $defaultDate = $postedStartDate;
+                    } else {
+                        $defaultDate = new Date();
+                        // if a later Requested Date was already posted, don't default Start
+                        // Date earlier than it -- "Requested Date must not be after Start Date"
+                        // would otherwise keep failing until the user manually fixes Start Date.
+                        if ($postedRequestedDate && $postedRequestedDate > $defaultDate) {
+                            $defaultDate = $postedRequestedDate;
+                        }
+                    }
+
+                    if ($defaultDate < $periodStartDate) {
                         $defaultDate = $periodStartDate;
-                    } elseif ($today > $periodEndDate) {
+                    } elseif ($defaultDate > $periodEndDate) {
                         $defaultDate = $periodEndDate;
                     }
                     $attr['value'] = $defaultDate->format('Y-m-d');
@@ -1220,7 +1277,12 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 if (in_array($action, ['edit', 'approve']) && !empty($entity->end_date)) {
                     $attr['value'] = $entity->end_date->format('Y-m-d');
                 } else {
-                    $attr['value'] = $periodEndDate->format('Y-m-d');
+                    // On 'add', prefer whatever was already posted on a redisplay after some
+                    // other field failed validation, rather than silently overwriting it.
+                    $postedEndDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.end_date'));
+                    $attr['value'] = $postedEndDate
+                        ? $postedEndDate->format('Y-m-d')
+                        : $periodEndDate->format('Y-m-d');
                 }
             } else {
                 $attr['type'] = 'hidden';

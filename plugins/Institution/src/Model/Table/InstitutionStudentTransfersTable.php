@@ -147,13 +147,8 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                 'student_id' => $entity->student_id,
                 'education_grade_id' => $entity->education_grade_id,
                 'academic_period_id' => $entity->academic_period_id,
-                // POCOR-9838: start_date/end_date on the transfer entity are now always
-                // populated (the "Transfer To" form fields are no longer hidden), so the
-                // empty() check that used to gate this POCOR-6362 fallback would otherwise
-                // never fire again. For promoted/graduated/current prior statuses, keep
-                // forcing the full academic period range regardless of what was submitted.
-                'start_date' => ($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']) ? $academicPeriod->start_date : $entity->start_date,//POCOR-6362
-                'end_date' => ($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']) ? $academicPeriod->end_date : $entity->end_date,//POCOR-6362
+                'start_date' => (($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']) && empty($entity->start_date)) ? $academicPeriod->start_date : $entity->start_date,//POCOR-6362
+                'end_date' => (($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']) && empty($entity->end_date)) ? $academicPeriod->end_date : $entity->end_date,//POCOR-6362
                 'institution_id' => $entity->institution_id,
                 'previous_institution_student_id' => $previousStudentRecord->id
             ];

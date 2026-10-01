@@ -74,7 +74,10 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                     }
                 ],
                 'ruleCompareDate' => [
-                    'rule' => ['compareDate', 'end_date', false],
+                    // POCOR-9838: equals=true allows start_date == end_date -- End Date is now
+                    // editable and both may legitimately land on the same day (e.g. both
+                    // defaulting to the academic period's end date).
+                    'rule' => ['compareDate', 'end_date', true],
                     'on' => function ($context) {
                         return array_key_exists('end_date', $context['data']) && !empty($context['data']['end_date']);
                     }
@@ -84,6 +87,17 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 ],
                 'dateAlreadyTaken' => [
                     'rule' => ['dateAlreadyTaken']
+                ]
+            ])
+            // POCOR-9838: end_date must also fall within the selected academic period --
+            // previously only start_date had this rule, even though end_date was changed above
+            // to be user-editable.
+            ->add('end_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'on' => function ($context) {
+                        return array_key_exists('end_date', $context['data']) && !empty($context['data']['end_date']);
+                    }
                 ]
             ])
             ->allowEmpty('institution_class_id')
@@ -646,17 +660,30 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
+        // POCOR-9838: End Date was forced read-only here, inconsistent with Start Date (just
+        // above) which is already an editable 'date' field bound to the academic period. Match
+        // that behaviour so the user can actually pick/adjust an End Date, the same as on
+        // Transfer Pending Out.
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
-            if (empty($entity->end_date)) {
-                $endDate = $this->AcademicPeriods->get($entity->academic_period_id)->end_date;
-            } else {
-                $endDate = $entity->end_date;
-            }
+            $academicPeriodId = $entity->academic_period_id;
+            $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+            $periodStartDate = $academicPeriod->start_date;
+            $periodEndDate = $academicPeriod->end_date;
 
-            $attr['type'] = 'readonly';
-            $attr['value'] = $endDate->format('Y-m-d');
-            $attr['attr']['value'] = $this->formatDate($endDate);
+            [, $editableDateFormat] = $this->getSystemDateFormats();
+            $attr['type'] = 'date';
+            $attr['date_options'] = [
+                'startDate' => $periodStartDate->format($editableDateFormat),
+                'endDate' => $periodEndDate->format($editableDateFormat),
+                'todayBtn' => false
+            ];
+
+            if (!empty($entity->end_date)) {
+                $attr['value'] = $entity->end_date->format('Y-m-d');
+            } else {
+                $attr['value'] = $periodEndDate->format('Y-m-d');
+            }
             return $attr;
         }
     }
