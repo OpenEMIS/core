@@ -69,8 +69,16 @@
 
 													if ($pendingRequestsCount == 0) {
 														// POCOR-9837: restore the student's previously saved draft class;
-														// the bulk "Next Class" selector only fills in rows without one
-														$draftNextClassId = !empty($obj->next_institution_class_id) ? $obj->next_institution_class_id : $getNextclassId;
+														// the bulk "Next Class" selector only fills in rows without one -
+														// except right after the bulk selector itself was just changed
+														// (onChangeReload posts submit=changeNextClass), where the new
+														// bulk value must apply to every row even if a row's own value
+														// (saved draft, or just a stale repost of the previous bulk pick)
+														// is already set
+														$bulkNextClassChanged = $this->request->getData('submit') === 'changeNextClass';
+														$draftNextClassId = (!$bulkNextClassChanged && !empty($obj->next_institution_class_id))
+															? $obj->next_institution_class_id
+															: $getNextclassId;
 														echo $this->Form->input("$fieldPrefix.next_institution_class_id", [
 															'options' => $nextClassOptions,
 															'value' => [$draftNextClassId]
