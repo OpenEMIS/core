@@ -596,12 +596,19 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         //POCOR-8481 starts
         $toolbarButtons = $extra['toolbarButtons'];
+        // POCOR-9836: preserve the Programme/Class selection the user had on the
+        // index page so navigating back from the view page doesn't reset it.
+        $indexQuery = array_intersect_key(
+            $this->request->getQueryParams(),
+            array_flip(['academic_period_id', 'class_id'])
+        );
         $toolbarButtons['back']['url'] = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'Subjects',
             '0' => 'index',
-            '1' => $this->paramsEncode(['id' => $extra['institution_id'], 'institution_id' => $extra['institution_id']])
+            '1' => $this->paramsEncode(['id' => $extra['institution_id'], 'institution_id' => $extra['institution_id']]),
+            '?' => $indexQuery,
         ];//POCOR-8481 ends
 
         if ($extra['selectedAcademicPeriodId'] == -1) {
