@@ -348,8 +348,16 @@ class OpenEmisBehavior extends Behavior
             }
         } elseif ($action == 'add' || $action == 'edit') {
             $toolbarButtons['back']['url'] = $model->url($backAction, 'QUERY');
-            if ($action == 'edit' && $model->actions('index')) {
+            if ($model->actions('index')) {
+                // POCOR-9819: carry pass parameters back to the index page too, not
+                // just ?query=string ones - 'edit' already did this below; 'add'
+                // pages reached via a pass-parameter id (eg Directory > Student >
+                // Languages > Add, where security_user_id is encoded into the URL
+                // path, not passed as a query string) silently dropped that id on
+                // Cancel, since 'QUERY' mode only carries real query-string params.
                 $toolbarButtons['back']['url'] = $model->url($backAction);
+            }
+            if ($action == 'edit' && $model->actions('index')) {
                 $toolbarButtons['list']['url'] = $model->url('index', 'QUERY');
                 $toolbarButtons['list']['type'] = 'button';
                 $toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';
@@ -359,6 +367,12 @@ class OpenEmisBehavior extends Behavior
         } elseif ($action == 'view') {
             // edit button
             $toolbarButtons['back']['url'] = $model->url($backAction, 'QUERY');
+            if ($model->actions('index')) {
+                // POCOR-9819: same fix as add/edit above - back-from-view (eg
+                // reached after an edit-save redirect lands on view first) must
+                // carry pass parameters forward too, not just query-string ones.
+                $toolbarButtons['back']['url'] = $model->url($backAction);
+            }
             if ($model->actions('edit')) {
                 // echo "<pre>";print_r($model->url($backAction, 'QUERY')['action']);die;
                 //POCOR-8549 start
