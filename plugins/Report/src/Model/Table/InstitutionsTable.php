@@ -1459,6 +1459,9 @@ class InstitutionsTable extends AppTable
                     $attr['options'] = $gradeOptions;
                 }
                 $attr['onChangeReload'] = true;
+                if ($feature == 'Report.StudentAttendanceWeeklyReport') {
+                    $attr['attr']['required'] = true; //POCOR-9831: still mandatory (red asterisk) - "All Grades" is a valid selection
+                }
             } elseif (in_array(
                 $feature,
                 [
