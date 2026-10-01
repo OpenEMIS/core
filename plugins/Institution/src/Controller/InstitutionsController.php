@@ -2604,6 +2604,13 @@ class InstitutionsController extends AppController
         // 2) Determine current institution
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 // URL for “Back to Subjects” in InstitutionsController
+        // POCOR-9836: preserve the Programme/Class selection the user had on the
+        // index page (carried here as query params) so returning to the list
+        // doesn't reset back to the first Programme/Class.
+        $indexQuery = array_intersect_key(
+            $this->request->getQueryParams(),
+            array_flip(['academic_period_id', 'class_id'])
+        );
         $indexUrl = [
             'plugin'     => 'Institution',
             'controller' => 'Institutions',
@@ -2613,6 +2620,7 @@ class InstitutionsController extends AppController
                 'id'             => $institutionId,
                 'institution_id'=> $institutionId,
             ]),
+            '?'          => $indexQuery,
         ];
         // 3) Authorization checks
         $isAdmin = $this->AccessControl->isAdmin();
@@ -2653,6 +2661,12 @@ class InstitutionsController extends AppController
         // ─── PREPARE VIEW VARIABLES ─────────────────────────────────────────────
 
         // URL for “View” button
+        // POCOR-9836: this is also the URL the Angular controller redirects to after a
+        // successful Save (see institution.subject.students.ctrl.js:Controller.redirectUrl).
+        // Without '?' => $indexQuery here, the view page loaded straight after saving would
+        // carry no Programme/Class query params of its own, so its own "Back" button (built
+        // from $this->request->getQueryParams() in InstitutionSubjectsTable::viewBeforeAction())
+        // would have nothing left to preserve.
         $viewUrl = [
             'plugin'     => 'Institution',
             'controller' => 'Institutions',
@@ -2663,6 +2677,7 @@ class InstitutionsController extends AppController
                 'institution_id'         => $institutionId,
                 'institution_subject_id' => $subjectId,
             ]),
+            '?'          => $indexQuery,
         ];
 
         // URL for setting alerts
