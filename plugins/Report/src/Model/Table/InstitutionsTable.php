@@ -1156,7 +1156,9 @@ class InstitutionsTable extends AppTable
                 $attr['select'] = false;
                 $attr['onChangeReload'] = true;
                 if (empty($data['academic_period_id'])) {
-                    if ($feature == 'Report.StudentAttendances') { //POCOR-9813: preselect current period so the date filters match it on first load
+                    //POCOR-9813 / POCOR-9831: preselect current period so the dropdown matches the Start/End Date
+                    //defaults on first load (the withData() calls below don't reach the form - ServerRequest is immutable)
+                    if (in_array($feature, ['Report.StudentAttendances', 'Report.StudentAttendanceWeeklyReport'])) {
                         $attr['attr']['value'] = $currentPeriod;
                     }
                     $request = $request->withData('academic_period_id', $currentPeriod);
