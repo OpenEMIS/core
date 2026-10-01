@@ -1516,8 +1516,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
-            ->where([$this->aliasField('assignee_id') => $userId,
-                'Assignees.super_admin IS NOT' => 1]) //POCOR-7102
+            ->where([$this->aliasField('assignee_id') => $userId]) //POCOR-9824
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {

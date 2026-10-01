@@ -120,6 +120,7 @@ class AssessmentsTable extends AppTable
             ->where($conditions)
             ->distinct(['student_id', 'institution_class_id'])
             ->enableHydration(false)
+            ->all()
             ->toList();
 
         $studentIds = array_column($students, 'student_id');
@@ -141,6 +142,7 @@ class AssessmentsTable extends AppTable
                 ->select(['education_grade_id'])
                 ->where(['academic_period_id' => $academicPeriodId])
                 ->enableHydration(false)
+                ->all()
                 ->extract('education_grade_id')
                 ->toArray();
 

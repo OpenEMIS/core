@@ -137,7 +137,8 @@ class ImportUsersTable extends AppTable
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.import.onImportCustomHeader' => 'onImportCustomHeader',
             'Model.import.onImportCheckIdentityConfig' => 'onImportCheckIdentityConfig',
-            'Model.import.onImportGetContact' => 'onImportGetContact'
+            'Model.import.onImportGetContact' => 'onImportGetContact',
+            'Model.import.onImportSetModelPassedRecord' => 'onImportSetModelPassedRecord' // POCOR-9827
         ];
         $events = array_merge($events, $newEvent);
         return $events;
@@ -620,22 +621,20 @@ class ImportUsersTable extends AppTable
     public function onImportSetModelPassedRecord(EventInterface $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow)
     {
         $flipped = array_flip($columns);
-        $key = $flipped['openemis_no'];
         // POCOR-8835 start
-
-//        if ($clonedEntity->openemis_no != $clonedEntity->username) {
-//            $tempPassedRecord['data'][$key] =
-//                "Openemis No: {$clonedEntity->openemis_no}\nUsername: {$clonedEntity->username}"; // POCOR-8835
-//        }else{
-            $tempPassedRecord['data'][$key] = $clonedEntity->username;
-//        }
+        // POCOR-9827: POCOR-8835's migration (20250203010101_POCOR8835.php) renamed the
+        // 'openemis_no' import_mapping column to 'username' for User.Users, but this lookup was
+        // never updated to match, so $flipped['openemis_no'] was an undefined array key and the
+        // Username column in the Passed report stayed blank.
+        $key = $flipped['username'];
+        $tempPassedRecord['data'][$key] = $clonedEntity->username;
+        // POCOR-9827: the OpenEMIS ID is reported in its own column (appended past the
+        // importable columns by ImportBehavior::_generateDownloadableFile()) rather than folded
+        // into the Username cell above, so the Passed file stays re-importable unmodified even
+        // when an admin supplied a username that differs from the generated OpenEMIS ID.
+        $tempPassedRecord['extraColumnLabels'] = [__('OpenEMIS ID')];
+        $tempPassedRecord['extraColumnValues'] = [$clonedEntity->openemis_no];
         // POCOR-8835 end
-//        if ($this->generatedUsername) {
-//            $key = $flipped['openemis_no'];
-//            // IMPORTANT: use "\n" (LF), not "<li>" or "<br>"
-//            $tempPassedRecord['data'][$key] =
-//                "Openemis No: {$clonedEntity->openemis_no}\nGenerated Username: {$clonedEntity->username}";
-//        }
         // POCOR-9364 start
         if ($this->generatedPassword) {
             $key = $flipped['password'];
