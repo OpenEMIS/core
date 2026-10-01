@@ -1320,8 +1320,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             $where = [
                 $this->aliasField('assignee_id') => $userId,
                 // $workflowStepsRoles->aliasField('security_role_id') => $roleId,
-                'Assignees.super_admin IS NOT' => 1, //POCOR-7102
-            ];
+            ]; //POCOR-9824
         }
         if ($isSuperAdmin) {
             $where = [];

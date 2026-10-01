@@ -153,7 +153,12 @@ class UserTabBehavior extends Behavior
                 'HealthFamilies','HealthHistories', 'HealthImmunizations', 'HealthMedications','HealthTests','HealthBodyMasses',
                 'Employments','StaffQualifications','StaffMemberships','StaffLicenses','StaffAwards','SpecialNeedsDiagnostics',
                 'SpecialNeedsDevices','SpecialNeedsServices','SpecialNeedsAssessments','HealthInsurances','SpecialNeedsPlans',
-                'StudentBankAccounts','Counsellings','StudentFees','StudentLicenses','GuardianStudents'];
+                'StudentBankAccounts','Counsellings','StudentFees','StudentLicenses','GuardianStudents',
+                // POCOR-9819: Languages was missing from this whitelist, so the else branch
+                // below unconditionally unset($url['1']), stripping security_user_id from the
+                // Cancel/back link and landing on the unscoped index page instead of this
+                // student's Languages list.
+                'Languages'];
                 $action = $request->getParam('action');
                 if(isset($request->getParam('pass')[1]) && in_array($action, $actions)) {
                     $decodeQueryString = $request->getParam('pass')[1];
@@ -369,9 +374,18 @@ class UserTabBehavior extends Behavior
         }
         $params = $model->getQueryString();
         if ($userId) {
+            $params = is_array($params) ? $params : [];
             $params['user_id'] = $userId;
         }
-        $url[1] = $model->paramsEncode($params);
+        // POCOR-9819: $model->url('index') above already carries forward whatever
+        // pass-encoded id the current request itself has. Only replace url[1] with
+        // a freshly-built one when getQueryString()/getUserID() actually resolved
+        // something - otherwise $params is null and paramsEncode(null) silently
+        // coerces it to an empty array ("W10.<hash>"), overwriting a perfectly
+        // good id with a blank one and landing Save on an unscoped index page.
+        if (!empty($params)) {
+            $url[1] = $model->paramsEncode($params);
+        }
         $extra['redirect'] = $url;
     }
 }

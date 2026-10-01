@@ -1,7 +1,7 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php if (in_array($action, ['add', 'reconfirm'])) :
-	$getNextclassId = $this->request->getData()['StudentPromotion']['next_class']; ?>
+	$getNextclassId = $this->request->getData()['StudentPromotion']['next_class'] ?? null; ?>
 	<div class="input clearfix required">
 		<label><?= !is_null($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
 		<div class="table-wrapper">
@@ -68,10 +68,20 @@
 											<?php if ($action == 'add') {
 
 													if ($pendingRequestsCount == 0) {
+														// POCOR-9837: restore the student's previously saved draft class;
+														// the bulk "Next Class" selector only fills in rows without one -
+														// except right after the bulk selector itself was just changed
+														// (onChangeReload posts submit=changeNextClass), where the new
+														// bulk value must apply to every row even if a row's own value
+														// (saved draft, or just a stale repost of the previous bulk pick)
+														// is already set
+														$bulkNextClassChanged = $this->request->getData('submit') === 'changeNextClass';
+														$draftNextClassId = (!$bulkNextClassChanged && !empty($obj->next_institution_class_id))
+															? $obj->next_institution_class_id
+															: $getNextclassId;
 														echo $this->Form->input("$fieldPrefix.next_institution_class_id", [
 															'options' => $nextClassOptions,
-															//'value' => [$obj->next_institution_class_id]//POCOR-8332
-															'value' => [$getNextclassId]
+															'value' => [$draftNextClassId]
 														]);
 
 													}
