@@ -893,10 +893,10 @@ class InstitutionCasesTable extends ControllerActionTable
         // POCOR-9014 end
         $Statuses = $this->Statuses;
         $doneStatus = WorkflowSteps::DONE;
+        $where = ['1 = 0']; //POCOR-9824 no logged-in user, return nothing
         if($userId) {
             $where = [$this->aliasField('assignee_id') => $userId];
         }
-        $where['Assignees.super_admin IS NOT'] = 1;
         $query
             ->select([
                 $this->aliasField('id'),

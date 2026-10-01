@@ -24,6 +24,7 @@ use Cake\Utility\Text;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Institution\Model\Traits\StudentCreationCheckTrait;
 use Institution\Model\Traits\RouteInstitutionIdTrait;
+use User\Controller\SyncUserTrait; //POCOR-9821
 use Exception;
 use PHPExcel_IOFactory;
 use Cake\Auth\DefaultPasswordHasher;
@@ -46,6 +47,12 @@ class InstitutionsController extends AppController
     use UtilityTrait;
     use StudentCreationCheckTrait; //POCOR-9385: single source of truth for the student-creation entry-grade gate
     use RouteInstitutionIdTrait; //POCOR-7692: shared ':institutionId' route param decode (Houses/Associations add-edit links)
+    use SyncUserTrait;
+
+    public function syncUserPermission(): array
+    {
+        return [$this->getName(), 'SyncUser', 'execute'];
+    }
     // POCOR-8231 start
     const STUDENT = 1;
     const STAFF = 2;
@@ -2597,6 +2604,13 @@ class InstitutionsController extends AppController
         // 2) Determine current institution
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 // URL for “Back to Subjects” in InstitutionsController
+        // POCOR-9836: preserve the Programme/Class selection the user had on the
+        // index page (carried here as query params) so returning to the list
+        // doesn't reset back to the first Programme/Class.
+        $indexQuery = array_intersect_key(
+            $this->request->getQueryParams(),
+            array_flip(['academic_period_id', 'class_id'])
+        );
         $indexUrl = [
             'plugin'     => 'Institution',
             'controller' => 'Institutions',
@@ -2606,6 +2620,7 @@ class InstitutionsController extends AppController
                 'id'             => $institutionId,
                 'institution_id'=> $institutionId,
             ]),
+            '?'          => $indexQuery,
         ];
         // 3) Authorization checks
         $isAdmin = $this->AccessControl->isAdmin();
@@ -2646,6 +2661,12 @@ class InstitutionsController extends AppController
         // ─── PREPARE VIEW VARIABLES ─────────────────────────────────────────────
 
         // URL for “View” button
+        // POCOR-9836: this is also the URL the Angular controller redirects to after a
+        // successful Save (see institution.subject.students.ctrl.js:Controller.redirectUrl).
+        // Without '?' => $indexQuery here, the view page loaded straight after saving would
+        // carry no Programme/Class query params of its own, so its own "Back" button (built
+        // from $this->request->getQueryParams() in InstitutionSubjectsTable::viewBeforeAction())
+        // would have nothing left to preserve.
         $viewUrl = [
             'plugin'     => 'Institution',
             'controller' => 'Institutions',
@@ -2656,6 +2677,7 @@ class InstitutionsController extends AppController
                 'institution_id'         => $institutionId,
                 'institution_subject_id' => $subjectId,
             ]),
+            '?'          => $indexQuery,
         ];
 
         // URL for setting alerts
@@ -9312,7 +9334,7 @@ class InstitutionsController extends AppController
             'Institution.StudentSpecialNeeds' => __('Student Special Needs'),
             'StaffAppraisal.Appraisals' => __('Staff Appraisals'),
             'Institution.InstitutionConsumablesReport' => __('Consumables'), //POCOR-9058
-            'Institution.InstitutionStudentWeeklyAttendance' => __('Students Attendance Weekly'), //POCOR-9611
+            //POCOR-9831: Students Attendance Weekly moved to Reports > Institutions > Student Attendance Weekly Report
         ];
         // End POCOR-6871
         return $options;
