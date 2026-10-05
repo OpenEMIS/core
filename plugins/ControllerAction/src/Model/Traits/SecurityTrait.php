@@ -115,9 +115,15 @@ trait SecurityTrait
 
                 //POCOR-9715
                 // POCOR-9675: restore staff/institution context from referer on POST/DELETE (e.g. modal delete)
+                // POCOR-9819: also match /add/<encoded> and /edit/<encoded> referers, not just
+                // /index/<encoded> - clicking Cancel on an Add/Edit page (entered via a PASS-encoded
+                // id, eg Directory > Student > Languages > Add) lands on a plain /index request with
+                // no pass/query info of its own; the referer is the /add/<encoded> page just left,
+                // which the old index-only regex never matched, so the id was silently lost and the
+                // index query crashed building `security_user_id = NULL`.
                 if ($decodedQuery == null) {
                     $referer = $request->getHeaderLine('Referer');
-                    if ($referer && preg_match('#/index/([^/?]+)#', $referer, $matches)) {
+                    if ($referer && preg_match('#/(?:index|add|edit|view)/([^/?]+)#', $referer, $matches)) {
                         try {
                             $decodedQuery = $this->paramsDecode($matches[1]);
                         } catch (\Exception $exception) {
