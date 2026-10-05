@@ -943,6 +943,35 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
      * @return array
      *
      */
+    /**
+     * The Start Date the receiving-institution dropdowns (Area/Institution) should filter
+     * against -- i.e. the date on which the student would actually start attending, per
+     * reporter decision on POCOR-9838: "show institutions offering the student's education
+     * grade where the proposed student Start Date falls within the grade's active date
+     * range." Area/Institution render before Start Date in the field order, and Start Date
+     * itself isn't known server-side until the user has set/reloaded it, so this mirrors
+     * onUpdateFieldStartDate()'s own default computation: prefer whatever was already posted
+     * (e.g. after Start Date's own onChangeReload), otherwise fall back to today clamped to
+     * the academic period.
+     */
+    private function getProposedStartDateForDropdowns($academicPeriodId, ServerRequest $request): Date
+    {
+        $postedStartDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.start_date'));
+        if ($postedStartDate) {
+            return $postedStartDate;
+        }
+
+        $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+        $periodStartDate = $academicPeriod->start_date;
+        $periodEndDate = $academicPeriod->end_date;
+
+        $today = new Date();
+        if ($today < $periodStartDate || $today > $periodEndDate) {
+            return $periodStartDate;
+        }
+        return $today;
+    }
+
     public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
@@ -958,13 +987,13 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             // POCOR-8943 end
             if ($action == 'add') {
                 // using institution_student entity
-                $today = Date::now()->format('Y-m-d');
-                $nextPeriodData = $this->AcademicPeriods->get($next_period_id);
-                if ($nextPeriodData->start_date instanceof Time) {
-                    $nextPeriodStartDate = $nextPeriodData->start_date->format('Y-m-d');
-                } else {
-                    $nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
-                }
+                // POCOR-9838: a school that has offered this grade since long before the
+                // transfer's academic period was wrongly excluded by "start_date >= period
+                // start" -- a grade offering's start_date is when it BEGAN, almost always
+                // well before any future period. The correct check is whether the grade is
+                // active ON the student's proposed Start Date: it must have started on or
+                // before that date, and not yet ended.
+                $proposedStartDate = $this->getProposedStartDateForDropdowns($next_period_id, $request)->format('Y-m-d');
 
                 $activeId = $InstitutionStatuses->getIdByCode('ACTIVE');
                 $areaOptions = $Areas
@@ -976,19 +1005,19 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     ->where([
                         $InstitutionGrades->aliasField('institution_id <>') => $institution_id,
                         $InstitutionGrades->aliasField('education_grade_id') => $next_grade_id,
-                        $InstitutionGrades->aliasField('start_date >=') => $nextPeriodStartDate,
+                        $InstitutionGrades->aliasField('start_date <=') => $proposedStartDate,
                         $Institutions->aliasField('institution_status_id') =>
                             $activeId,
                         'OR' => [
                             $InstitutionGrades->aliasField('end_date IS NULL'),
-                            $InstitutionGrades->aliasField('end_date >=') => $today
+                            $InstitutionGrades->aliasField('end_date >=') => $proposedStartDate
                         ]
                     ])
                     ->orderAsc($Areas->aliasField('parent_id'))
                     ->orderAsc($Areas->aliasField('order'))
                 ;
 //                $this->log($areaOptions->sql(), 'debug');
-//                $this->log("$institution_id = $next_grade_id = $nextPeriodStartDate = $activeId = $today", 'debug');
+//                $this->log("$institution_id = $next_grade_id = $proposedStartDate = $activeId", 'debug');
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['select'] = true;
@@ -1002,14 +1031,6 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         return $attr;
     }
 
-    /**
-     * @param EventInterface $event
-     * @param array $attr
-     * @param $action
-     * @param Request $request
-     * @return array
-     *
-     */
     public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //single student
@@ -1043,13 +1064,10 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             $institutionOptions = [];
             if ($action == 'add') {
                 if (!is_null($next_period_id) && !is_null($next_grade_id)) {
-                    $today = Date::now();
-                    $nextPeriodData = $this->AcademicPeriods->get($next_period_id);
-                    if ($nextPeriodData->start_date instanceof Time) {
-                        $nextPeriodStartDate = $nextPeriodData->start_date->format('Y-m-d');
-                    } else {
-                        $nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
-                    }
+                    // POCOR-9838: same fix as onUpdateFieldAreaId() above -- filter on whether
+                    // the grade is active on the student's proposed Start Date, not on whether
+                    // the grade offering happened to start after the academic period begins.
+                    $nextPeriodStartDate = $this->getProposedStartDateForDropdowns($next_period_id, $request)->format('Y-m-d');
 
                     $Institutions = $this->Institutions;
                     $institutionQuery = $Institutions
@@ -1061,10 +1079,10 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                                 $InstitutionGrades->aliasField('institution_id = ') .
                                 $Institutions->aliasField('id'),
                                 $InstitutionGrades->aliasField('education_grade_id') => $next_grade_id,
-                                $InstitutionGrades->aliasField('start_date >=') => $nextPeriodStartDate,
+                                $InstitutionGrades->aliasField('start_date <=') => $nextPeriodStartDate,
                                 'OR' => [
                                     $InstitutionGrades->aliasField('end_date IS NULL'),
-                                    $InstitutionGrades->aliasField('end_date >=') => $today->format('Y-m-d')
+                                    $InstitutionGrades->aliasField('end_date >=') => $nextPeriodStartDate
                                 ]
                             ]
                         ])->join([
@@ -1153,44 +1171,6 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    /**
-     * Parses a raw submitted date string (as posted by the editable-date-format text input,
-     * e.g. "October 01, 2026") into a Date object, or null if missing/unparseable. Mirrors the
-     * format-detection already used in beforeMarshal() above, but returns a value usable before
-     * marshalling -- needed so onUpdateFieldStartDate()/onUpdateFieldEndDate() can inspect what
-     * was actually posted on a redisplay after a failed save (POCOR-9838).
-     */
-    private function parseSubmittedDate($rawValue)
-    {
-        if (empty($rawValue) || !is_string($rawValue)) {
-            return null;
-        }
-
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
-            return new Date($rawValue);
-        }
-
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
-        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
-        $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
-
-        try {
-            try {
-                $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
-            } catch (\Exception $e) {
-                $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
-            }
-            if ($date !== false && $date !== null) {
-                return new Date($date->format('Y-m-d'));
-            }
-        } catch (\Exception $e) {
-            // unparseable -- treat as not submitted
-        }
-
-        return null;
-    }
-
     public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
@@ -1209,34 +1189,35 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     'endDate' => $periodEndDate->format($editableDateFormat),
                     'todayBtn' => false
                 ];
+                if ($action == 'add') {
+                    // POCOR-9838: Area/Institution filter on the proposed Start Date (see
+                    // getProposedStartDateForDropdowns()), so changing Start Date must reload
+                    // the form to refresh those two lists -- same mechanism they already use
+                    // on their own onChange.
+                    $attr['onChangeReload'] = true;
+                }
 
-                // POCOR-9838: default to today (clamped to the academic period) on initial
-                // add, and otherwise show whatever was actually saved on the transfer record.
-                // On 'add', $entity is the student's CURRENT institution_student record (see
-                // setupFields()), so its start_date is that enrollment's start date -- not a
-                // saved transfer value -- and must never be used as the default here.
-                if (in_array($action, ['edit', 'approve']) && !empty($entity->start_date)) {
+                // POCOR-9838: whatever the user actually left on the form on a redisplay
+                // after some other field failed validation always takes priority, on ANY
+                // action -- the system must never silently overwrite a date the user entered
+                // (this previously only applied to 'add'; 'edit'/'approve' always showed the
+                // saved value regardless of posted data, discarding in-progress edits on a
+                // failed resubmit). On 'add', $entity is the student's CURRENT
+                // institution_student record (see setupFields()), so its start_date is that
+                // enrollment's start date -- not a saved transfer value -- and must never be
+                // used as a fallback here.
+                $postedStartDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.start_date'));
+
+                if ($postedStartDate) {
+                    $attr['value'] = $postedStartDate->format('Y-m-d');
+                } elseif (in_array($action, ['edit', 'approve']) && !empty($entity->start_date)) {
                     $attr['value'] = $entity->start_date->format('Y-m-d');
                 } else {
-                    // On 'add', prefer whatever the user actually left on the form on a
-                    // redisplay after some other field failed validation, instead of silently
-                    // recomputing (and overwriting) a fresh default every time. Per reporter
-                    // decision on POCOR-9838: the system must never silently change a date the
-                    // user entered -- a Requested Date later than Start Date is instead caught
-                    // by validation (ruleCompareDate on requested_date) and must be corrected
-                    // by the user, not auto-adjusted here.
-                    $postedStartDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.start_date'));
-
-                    if ($postedStartDate) {
-                        $defaultDate = $postedStartDate;
-                    } else {
-                        $defaultDate = new Date();
-                        // Per reporter decision: if today falls outside the selected academic
-                        // period, default to the period's start date -- not the nearest
-                        // boundary.
-                        if ($defaultDate < $periodStartDate || $defaultDate > $periodEndDate) {
-                            $defaultDate = $periodStartDate;
-                        }
+                    $defaultDate = new Date();
+                    // Per reporter decision: if today falls outside the selected academic
+                    // period, default to the period's start date -- not the nearest boundary.
+                    if ($defaultDate < $periodStartDate || $defaultDate > $periodEndDate) {
+                        $defaultDate = $periodStartDate;
                     }
                     $attr['value'] = $defaultDate->format('Y-m-d');
                 }
@@ -1266,20 +1247,21 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     'todayBtn' => false
                 ];
 
-                // POCOR-9838: default to the academic period end date until the user has
-                // saved an explicit end date. On 'add', $entity is the student's CURRENT
+                // POCOR-9838: whatever was already posted on a redisplay after some other
+                // field failed validation always takes priority, on ANY action -- previously
+                // this only applied to 'add'; 'edit'/'approve' always showed the saved value
+                // regardless of posted data. On 'add', $entity is the student's CURRENT
                 // institution_student record (see setupFields()), so its end_date belongs to
                 // that enrollment, not a saved transfer value -- same reasoning as start_date
                 // above.
-                if (in_array($action, ['edit', 'approve']) && !empty($entity->end_date)) {
+                $postedEndDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.end_date'));
+
+                if ($postedEndDate) {
+                    $attr['value'] = $postedEndDate->format('Y-m-d');
+                } elseif (in_array($action, ['edit', 'approve']) && !empty($entity->end_date)) {
                     $attr['value'] = $entity->end_date->format('Y-m-d');
                 } else {
-                    // On 'add', prefer whatever was already posted on a redisplay after some
-                    // other field failed validation, rather than silently overwriting it.
-                    $postedEndDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.end_date'));
-                    $attr['value'] = $postedEndDate
-                        ? $postedEndDate->format('Y-m-d')
-                        : $periodEndDate->format('Y-m-d');
+                    $attr['value'] = $periodEndDate->format('Y-m-d');
                 }
             } else {
                 $attr['type'] = 'hidden';

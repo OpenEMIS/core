@@ -653,6 +653,17 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 'endDate' => $periodEndDate->format($editableDateFormat),
                 'todayBtn' => false
             ];
+
+            // POCOR-9838: on a failed resubmit, CakePHP's Marshaller routes a value that fails
+            // validation to $entity->getInvalid() and leaves the entity's own property holding
+            // the stale pre-patch (saved) value -- so without this check, a user's invalid
+            // Start Date would silently revert to the old saved date with no indication their
+            // input wasn't kept. Prefer the posted value, whether valid or not, so the user
+            // sees what they actually typed.
+            $postedStartDate = $this->parseSubmittedDate($request->getData('StudentTransferIn.start_date'));
+            if ($postedStartDate) {
+                $attr['value'] = $postedStartDate->format('Y-m-d');
+            }
             return $attr;
         }
     }
@@ -688,7 +699,13 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 'todayBtn' => false
             ];
 
-            if (!empty($entity->end_date)) {
+            // POCOR-9838: posted value (even if invalid) takes priority on a redisplay after a
+            // failed resubmit, so the user sees what they typed rather than a silent revert to
+            // the stale saved date -- see onUpdateFieldStartDate() above for why.
+            $postedEndDate = $this->parseSubmittedDate($request->getData('StudentTransferIn.end_date'));
+            if ($postedEndDate) {
+                $attr['value'] = $postedEndDate->format('Y-m-d');
+            } elseif (!empty($entity->end_date)) {
                 $attr['value'] = $entity->end_date->format('Y-m-d');
             } else {
                 $attr['value'] = $periodEndDate->format('Y-m-d');

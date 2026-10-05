@@ -2714,7 +2714,11 @@ class WorkflowCaseBehavior extends Behavior
             }
 
             //POCOR-5677 & POCOR-6028 starts
-            if ($entity->has('status_id') && $entity->status_id == 95) {
+            // POCOR-9838: same fix as WorkflowBehavior.php's identical block -- only fill in
+            // start_date/end_date as a fallback when they're genuinely empty, using the real
+            // academic period dates, instead of unconditionally overwriting with a hardcoded
+            // Jan 1/Dec 31 that discards whatever the user actually chose and saved.
+            if ($entity->has('status_id') && $entity->status_id == 95 && (empty($entity->start_date) || empty($entity->end_date))) {
                 // update in institution_student_transfers table start and end date after change status open to pending approval
                 $AcademicPeriods = TableRegistry::getTableLocator()->get('academic_periods');
                 $AcademicData = $AcademicPeriods
@@ -2722,8 +2726,12 @@ class WorkflowCaseBehavior extends Behavior
                             ->where([$AcademicPeriods->aliasField('id') => $entity->academic_period_id])
                             ->first();
 
-                $entity->start_date = $AcademicData->start_year.'-01-01';
-                $entity->end_date = $AcademicData->start_year.'-12-31';
+                if (empty($entity->start_date)) {
+                    $entity->start_date = $AcademicData->start_date;
+                }
+                if (empty($entity->end_date)) {
+                    $entity->end_date = $AcademicData->end_date;
+                }
                 $model->save($entity);
             }
             //POCOR-5677 & POCOR-6028 ends
