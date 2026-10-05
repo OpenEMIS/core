@@ -663,6 +663,10 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
             $postedStartDate = $this->parseSubmittedDate($request->getData('StudentTransferIn.start_date'));
             if ($postedStartDate) {
                 $attr['value'] = $postedStartDate->format('Y-m-d');
+            } elseif (!empty($entity->start_date)) {
+                // Explicit fallback to match onUpdateFieldEndDate() below: don't rely solely on
+                // FormHelper's implicit entity-binding fallback to render the saved value.
+                $attr['value'] = $entity->start_date->format('Y-m-d');
             }
             return $attr;
         }
