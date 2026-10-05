@@ -380,8 +380,12 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $encodedQueryString = $this->paramsEncode($queryString);
         $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
 
+        // POCOR-9838: this used to unconditionally overwrite $entity->end_date with the
+        // academic period's end date, so the view screen always showed that instead of
+        // whatever was actually saved. start_date's equivalent line was already commented
+        // out for the same reason; end_date's is now too.
         //$entity->start_date = $selectedAcademicPeriodData->start_date;
-        $entity->end_date = $selectedAcademicPeriodData->end_date;
+        //$entity->end_date = $selectedAcademicPeriodData->end_date;
         $this->addSections();
         if (empty($entity->requested_date)) {
             $this->field('requested_date', ['type' => 'hidden']);
@@ -481,8 +485,13 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     {
         $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
 
+        // POCOR-9838: this used to unconditionally overwrite $entity->end_date with the
+        // academic period's end date here, before onUpdateFieldEndDate() even ran -- so no
+        // matter what was actually saved, the edit/approve screen always showed (and
+        // resubmitted) the period's end date instead. start_date's equivalent line was
+        // already commented out below for the same reason; end_date's is now too.
         //$entity->start_date = $selectedAcademicPeriodData->start_date;
-        $entity->end_date = $selectedAcademicPeriodData->end_date;
+        //$entity->end_date = $selectedAcademicPeriodData->end_date;
         $this->addSections();
         $this->field('student_id', [
             'type' => 'readonly',
