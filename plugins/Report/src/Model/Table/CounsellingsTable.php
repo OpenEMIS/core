@@ -114,8 +114,20 @@ class CounsellingsTable extends AppTable
             }
         }
 
-        if (!empty($institutionId) && $institutionId != 0) {
-            $conditions['InstitutionStudents.institution_id'] = $institutionId;
+        //POCOR-9842 institution_id is a multi-select ({_ids: [...]}); '0' = All Institutions
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = (array)$institutionId->_ids;
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = (array)$institutionId['_ids'];
+        } elseif (!empty($institutionId) && !is_array($institutionId) && !is_object($institutionId)) {
+            $filterInstitutionIds = [$institutionId];
+        }
+        $filterInstitutionIds = array_values(array_filter($filterInstitutionIds, function ($id) {
+            return $id !== '' && $id !== null && (string)$id !== '0';
+        }));
+        if (!empty($filterInstitutionIds)) {
+            $conditions['InstitutionStudents.institution_id IN'] = $filterInstitutionIds;
         }
 
         if ($areaId != -1 && $areaId != '') {
