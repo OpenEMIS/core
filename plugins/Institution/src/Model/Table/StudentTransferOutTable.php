@@ -1220,26 +1220,23 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                 } else {
                     // On 'add', prefer whatever the user actually left on the form on a
                     // redisplay after some other field failed validation, instead of silently
-                    // recomputing (and overwriting) a fresh default every time.
+                    // recomputing (and overwriting) a fresh default every time. Per reporter
+                    // decision on POCOR-9838: the system must never silently change a date the
+                    // user entered -- a Requested Date later than Start Date is instead caught
+                    // by validation (ruleCompareDate on requested_date) and must be corrected
+                    // by the user, not auto-adjusted here.
                     $postedStartDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.start_date'));
-                    $postedRequestedDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.requested_date'));
 
-                    if ($postedStartDate && (!$postedRequestedDate || $postedStartDate >= $postedRequestedDate)) {
+                    if ($postedStartDate) {
                         $defaultDate = $postedStartDate;
                     } else {
                         $defaultDate = new Date();
-                        // if a later Requested Date was already posted, don't default Start
-                        // Date earlier than it -- "Requested Date must not be after Start Date"
-                        // would otherwise keep failing until the user manually fixes Start Date.
-                        if ($postedRequestedDate && $postedRequestedDate > $defaultDate) {
-                            $defaultDate = $postedRequestedDate;
+                        // Per reporter decision: if today falls outside the selected academic
+                        // period, default to the period's start date -- not the nearest
+                        // boundary.
+                        if ($defaultDate < $periodStartDate || $defaultDate > $periodEndDate) {
+                            $defaultDate = $periodStartDate;
                         }
-                    }
-
-                    if ($defaultDate < $periodStartDate) {
-                        $defaultDate = $periodStartDate;
-                    } elseif ($defaultDate > $periodEndDate) {
-                        $defaultDate = $periodEndDate;
                     }
                     $attr['value'] = $defaultDate->format('Y-m-d');
                 }
