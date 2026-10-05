@@ -74,7 +74,10 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                     }
                 ],
                 'ruleCompareDate' => [
-                    'rule' => ['compareDate', 'end_date', false],
+                    // POCOR-9838: equals=true allows start_date == end_date -- End Date is now
+                    // editable and both may legitimately land on the same day (e.g. both
+                    // defaulting to the academic period's end date).
+                    'rule' => ['compareDate', 'end_date', true],
                     'on' => function ($context) {
                         return array_key_exists('end_date', $context['data']) && !empty($context['data']['end_date']);
                     }
@@ -84,6 +87,17 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 ],
                 'dateAlreadyTaken' => [
                     'rule' => ['dateAlreadyTaken']
+                ]
+            ])
+            // POCOR-9838: end_date must also fall within the selected academic period --
+            // previously only start_date had this rule, even though end_date was changed above
+            // to be user-editable.
+            ->add('end_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'on' => function ($context) {
+                        return array_key_exists('end_date', $context['data']) && !empty($context['data']['end_date']);
+                    }
                 ]
             ])
             ->allowEmpty('institution_class_id')
@@ -366,8 +380,12 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $encodedQueryString = $this->paramsEncode($queryString);
         $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
 
+        // POCOR-9838: this used to unconditionally overwrite $entity->end_date with the
+        // academic period's end date, so the view screen always showed that instead of
+        // whatever was actually saved. start_date's equivalent line was already commented
+        // out for the same reason; end_date's is now too.
         //$entity->start_date = $selectedAcademicPeriodData->start_date;
-        $entity->end_date = $selectedAcademicPeriodData->end_date;
+        //$entity->end_date = $selectedAcademicPeriodData->end_date;
         $this->addSections();
         if (empty($entity->requested_date)) {
             $this->field('requested_date', ['type' => 'hidden']);
@@ -467,8 +485,13 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
     {
         $selectedAcademicPeriodData = $this->AcademicPeriods->get($entity->academic_period_id);
 
+        // POCOR-9838: this used to unconditionally overwrite $entity->end_date with the
+        // academic period's end date here, before onUpdateFieldEndDate() even ran -- so no
+        // matter what was actually saved, the edit/approve screen always showed (and
+        // resubmitted) the period's end date instead. start_date's equivalent line was
+        // already commented out below for the same reason; end_date's is now too.
         //$entity->start_date = $selectedAcademicPeriodData->start_date;
-        $entity->end_date = $selectedAcademicPeriodData->end_date;
+        //$entity->end_date = $selectedAcademicPeriodData->end_date;
         $this->addSections();
         $this->field('student_id', [
             'type' => 'readonly',
@@ -630,6 +653,21 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
                 'endDate' => $periodEndDate->format($editableDateFormat),
                 'todayBtn' => false
             ];
+
+            // POCOR-9838: on a failed resubmit, CakePHP's Marshaller routes a value that fails
+            // validation to $entity->getInvalid() and leaves the entity's own property holding
+            // the stale pre-patch (saved) value -- so without this check, a user's invalid
+            // Start Date would silently revert to the old saved date with no indication their
+            // input wasn't kept. Prefer the posted value, whether valid or not, so the user
+            // sees what they actually typed.
+            $postedStartDate = $this->parseSubmittedDate($request->getData('StudentTransferIn.start_date'));
+            if ($postedStartDate) {
+                $attr['value'] = $postedStartDate->format('Y-m-d');
+            } elseif (!empty($entity->start_date)) {
+                // Explicit fallback to match onUpdateFieldEndDate() below: don't rely solely on
+                // FormHelper's implicit entity-binding fallback to render the saved value.
+                $attr['value'] = $entity->start_date->format('Y-m-d');
+            }
             return $attr;
         }
     }
@@ -646,17 +684,36 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
 
     public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
+        // POCOR-9838: End Date was forced read-only here, inconsistent with Start Date (just
+        // above) which is already an editable 'date' field bound to the academic period. Match
+        // that behaviour so the user can actually pick/adjust an End Date, the same as on
+        // Transfer Pending Out.
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
-            if (empty($entity->end_date)) {
-                $endDate = $this->AcademicPeriods->get($entity->academic_period_id)->end_date;
-            } else {
-                $endDate = $entity->end_date;
-            }
+            $academicPeriodId = $entity->academic_period_id;
+            $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+            $periodStartDate = $academicPeriod->start_date;
+            $periodEndDate = $academicPeriod->end_date;
 
-            $attr['type'] = 'readonly';
-            $attr['value'] = $endDate->format('Y-m-d');
-            $attr['attr']['value'] = $this->formatDate($endDate);
+            [, $editableDateFormat] = $this->getSystemDateFormats();
+            $attr['type'] = 'date';
+            $attr['date_options'] = [
+                'startDate' => $periodStartDate->format($editableDateFormat),
+                'endDate' => $periodEndDate->format($editableDateFormat),
+                'todayBtn' => false
+            ];
+
+            // POCOR-9838: posted value (even if invalid) takes priority on a redisplay after a
+            // failed resubmit, so the user sees what they typed rather than a silent revert to
+            // the stale saved date -- see onUpdateFieldStartDate() above for why.
+            $postedEndDate = $this->parseSubmittedDate($request->getData('StudentTransferIn.end_date'));
+            if ($postedEndDate) {
+                $attr['value'] = $postedEndDate->format('Y-m-d');
+            } elseif (!empty($entity->end_date)) {
+                $attr['value'] = $entity->end_date->format('Y-m-d');
+            } else {
+                $attr['value'] = $periodEndDate->format('Y-m-d');
+            }
             return $attr;
         }
     }
