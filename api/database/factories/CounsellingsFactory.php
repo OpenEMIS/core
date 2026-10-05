@@ -26,7 +26,6 @@ class CounsellingsFactory extends Factory
     'file_content' => $this->faker->word(),
     'counselor_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'student_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
-    'guidance_type_id' => \App\Models\GuidanceTypes::inRandomOrder()->value('id') ?? \App\Models\GuidanceTypes::factory()->create()->id,
     'requester_id' => \App\Models\SecurityUsers::inRandomOrder()->value('id') ?? \App\Models\SecurityUsers::factory()->create()->id,
     'modified_user_id' => $this->faker->numberBetween(1, 2),
     'modified' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
