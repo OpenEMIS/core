@@ -1873,11 +1873,6 @@ class InstitutionsTable extends AppTable
                     if(in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport', 'Report.StudentAttendanceWeeklyReport', 'Report.StudentAttendances'])) { //POCOR-8417 //POCOR-9831
                         $attr['attr']['multiple'] = true;
                         unset($institutionOptions['']);
-
-                        // POCOR-Institution-AllExclusivity: selecting a specific institution should
-                        // still allow "All Institutions" to be picked afterwards. Only once "All
-                        // Institutions" itself is selected do the specific institutions become
-                        // disabled (and any of them already selected are cleared).
                         if (is_array($institutionOptions) && array_key_exists('0', $institutionOptions)) {
                             $selectedInstitutionIds = [];
                             if (isset($data['institution_id']) && is_array($data['institution_id']) && isset($data['institution_id']['_ids'])) {
@@ -1886,11 +1881,7 @@ class InstitutionsTable extends AppTable
                                 });
                             }
                             $allInstitutionsSelected = in_array('0', $selectedInstitutionIds);
-
                             if ($allInstitutionsSelected) {
-                                // "All Institutions" wins - disable every other option and force it
-                                // to be the only value selected (covers the case where both were
-                                // submitted together, e.g. a stale/duplicate selection).
                                 $formattedInstitutionOptions = [];
                                 foreach ($institutionOptions as $optKey => $optLabel) {
                                     if ((string)$optKey === '0') {
@@ -1926,8 +1917,7 @@ class InstitutionsTable extends AppTable
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
         $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
-        //POCOR-9831: on first load academic_period_id is not posted yet (the dropdown only displays the
-        //            current period), so fall back to it or Start/End Date stay hidden until a reload
+    
         if (empty($selectedAcademicPeriodId) && ($feature == 'Report.StudentAttendanceWeeklyReport' || $feature == 'Report.StudentAttendances')) {
             $selectedAcademicPeriodId = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods')->getCurrent();
         }
