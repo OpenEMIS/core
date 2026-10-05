@@ -624,6 +624,110 @@ class StudentUserTable extends ControllerActionTable
                 $extra['toolbarButtons'][$key] = $button;
             }
         }
+
+        // POCOR-4477: last thing in this hook, after UserBehavior/AreapickerBehavior
+        // have already positioned everything - see applyFieldConfigurations() below.
+        $this->applyFieldConfigurations('Student');
+    }
+
+    /**
+     * POCOR-4477 Phase 2: applies admin-configured visibility/order (Fields
+     * Configurations) to the real Student View/Edit page. Only fields
+     * marked non-mandatory AND hidden get hidden - a field configured
+     * visible=1 is left as whatever the page already resolves, so this
+     * never force-reveals something hidden for other reasons. Since this is
+     * only ever called from an action-specific hook (view-only or
+     * edit-only), a plain 'visible' => false is safely scoped to that
+     * single request's action.
+     *
+     * Unlike Institution, this table has no pre-existing hardcoded
+     * setFieldOrder() array to build on - field order here comes from
+     * UserBehavior/AreapickerBehavior's own after/before pinning. So the
+     * base order is read directly off $this->fields' current 'order'
+     * values instead of a literal array; this is safe only because this
+     * method is called LAST in each hook, after all other field-ordering
+     * logic for that action has already run.
+     *
+     * Reorders only the subset of fields that are both in field_configurations
+     * and genuinely present on this page (silently skips the 4 enrollment
+     * fields - class/start_date/education_grade_id/academic_period_id -
+     * seeded for Student but rendered elsewhere, not on this table).
+     *
+     * Reordering happens WITHIN each section only (see
+     * reorderWithinSections()) - this page's sections (information_section,
+     * identity_section, location_section, etc.) come from the shared
+     * User.User behavior, not this table, and the admin's flat Fields
+     * Configurations list has no concept of them, so an unconstrained
+     * reorder can otherwise pull a field into a completely different
+     * section's slot, rendering it under the wrong header.
+     */
+    private function applyFieldConfigurations(string $module): void
+    {
+        $currentOrder = $this->fields;
+        uasort($currentOrder, function ($a, $b) {
+            return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+        });
+        $baseOrder = array_keys($currentOrder);
+
+        $fieldConfigTable = TableRegistry::getTableLocator()->get('Configuration.ConfigFieldsConfigurations');
+        $configs = $fieldConfigTable->find()
+            ->where(['module' => $module])
+            ->order([$fieldConfigTable->aliasField('order') => 'ASC'])
+            ->all();
+
+        $adminOrder = [];
+        $rank = 0;
+        foreach ($configs as $config) {
+            if (!in_array($config->field_name, $baseOrder, true)) {
+                continue;
+            }
+            $adminOrder[$config->field_name] = $rank++;
+
+            if (empty($config->is_mandatory) && empty($config->visible)) {
+                $this->field($config->field_name, ['visible' => false]);
+            }
+        }
+
+        $this->setFieldOrder($this->reorderWithinSections($baseOrder, $adminOrder));
+    }
+
+    /**
+     * POCOR-4477: reorders $baseOrder to match $adminOrder (field_name =>
+     * rank, lower = earlier), but only WITHIN each contiguous run between
+     * section-header entries (fields with 'type' => 'section') - never
+     * moves a configurable field across a section boundary. Non-configurable
+     * fields within a run keep their original relative position (same
+     * "slot substitution" as before, just scoped per-run).
+     */
+    private function reorderWithinSections(array $baseOrder, array $adminOrder): array
+    {
+        $result = [];
+        $currentRun = [];
+
+        $flush = function () use (&$result, &$currentRun, $adminOrder) {
+            $configurable = array_values(array_filter($currentRun, function ($name) use ($adminOrder) {
+                return isset($adminOrder[$name]);
+            }));
+            usort($configurable, function ($a, $b) use ($adminOrder) {
+                return $adminOrder[$a] <=> $adminOrder[$b];
+            });
+            foreach ($currentRun as $name) {
+                $result[] = isset($adminOrder[$name]) ? array_shift($configurable) : $name;
+            }
+            $currentRun = [];
+        };
+
+        foreach ($baseOrder as $name) {
+            if (($this->fields[$name]['type'] ?? null) === 'section') {
+                $flush();
+                $result[] = $name;
+            } else {
+                $currentRun[] = $name;
+            }
+        }
+        $flush();
+
+        return $result;
     }
 
     private function setupTabElements($entity)
@@ -649,6 +753,7 @@ class StudentUserTable extends ControllerActionTable
             $this->addPromoteButton($entity, $extra);
             $this->addTransferButton($entity, $extra);
             $this->addWithdrawButton($entity, $extra);
+            $this->addSyncButton($entity, $extra);
         }
 
     }
@@ -679,6 +784,9 @@ class StudentUserTable extends ControllerActionTable
 
         $this->field('institution_id', ['type' => 'hidden']);
         $this->fields['institution_id']['value'] = $extra['institutionId'];
+
+        // POCOR-4477: last thing in this hook - see applyFieldConfigurations() above.
+        $this->applyFieldConfigurations('Student');
     }
 
     public function onUpdateFieldIdentityNumber(EventInterface $event, array $attr, $action, Request $request)
@@ -1475,12 +1583,13 @@ class StudentUserTable extends ControllerActionTable
     }
 
     //POCOR-9590: Sync button on the student General view toolbar — visible only when user has a preferred identity matching the active external data source's identity_type_id
+
     private function addSyncButton(Entity $entity, ArrayObject $extra)
     {
         //POCOR-9590: delegate to controller when it supports the method (StudentsController); fall back for InstitutionsController and others
         $permission = method_exists($this->controller, 'syncUserPermission')
             ? $this->controller->syncUserPermission()
-            : ['Institutions', 'Students', 'add'];
+            : [$this->controller->getName(), 'SyncUser', 'execute'];
         if (!$this->AccessControl->check($permission)) {
             return;
         }
@@ -1506,10 +1615,11 @@ class StudentUserTable extends ControllerActionTable
         $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
         $syncButton['attr']['title'] = __('Sync');
         $syncButton['url'] = [
-            'plugin'     => 'Student',
-            'controller' => 'Students',
+            'plugin'     => 'Institution',
+            'controller' => 'Institutions',
             'action'     => 'SyncUser',
-            0            => $encodedParams,
+            0            => 'execute',
+            1            => $encodedParams,
         ];
         $toolbarButtons['sync'] = $syncButton;
     }

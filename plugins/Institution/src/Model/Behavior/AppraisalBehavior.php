@@ -31,8 +31,73 @@ class AppraisalBehavior extends Behavior
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
         $events['Model.excel.onExcelUpdateFields'] = ['callable' => 'onExcelUpdateFields', 'priority' => 110];
         $events['Model.excel.onExcelRenderCustomField']  = 'onExcelRenderCustomField';
+        $events['Model.beforeMarshal'] = 'beforeMarshal';
 
         return $events;
+    }
+
+    // Text-type sliders are dragged along a smooth 0-100 style scale client-side (for a clean,
+    // classic slider look) but must only ever be saved as one of the admin-defined tick Values.
+    // Snap the submitted answer to the nearest defined appraisal_slider_options.value here,
+    // server-side, regardless of where exactly the handle was released.
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (empty($data['appraisal_slider_answers']) || !is_array($data['appraisal_slider_answers'])) {
+            return;
+        }
+
+        $criteriaIds = [];
+        foreach ($data['appraisal_slider_answers'] as $answerData) {
+            if (!isset($answerData['answer']) || $answerData['answer'] === '' || empty($answerData['appraisal_criteria_id'])) {
+                continue;
+            }
+            $criteriaIds[] = $answerData['appraisal_criteria_id'];
+        }
+
+        if (empty($criteriaIds)) {
+            return;
+        }
+
+        $AppraisalCriterias = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalCriterias');
+
+        // Single batched lookup instead of one query per submitted slider answer.
+        $criteriasById = $AppraisalCriterias->find()
+            ->contain(['AppraisalSliders', 'AppraisalSliderOptions'])
+            ->where([$AppraisalCriterias->aliasField('id') . ' IN' => array_unique($criteriaIds)])
+            ->all()
+            ->indexBy('id')
+            ->toArray();
+
+        foreach ($data['appraisal_slider_answers'] as $key => $answerData) {
+            if (!isset($answerData['answer']) || $answerData['answer'] === '' || empty($answerData['appraisal_criteria_id'])) {
+                continue;
+            }
+
+            $criteria = $criteriasById[$answerData['appraisal_criteria_id']] ?? null;
+
+            if (!$criteria || empty($criteria->appraisal_slider) || $criteria->appraisal_slider->slider_type !== 'TEXT') {
+                continue;
+            }
+
+            if (empty($criteria->appraisal_slider_options)) {
+                continue;
+            }
+
+            $submittedValue = (float)$answerData['answer'];
+            $closestValue = null;
+            $closestDiff = null;
+            foreach ($criteria->appraisal_slider_options as $sliderOption) {
+                $diff = abs((float)$sliderOption->value - $submittedValue);
+                if ($closestDiff === null || $diff < $closestDiff) {
+                    $closestDiff = $diff;
+                    $closestValue = (float)$sliderOption->value;
+                }
+            }
+
+            if ($closestValue !== null) {
+                $data['appraisal_slider_answers'][$key]['answer'] = $closestValue;
+            }
+        }
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -222,7 +287,6 @@ class AppraisalBehavior extends Behavior
     {
         $model = $this->_table;
         if ($appraisalFormId) {
-            $section = null;
             $sectionCount = 0;
             $criteriaCounter = new ArrayObject();
             $staffAppraisalId = $entity->has('id') ? $entity->id : -1;
@@ -234,6 +298,7 @@ class AppraisalBehavior extends Behavior
                     'AppraisalCriterias' => [
                         'FieldTypes',
                         'AppraisalSliders',
+                        'AppraisalSliderOptions' => ['sort' => ['AppraisalSliderOptions.value' => 'ASC']],
                         'AppraisalNumbers',
                         'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
                     ],
@@ -256,70 +321,35 @@ class AppraisalBehavior extends Behavior
                 ->where([$AppraisalFormsCriterias->aliasField('appraisal_form_id') => $appraisalFormId])
                 ->order($AppraisalFormsCriterias->aliasField('order'));
 
-            $tabElements = [];
-
-            $action = $model->action;
-            $url = $model->url($action);
-
-            //section tab
+            // Render every criteria field from every section on the same Add/Edit/View page,
+            // each preceded by its own inline section heading (see appraisalCustomFieldExtra()
+            // below) rather than splitting sections across clickable tabs. Previously the
+            // criteria list was filtered down to whichever single section was "selected" (the
+            // first one found, since there is no tab UI to change it on Add) - that silently
+            // hid every section after the first, with no way to reach it.
             $formsCriterias = $query->toArray();
-            foreach ($formsCriterias as $key => $formCritieria) {
-                if ($section != $formCritieria->section) {
-                    $section = $formCritieria->section;
-                    $tabName = Text::slug($section);
-                    if (empty($tabElements)) {
-                        $selectedAction = $tabName;
-                    } else { // POCOR-9123
-                        if (isset($url['?']) && $url['?'] != $tabName) {
-                            unset($url['?']);
-                        }
-                    }
+            // Tracks the last section name a header was printed for, so a "Number Slider"
+            // style section title renders inline, once, directly before the first criteria
+            // field belonging to that section (relies on OpenEmis.Section behavior, already
+            // attached to this table, which turns a ['type' => 'section'] field into a
+            // heading div).
+            $sectionState = new ArrayObject(['current' => null]);
+            foreach ($formsCriterias as $key => $formsCriteria) {
+                $details = new ArrayObject([
+                    'appraisal_form_id' => $formsCriteria->appraisal_form_id,
+                    'appraisal_criteria_id' => $formsCriteria->appraisal_criteria_id,
+                    'section' => $formsCriteria->section,
+                    'field_type' => $formsCriteria->appraisal_criteria->field_type->code,
+                    'criteria_name' => $formsCriteria->appraisal_criteria->name,
+                    'is_mandatory' => $formsCriteria->is_mandatory
+                ]);
 
-                    $url['tab_section'] = $tabName;
-                    $url['?']['tab_section'] = $tabName; // POCOR-9123
-
-                    $tabElements[$tabName] = [
-                        'url' => $url,
-                        'text' => $section,
-                    ];
-                }
-            }
-            //end
-
-            if (!empty($tabElements)) {
-                $queryTabSection = $model->request->getQuery('tab_section');
-                if (!is_null($queryTabSection) && array_key_exists($queryTabSection, $tabElements)) {
-                    $selectedAction = $queryTabSection;
-                }
-                if ($action != 'add') {
-                    $model->controller->set('tabElements', $tabElements);
-                    $model->controller->set('selectedAction', $selectedAction);
-                }
-                $query
-                    ->where([
-                    $AppraisalFormsCriterias->aliasField('section') => $tabElements[$selectedAction]['text']
-                    ]);
-            }
-
-            if (($action != 'add' &&  !empty($tabElements)) || empty($tabElements)) {
-                $formsCriterias = $query->toArray();
-                foreach ($formsCriterias as $key => $formsCriteria) {
-                    $details = new ArrayObject([
-                        'appraisal_form_id' => $formsCriteria->appraisal_form_id,
-                        'appraisal_criteria_id' => $formsCriteria->appraisal_criteria_id,
-                        'section' => $formsCriteria->section,
-                        'field_type' => $formsCriteria->appraisal_criteria->field_type->code,
-                        'criteria_name' => $formsCriteria->appraisal_criteria->name,
-                        'is_mandatory' => $formsCriteria->is_mandatory
-                    ]);
-
-                    $this->appraisalCustomFieldExtra($details, $formsCriteria, $criteriaCounter, $entity);
-                }
+                $this->appraisalCustomFieldExtra($details, $formsCriteria, $criteriaCounter, $entity, $sectionState);
             }
         }
     }
 
-    public function appraisalCustomFieldExtra(ArrayObject $details, Entity $formCritieria, ArrayObject $criteriaCounter, Entity $entity)
+    public function appraisalCustomFieldExtra(ArrayObject $details, Entity $formCritieria, ArrayObject $criteriaCounter, Entity $entity, ArrayObject $sectionState = null)
     {
         $model = $this->_table;
         $fieldTypeCode = $details['field_type'];
@@ -336,9 +366,28 @@ class AppraisalBehavior extends Behavior
                 $key = 'appraisal_slider_answers';
                 $fieldKey = $key.'.'.$criteriaCounter[$fieldTypeCode];
                 $attr['type'] = 'slider';
-                $attr['max'] = $criteria->appraisal_slider->max;
-                $attr['min'] = $criteria->appraisal_slider->min;
-                $attr['step'] = $criteria->appraisal_slider->step;
+                $sliderType = $criteria->appraisal_slider->slider_type ?? 'NUMBER';
+                if ($sliderType === 'TEXT') {
+                    $sliderOptions = $criteria->appraisal_slider_options;
+                    usort($sliderOptions, function ($a, $b) {
+                        return $a->value <=> $b->value;
+                    });
+                    $ticks = [];
+                    $ticksLabels = [];
+                    foreach ($sliderOptions as $sliderOption) {
+                        $ticks[] = (float)$sliderOption->value;
+                        $ticksLabels[] = $sliderOption->label; // escaped once, as JSON, in slider_input.php
+                    }
+                    $attr['ticks'] = $ticks;
+                    $attr['ticksLabels'] = $ticksLabels;
+                    $attr['min'] = !empty($ticks) ? min($ticks) : 0;
+                    $attr['max'] = !empty($ticks) ? max($ticks) : 0;
+                    $attr['step'] = 0.01;
+                } else {
+                    $attr['max'] = $criteria->appraisal_slider->max;
+                    $attr['min'] = $criteria->appraisal_slider->min;
+                    $attr['step'] = $criteria->appraisal_slider->step;
+                }
                 break;
             case 'TEXTAREA':
                 $key = 'appraisal_text_answers';
@@ -381,6 +430,21 @@ class AppraisalBehavior extends Behavior
         // build custom fields
         $attr['attr']['label'] = $details['criteria_name'];
         $attr['attr']['required'] = $details['is_mandatory'];
+
+        // Print the section name (e.g. "Number Slider") as an inline heading right before the
+        // first criteria field that belongs to it, once per section, using the same
+        // ['type' => 'section'] convention as the rest of the app (see OpenEmis.Section
+        // behavior, already attached to StaffAppraisalsTable).
+        $section = $details['section'];
+        if ($sectionState !== null && !empty($section) && $sectionState['current'] !== $section) {
+            $sectionState['current'] = $section;
+            $sectionFieldName = 'appraisal_criteria_section_' . Text::slug($section);
+            $model->field($sectionFieldName, [
+                'type' => 'section',
+                'title' => $section,
+                'before' => $fieldKey . '.answer',
+            ]);
+        }
 
         // set each answer in entity
         if (!$entity->offsetExists($key)) {
@@ -458,6 +522,7 @@ class AppraisalBehavior extends Behavior
             'AppraisalCriterias' => [
                 'FieldTypes',
                 'AppraisalSliders',
+                'AppraisalSliderOptions' => ['sort' => ['AppraisalSliderOptions.value' => 'ASC']],
                 'AppraisalNumbers',
                 'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
             ],
@@ -530,6 +595,7 @@ class AppraisalBehavior extends Behavior
                 'AppraisalCriterias' => [
                     'FieldTypes',
                     'AppraisalSliders',
+                    'AppraisalSliderOptions' => ['sort' => ['AppraisalSliderOptions.value' => 'ASC']],
                     'AppraisalNumbers',
                     'AppraisalDropdownOptions' => ['sort' => ['AppraisalDropdownOptions.order' => 'ASC']]
                 ],
@@ -559,7 +625,16 @@ class AppraisalBehavior extends Behavior
                 $fieldTypeCode = $formsCriteria->appraisal_criteria->field_type->code;
 
                 if($fieldTypeCode == 'SLIDER' && $attr['field'] == 'SLIDER') {
-                    return  $formsCriteria->appraisal_slider_answers[0]->answer;
+                    $sliderAnswer = $formsCriteria->appraisal_slider_answers[0]->answer ?? null;
+                    $sliderTypeCode = $formsCriteria->appraisal_criteria->appraisal_slider->slider_type ?? 'NUMBER';
+                    if ($sliderTypeCode === 'TEXT' && $sliderAnswer !== null) {
+                        foreach ($formsCriteria->appraisal_criteria->appraisal_slider_options as $sliderOption) {
+                            if ((float)$sliderOption->value === (float)$sliderAnswer) {
+                                return $sliderOption->label;
+                            }
+                        }
+                    }
+                    return $sliderAnswer;
                 }
                 if($fieldTypeCode == 'TEXTAREA' && $attr['field'] == 'TEXTAREA') {
                     return  $formsCriteria->appraisal_text_answers[0]->answer;
