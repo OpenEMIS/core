@@ -1584,72 +1584,143 @@ class ValidationBehavior extends Behavior
         return ($found == 0);
     }
 
+    /**
+     * Prevents two assignments on the same staff / institution / position from overlapping in time.
+     *
+     * POCOR-9832: the original implementation blocked any edit to a record that overlapped a sibling,
+     * which made a pair of legitimately concurrent assignments (for example Full-Time 0.5 + Part-Time 0.5
+     * on one position, permitted by checkFTE) impossible to ever close - no end date satisfied the rule.
+     * One constraint is applied on top of the original behaviour:
+     *
+     *  - the rule is skipped when the period is being narrowed (start date unchanged, end date being set
+     *    to an earlier or equal date than it already was). Closing an assignment cannot create a new
+     *    overlap, so validating it only stops the user from correcting data that already existed before
+     *    the edit. Clearing a previously-set end date is NOT narrowing - it reopens the period to run
+     *    indefinitely, which is exactly the shape of change the rule exists to catch.
+     *  - the overlap test is the standard interval comparison rather than four partially redundant branches.
+     *
+     * Sibling status is deliberately NOT filtered here: an assignment that has already ended still
+     * occupies the historical dates it was recorded against, and the narrowing bypass above is what
+     * unblocks the reported bug, not a status exemption.
+     *
+     * Concurrent capacity on a single position remains the responsibility of checkFTE().
+     */
     public static function checkStaffExistWithinPeriod($field, array $globalData)
     {
-        // The logic below will prevent duplicate record that will be produce if the user amend the start or end date for a staff that is inactive when there is an active staff
-        // in the same institution
+        $data = $globalData['data'];
 
-        $recordId = $globalData['data']['id'];
-        $institutionId = $globalData['data']['institution_id'];
-        $newEndDate = date('Y-m-d', strtotime($globalData['data']['end_date']));
-        $newStartDate = date('Y-m-d', strtotime($globalData['data']['start_date']));
-        $staffId = $globalData['data']['staff_id'];
-        $positionId = $globalData['data']['institution_position_id'];
+        // This rule is shared (via Institution.StaffValidation) by StaffTable,
+        // StaffSalariesTable (both mapped directly onto institution_staff, so their
+        // own 'id' is already an institution_staff id) and StaffPositionProfilesTable
+        // (mapped onto the separate institution_staff_position_profiles table, whose
+        // 'id' is NOT an institution_staff id). institution_staff_id is the one key
+        // that reliably names the institution_staff row across all three.
+        $recordId = array_key_exists('institution_staff_id', $data) && !empty($data['institution_staff_id'])
+            ? $data['institution_staff_id']
+            : (array_key_exists('id', $data) ? $data['id'] : null);
+        $institutionId = array_key_exists('institution_id', $data) ? $data['institution_id'] : null;
+        $staffId = array_key_exists('staff_id', $data) ? $data['staff_id'] : null;
+        $positionId = array_key_exists('institution_position_id', $data) ? $data['institution_position_id'] : null;
+
+        $newStartDate = self::formatStaffPeriodDate(array_key_exists('start_date', $data) ? $data['start_date'] : null);
+        $newEndDate = self::formatStaffPeriodDate(array_key_exists('end_date', $data) ? $data['end_date'] : null);
+
+        // Without a usable start date there is no period to compare. Presence and date-order are enforced
+        // by requirePresence / ruleCompareDateReverse, so this rule stays out of the way.
+        if (empty($newStartDate)) {
+            return true;
+        }
 
         $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
 
-        $condition = [
+        // POCOR-9832: allow an assignment period to be narrowed or left unchanged.
+        if (!empty($recordId)) {
+            $existingRecord = $InstitutionStaffTable->find()
+                ->where([$InstitutionStaffTable->aliasField('id') => $recordId])
+                ->first();
+
+            if (!empty($existingRecord)) {
+                $oldStartDate = self::formatStaffPeriodDate($existingRecord->start_date);
+                $oldEndDate = self::formatStaffPeriodDate($existingRecord->end_date);
+
+                $startUnchanged = ($oldStartDate === $newStartDate);
+
+                // Narrowing means: the record already had no end date (still open,
+                // nothing to narrow) OR the new end date is present and on/before the
+                // one already saved. A new end date that is empty/cleared, or later
+                // than the saved one, is an extension - not narrowing - even though
+                // the "absent end date" shape also covers change types that never
+                // touch end_date at all. That ambiguity belongs to the caller (it
+                // should resend the existing end_date when it isn't being changed),
+                // not to this rule; here an empty new end date against an existing
+                // one is treated as the more dangerous case.
+                $endNotExtended = empty($oldEndDate)
+                    || (!empty($newEndDate) && $newEndDate <= $oldEndDate);
+
+                if ($startUnchanged && $endNotExtended) {
+                    return true;
+                }
+            }
+        }
+
+        // Without a staff member or a position there is nothing to compare. On a
+        // create the request may not carry every key, so this fails open rather
+        // than matching on a NULL.
+        if (empty($staffId) || empty($positionId)) {
+            return true;
+        }
+
+        // A position belongs to exactly one institution, so institution_id is
+        // redundant here - it is applied when supplied and dropped when it is
+        // not, rather than silently matching nothing on a NULL.
+        $conditions = [
             $InstitutionStaffTable->aliasField('staff_id') => $staffId,
             $InstitutionStaffTable->aliasField('institution_position_id') => $positionId,
-            $InstitutionStaffTable->aliasField('id').' IS NOT' => $recordId,
-            $InstitutionStaffTable->aliasField('institution_id') => $institutionId
+            $InstitutionStaffTable->aliasField('id') . ' IS NOT' => $recordId
         ];
-        $count = 0;
 
-        if ($newStartDate !== false) {
-            if (empty($newEndDate)) {
-                $count = $InstitutionStaffTable->find()
-                    ->where($condition)
-                    ->where([
-                        'OR' => [
-                            [$InstitutionStaffTable->aliasField('end_date').' IS NULL'],
-                            [
-                                $InstitutionStaffTable->aliasField('start_date').' >=' => $newStartDate,
-                            ]
-                        ]
-                    ]);
-            } else {
-                $count = $InstitutionStaffTable->find()
-                    ->where($condition)
-                    ->where([
-                        'OR' => [
-                            [
-                                $InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
-                                $InstitutionStaffTable->aliasField('end_date').' IS NULL'
-                            ],
-                            [
-                                $InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
-                                $InstitutionStaffTable->aliasField('end_date').' IS NULL'
-                            ],
-                            [
-                                $InstitutionStaffTable->aliasField('start_date').' <=' => $newEndDate,
-                                $InstitutionStaffTable->aliasField('end_date').' >=' => $newEndDate,
-                            ],
-                            [
-                                $InstitutionStaffTable->aliasField('start_date').' <=' => $newStartDate,
-                                $InstitutionStaffTable->aliasField('end_date').' >=' => $newStartDate,
-                            ],
-                        ]
-                    ]);
-            }
-            if ($count->count() > 0) {
-                return false;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
+        if (!empty($institutionId)) {
+            $conditions[$InstitutionStaffTable->aliasField('institution_id')] = $institutionId;
         }
+
+        // POCOR-9832: standard interval overlap - sibling.start <= newEnd AND sibling.end >= newStart,
+        // where a sibling with no end date is treated as running indefinitely.
+        $overlapConditions = [
+            'OR' => [
+                [$InstitutionStaffTable->aliasField('end_date') . ' IS' => null],
+                [$InstitutionStaffTable->aliasField('end_date') . ' >=' => $newStartDate]
+            ]
+        ];
+
+        if (!empty($newEndDate)) {
+            $overlapConditions[$InstitutionStaffTable->aliasField('start_date') . ' <='] = $newEndDate;
+        }
+
+        $overlapping = $InstitutionStaffTable->find()
+            ->where($conditions)
+            ->where($overlapConditions)
+            ->count();
+
+        return ($overlapping == 0);
+    }
+
+    /**
+     * POCOR-9832: normalises the mixed date representations (Y-m-d string, localised string, Date,
+     * DateTime, null) that reach the staff period rules into Y-m-d, or null when there is no usable value.
+     */
+    private static function formatStaffPeriodDate($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+
+        $timestamp = strtotime((string)$value);
+
+        return ($timestamp === false) ? null : date('Y-m-d', $timestamp);
     }
 
     public static function checkFTE($field, array $globalData)

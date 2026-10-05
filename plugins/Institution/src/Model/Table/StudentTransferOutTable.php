@@ -60,6 +60,32 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     }
                 ]
             ])
+            // POCOR-9838: start_date/end_date must fall within the selected (new) academic period
+            ->add('start_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'on' => function ($context) {
+                        return array_key_exists('start_date', $context['data']) && !empty($context['data']['start_date']);
+                    }
+                ],
+                'ruleCompareDate' => [
+                    // POCOR-9838: equals=true allows start_date == end_date -- both legitimately
+                    // default to the academic period's end date when it has already passed, and
+                    // a same-day enrollment window is valid.
+                    'rule' => ['compareDate', 'end_date', true],
+                    'on' => function ($context) {
+                        return array_key_exists('end_date', $context['data']) && !empty($context['data']['end_date']);
+                    }
+                ]
+            ])
+            ->add('end_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'on' => function ($context) {
+                        return array_key_exists('end_date', $context['data']) && !empty($context['data']['end_date']);
+                    }
+                ]
+            ])
 // POCOR-8946
 //            ->add('institution_id', 'rulecompareStudentGenderWithInstitution', [
 //                'rule' => ['compareStudentGenderWithInstitution'],
@@ -917,6 +943,40 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
      * @return array
      *
      */
+    /**
+     * The Start Date the receiving-institution dropdowns (Area/Institution) should filter
+     * against -- i.e. the date on which the student would actually start attending, per
+     * reporter decision on POCOR-9838: "show institutions offering the student's education
+     * grade where the proposed student Start Date falls within the grade's active date
+     * range." Area/Institution render before Start Date in the field order, and Start Date
+     * itself isn't known server-side until the user has set/reloaded it, so this mirrors
+     * onUpdateFieldStartDate()'s own default computation: prefer whatever was already posted
+     * (e.g. after Start Date's own onChangeReload), otherwise fall back to today clamped to
+     * the academic period.
+     */
+    private function getProposedStartDateForDropdowns($academicPeriodId, ServerRequest $request)
+    {
+        // No return type hint: $this->AcademicPeriods->get(...)->start_date can come back as
+        // either Cake\I18n\Date or Cake\I18n\FrozenDate depending on how that particular row
+        // was cast, and the two aren't interchangeable under a strict type hint (this broke
+        // live with a TypeError until caught by browser testing, not by the unit tests, which
+        // never exercised a real AcademicPeriods row).
+        $postedStartDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.start_date'));
+        if ($postedStartDate) {
+            return $postedStartDate;
+        }
+
+        $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+        $periodStartDate = $academicPeriod->start_date;
+        $periodEndDate = $academicPeriod->end_date;
+
+        $today = new Date();
+        if ($today < $periodStartDate || $today > $periodEndDate) {
+            return $periodStartDate;
+        }
+        return $today;
+    }
+
     public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
@@ -932,13 +992,13 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             // POCOR-8943 end
             if ($action == 'add') {
                 // using institution_student entity
-                $today = Date::now()->format('Y-m-d');
-                $nextPeriodData = $this->AcademicPeriods->get($next_period_id);
-                if ($nextPeriodData->start_date instanceof Time) {
-                    $nextPeriodStartDate = $nextPeriodData->start_date->format('Y-m-d');
-                } else {
-                    $nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
-                }
+                // POCOR-9838: a school that has offered this grade since long before the
+                // transfer's academic period was wrongly excluded by "start_date >= period
+                // start" -- a grade offering's start_date is when it BEGAN, almost always
+                // well before any future period. The correct check is whether the grade is
+                // active ON the student's proposed Start Date: it must have started on or
+                // before that date, and not yet ended.
+                $proposedStartDate = $this->getProposedStartDateForDropdowns($next_period_id, $request)->format('Y-m-d');
 
                 $activeId = $InstitutionStatuses->getIdByCode('ACTIVE');
                 $areaOptions = $Areas
@@ -950,19 +1010,19 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     ->where([
                         $InstitutionGrades->aliasField('institution_id <>') => $institution_id,
                         $InstitutionGrades->aliasField('education_grade_id') => $next_grade_id,
-                        $InstitutionGrades->aliasField('start_date >=') => $nextPeriodStartDate,
+                        $InstitutionGrades->aliasField('start_date <=') => $proposedStartDate,
                         $Institutions->aliasField('institution_status_id') =>
                             $activeId,
                         'OR' => [
                             $InstitutionGrades->aliasField('end_date IS NULL'),
-                            $InstitutionGrades->aliasField('end_date >=') => $today
+                            $InstitutionGrades->aliasField('end_date >=') => $proposedStartDate
                         ]
                     ])
                     ->orderAsc($Areas->aliasField('parent_id'))
                     ->orderAsc($Areas->aliasField('order'))
                 ;
 //                $this->log($areaOptions->sql(), 'debug');
-//                $this->log("$institution_id = $next_grade_id = $nextPeriodStartDate = $activeId = $today", 'debug');
+//                $this->log("$institution_id = $next_grade_id = $proposedStartDate = $activeId", 'debug');
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['select'] = true;
@@ -976,14 +1036,6 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         return $attr;
     }
 
-    /**
-     * @param EventInterface $event
-     * @param array $attr
-     * @param $action
-     * @param Request $request
-     * @return array
-     *
-     */
     public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //single student
@@ -1017,13 +1069,10 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             $institutionOptions = [];
             if ($action == 'add') {
                 if (!is_null($next_period_id) && !is_null($next_grade_id)) {
-                    $today = Date::now();
-                    $nextPeriodData = $this->AcademicPeriods->get($next_period_id);
-                    if ($nextPeriodData->start_date instanceof Time) {
-                        $nextPeriodStartDate = $nextPeriodData->start_date->format('Y-m-d');
-                    } else {
-                        $nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
-                    }
+                    // POCOR-9838: same fix as onUpdateFieldAreaId() above -- filter on whether
+                    // the grade is active on the student's proposed Start Date, not on whether
+                    // the grade offering happened to start after the academic period begins.
+                    $nextPeriodStartDate = $this->getProposedStartDateForDropdowns($next_period_id, $request)->format('Y-m-d');
 
                     $Institutions = $this->Institutions;
                     $institutionQuery = $Institutions
@@ -1035,10 +1084,10 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                                 $InstitutionGrades->aliasField('institution_id = ') .
                                 $Institutions->aliasField('id'),
                                 $InstitutionGrades->aliasField('education_grade_id') => $next_grade_id,
-                                $InstitutionGrades->aliasField('start_date >=') => $nextPeriodStartDate,
+                                $InstitutionGrades->aliasField('start_date <=') => $nextPeriodStartDate,
                                 'OR' => [
                                     $InstitutionGrades->aliasField('end_date IS NULL'),
-                                    $InstitutionGrades->aliasField('end_date >=') => $today->format('Y-m-d')
+                                    $InstitutionGrades->aliasField('end_date >=') => $nextPeriodStartDate
                                 ]
                             ]
                         ])->join([
@@ -1131,11 +1180,52 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
+            $academicPeriodId = $entity->academic_period_id;
 
-            if (in_array($action, ['edit', 'approve']) && !empty($entity->start_date)) {
-                $attr['type'] = 'readonly';
-                $attr['value'] = $entity->start_date->format('Y-m-d');
-                $attr['attr']['value'] = $this->formatDate($entity->start_date);
+            if (!empty($academicPeriodId)) {
+                $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+                $periodStartDate = $academicPeriod->start_date;
+                $periodEndDate = $academicPeriod->end_date;
+
+                [, $editableDateFormat] = $this->getSystemDateFormats();
+                $attr['type'] = 'date';
+                $attr['date_options'] = [
+                    'startDate' => $periodStartDate->format($editableDateFormat),
+                    'endDate' => $periodEndDate->format($editableDateFormat),
+                    'todayBtn' => false
+                ];
+                if ($action == 'add') {
+                    // POCOR-9838: Area/Institution filter on the proposed Start Date (see
+                    // getProposedStartDateForDropdowns()), so changing Start Date must reload
+                    // the form to refresh those two lists -- same mechanism they already use
+                    // on their own onChange.
+                    $attr['onChangeReload'] = true;
+                }
+
+                // POCOR-9838: whatever the user actually left on the form on a redisplay
+                // after some other field failed validation always takes priority, on ANY
+                // action -- the system must never silently overwrite a date the user entered
+                // (this previously only applied to 'add'; 'edit'/'approve' always showed the
+                // saved value regardless of posted data, discarding in-progress edits on a
+                // failed resubmit). On 'add', $entity is the student's CURRENT
+                // institution_student record (see setupFields()), so its start_date is that
+                // enrollment's start date -- not a saved transfer value -- and must never be
+                // used as a fallback here.
+                $postedStartDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.start_date'));
+
+                if ($postedStartDate) {
+                    $attr['value'] = $postedStartDate->format('Y-m-d');
+                } elseif (in_array($action, ['edit', 'approve']) && !empty($entity->start_date)) {
+                    $attr['value'] = $entity->start_date->format('Y-m-d');
+                } else {
+                    $defaultDate = new Date();
+                    // Per reporter decision: if today falls outside the selected academic
+                    // period, default to the period's start date -- not the nearest boundary.
+                    if ($defaultDate < $periodStartDate || $defaultDate > $periodEndDate) {
+                        $defaultDate = $periodStartDate;
+                    }
+                    $attr['value'] = $defaultDate->format('Y-m-d');
+                }
             } else {
                 $attr['type'] = 'hidden';
             }
@@ -1147,11 +1237,37 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
+            $academicPeriodId = $entity->academic_period_id;
 
-            if (in_array($action, ['edit', 'approve']) && !empty($entity->end_date)) {
-                $attr['type'] = 'readonly';
-                $attr['value'] = $entity->end_date->format('Y-m-d');
-                $attr['attr']['value'] = $this->formatDate($entity->end_date);
+            if (!empty($academicPeriodId)) {
+                $academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+                $periodStartDate = $academicPeriod->start_date;
+                $periodEndDate = $academicPeriod->end_date;
+
+                [, $editableDateFormat] = $this->getSystemDateFormats();
+                $attr['type'] = 'date';
+                $attr['date_options'] = [
+                    'startDate' => $periodStartDate->format($editableDateFormat),
+                    'endDate' => $periodEndDate->format($editableDateFormat),
+                    'todayBtn' => false
+                ];
+
+                // POCOR-9838: whatever was already posted on a redisplay after some other
+                // field failed validation always takes priority, on ANY action -- previously
+                // this only applied to 'add'; 'edit'/'approve' always showed the saved value
+                // regardless of posted data. On 'add', $entity is the student's CURRENT
+                // institution_student record (see setupFields()), so its end_date belongs to
+                // that enrollment, not a saved transfer value -- same reasoning as start_date
+                // above.
+                $postedEndDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.end_date'));
+
+                if ($postedEndDate) {
+                    $attr['value'] = $postedEndDate->format('Y-m-d');
+                } elseif (in_array($action, ['edit', 'approve']) && !empty($entity->end_date)) {
+                    $attr['value'] = $entity->end_date->format('Y-m-d');
+                } else {
+                    $attr['value'] = $periodEndDate->format('Y-m-d');
+                }
             } else {
                 $attr['type'] = 'hidden';
             }
