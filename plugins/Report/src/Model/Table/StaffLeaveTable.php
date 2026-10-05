@@ -48,6 +48,8 @@ class StaffLeaveTable extends AppTable {
         $reportStartDate = $requestData->report_start_date;
         $reportEndDate = $requestData->report_end_date;
         $areaId = $requestData->area_education_id;
+        $superAdmin = $requestData->super_admin; //POCOR-9823
+        $userId = $requestData->user_id; //POCOR-9823
         $conditions = [];
 
         $institutionIds = [];
@@ -122,6 +124,12 @@ class StaffLeaveTable extends AppTable {
             if(!empty($conditions)){
                 $query->where($conditions);
             }
+
+            //POCOR-9823
+            if (!$superAdmin) {
+                $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
+            }
+
             $query->order([$this->aliasField('date_from')]);
 
             //POCOR-5762 starts

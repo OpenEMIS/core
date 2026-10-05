@@ -126,7 +126,6 @@ class InstitutionsTable extends AppTable
             $validator = $validator
                 ->notEmpty('institution_id');
         }
-
         if (in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport', 'Report.StudentAttendances', 'Report.StudentAttendanceWeeklyReport'])) { //POCOR-8417 //POCOR-9831
             $validator
                 ->notEmpty('area_level_id', __('This field cannot be left empty'))
@@ -1137,9 +1136,9 @@ class InstitutionsTable extends AppTable
                     'Report.InstitutionInfrastructureSummaryReport',
                     'Report.StudentBehaviours',
                     'Report.TeacherClasses', //POCOR-9064
-                    'Report.StudentAttendances', //POCOR-9813
-                    'Report.StudentAttendanceWeeklyReport', //POCOR-9831
 
+                    'Report.StudentAttendanceWeeklyReport', //POCOR-9831
+                    'Report.StudentAttendances', //POCOR-9813
 
                 ]
             )) || (((in_array($feature, ['Report.Institutions']) || in_array($feature, ['Report.StaffBehaviours'])) && !empty($data['institution_filter']) && $data['institution_filter'] == self::NO_STUDENT))) {
@@ -1214,8 +1213,8 @@ class InstitutionsTable extends AppTable
                 'Report.InstitutionInfrastructureSummaryReport',
                 'Report.StudentBehaviours', //POCOR-7517
                 'Report.TeacherClasses', //POCOR-9064
-                'Report.StudentAttendances', //POCOR-9813
                 'Report.StudentAttendanceWeeklyReport', //POCOR-9831
+                'Report.StudentAttendances', //POCOR-9813
             ]))) {
                 $Areas = self::getDynamicTableInstance('Area.AreaLevels');
                 $entity = $attr['entity'];
@@ -1287,8 +1286,8 @@ class InstitutionsTable extends AppTable
                     'Report.InstitutionInfrastructureSummaryReport',
                     'Report.StudentBehaviours', //POCOR-7517
                     'Report.TeacherClasses', //POCOR-9064
-                    'Report.StudentAttendances', //POCOR-9813
                     'Report.StudentAttendanceWeeklyReport', //POCOR-9831
+                    'Report.StudentAttendances', //POCOR-9813
                 ]
             ))) {
                 $Areas = self::getDynamicTableInstance('Area.Areas');
@@ -1869,7 +1868,7 @@ class InstitutionsTable extends AppTable
                         }
                         /*POCOR-6304 Ends*/
                     }
-                    //POCOR-9823 "All Institutions" is no longer stripped for non-superadmins: $institutionList is
+                    //POCOR-9823 "All Institutions" 
                     //already scoped via find('byAccess'), and every export applies the same access check.
                     if(in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport', 'Report.StudentAttendanceWeeklyReport', 'Report.StudentAttendances'])) { //POCOR-8417 //POCOR-9831
                         $attr['attr']['multiple'] = true;

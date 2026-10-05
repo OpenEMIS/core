@@ -63,6 +63,8 @@ class StudentAbsencesPerDaysTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $superAdmin = $requestData->super_admin; //POCOR-9823
+        $userId = $requestData->user_id; //POCOR-9823
         $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         $grades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -99,7 +101,17 @@ class StudentAbsencesPerDaysTable extends AppTable
             $idsList = implode(',', array_map('intval', $filterInstitutionIds));
             $condition = "AND institution_student_absence_details.institution_id IN ({$idsList})";
         } else {
-            $condition = null;
+            $condition = '';
+        }
+
+        //POCOR-9823
+        if (!$superAdmin) {
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $accessibleInstitutionIds = $Institutions->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                ->find('byAccess', ['userId' => $userId])
+                ->toArray();
+            $accessibleIdsList = implode(',', array_map('intval', !empty($accessibleInstitutionIds) ? $accessibleInstitutionIds : [0]));
+            $condition .= " AND institution_student_absence_details.institution_id IN ({$accessibleIdsList})";
         }
 
         $subQuery = "(SELECT areas.code area_code
