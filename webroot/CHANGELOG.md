@@ -1,3 +1,8 @@
+### 5.21.1 - 2026-10-05
+- Bug Fixed: Institutions > Students > Transfer Pending Out : System sets "1 January 2026" as the default Start date in New institution
+- Bug Fixed: Core>Reports>Student>Counselling Report: User sees Error status when trying to generate report.
+- Bug Fixed: Core>Directory>Staff - Kevin Sealy (1833657107)>Careers>Positions page : Error seen at the approval stage. : 
+
 ### 5.21.0 - 2026-10-01
 - Implemented: Develop changes to Institution > Statistics > Standard > Student Attendance Weekly Report
 - Implemented: Develop student attendance report
