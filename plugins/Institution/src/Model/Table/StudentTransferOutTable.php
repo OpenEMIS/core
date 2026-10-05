@@ -954,8 +954,13 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
      * (e.g. after Start Date's own onChangeReload), otherwise fall back to today clamped to
      * the academic period.
      */
-    private function getProposedStartDateForDropdowns($academicPeriodId, ServerRequest $request): Date
+    private function getProposedStartDateForDropdowns($academicPeriodId, ServerRequest $request)
     {
+        // No return type hint: $this->AcademicPeriods->get(...)->start_date can come back as
+        // either Cake\I18n\Date or Cake\I18n\FrozenDate depending on how that particular row
+        // was cast, and the two aren't interchangeable under a strict type hint (this broke
+        // live with a TypeError until caught by browser testing, not by the unit tests, which
+        // never exercised a real AcademicPeriods row).
         $postedStartDate = $this->parseSubmittedDate($request->getData('StudentTransferOut.start_date'));
         if ($postedStartDate) {
             return $postedStartDate;
