@@ -1,3 +1,20 @@
+### 5.21.0 - 2026-10-01
+- Implemented: Develop changes to Institution > Statistics > Standard > Student Attendance Weekly Report
+- Implemented: Develop student attendance report
+- Implemented: Develop scale question type in Staff Appraisals feature
+- Implemented: Set institution, student and staff standard non mandatory fields to visible/invisible and set the field sequence
+- Bug Fixed: Core>Administration>Security>Users: No permission to allow User other than super admin to sync students
+- Bug Fixed: Admissions API(v4)  - api/v4/users/generate-openemis-id : Is not working                                      | Core > Institution > Students Search : Students generated without openemis ID when searched give 404 not found 
+- Bug Fixed: Core>Institutions>Students>Promotions: Save as draft feature is not working.
+- Bug Fixed: Institutions > Classes  : Student counts are inaccurate
+- Bug Fixed: Reports > Performances : Generating a Performance Report on the EMIS side is currently not working
+- Bug Fixed: Directory>>Student name>>Directories>>Languages: 404 Error is displayed when user click on Cancel button at>>Directory>>Student name>>Languages
+- Bug Fixed: Workbench : Pending issues are not showing up in workbench eventhough it is assigned to user
+- Bug Fixed: Core>Directory > Import : In OpenEMIS_Core_Import_Users_Passed file OpenEMIS ID was missing
+- Bug Fixed: Competencies>>Competency Templates: 404 error is displayed
+- Bug Fixed: Core>Institutions>Academic>Subjects	: When a change is made to a subject of a particular level and the user returns to the main Subjects page, it reverts to the main first page.
+- Bug Fixed: Header > Notices : System shows red notice on envelope icon when there are no notices
+
 ### 5.20.0 - 2026-09-23
 - Implemented: Upgrade repo ikrst-cakephp-webhooks to CakePHP v5
 - Implemented: Develop staff profile placeholders

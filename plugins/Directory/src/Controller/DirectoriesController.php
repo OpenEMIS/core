@@ -1193,9 +1193,17 @@ class DirectoriesController extends AppController
 
     public function getUserTabElements($options = [])
     {
-        if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
-            $id = $this->getQueryString('security_user_id');
-        }
+        // POCOR-9819: getQueryString() (via SecurityTrait::getDecodedQueryArray()) already
+        // resolves security_user_id from a real ?queryString= param, a pass-encoded URL
+        // segment, or (as a last resort) the referer - not just the ?queryString= case this
+        // used to gate on. Gating on array_key_exists('queryString', ...) meant tab links
+        // (eg the Languages tab, and the Add/Cancel buttons built from it) silently fell
+        // through to the stale Directory.Directories.id session value whenever the current
+        // page was reached via a pass-encoded id instead of a real query string - even
+        // though the id was right there in the URL. Calling it unconditionally still
+        // returns null when nothing resolves, so the existing $options['id']/session
+        // fallbacks below are unchanged for requests that truly have no id anywhere.
+        $id = $this->getQueryString('security_user_id');
         $plugin = $this->getPlugin();
         $name = $this->getName();
         $id = !empty($id) ? $id : ((isset($options['id'])) ? $options['id'] : $this->request->getSession()->read($plugin . '.' . $name . '.id'));

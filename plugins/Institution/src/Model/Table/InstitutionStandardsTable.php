@@ -12,7 +12,6 @@ use App\Model\Table\AppTable;
 use Cake\Log\Log;
 use Cake\Validation\Validator;
 use Cake\Database\Expression\QueryExpression;
-use Cake\Datasource\ConnectionManager; //POCOR-9611
 
 /**
  *
@@ -30,13 +29,11 @@ class InstitutionStandardsTable extends AppTable
     private const FEATURES_WITH_GRADE = [
         'Institution.InstitutionStandardStudentAbsences',
         'Institution.InstitutionStandardStudentAbsenceType',
-        'Institution.InstitutionStudentWeeklyAttendance',
         'Institution.InstitutionStudentMonthlyAttendance', //POCOR-9611
     ];
     private const FEATURES_WITH_CLASS = [
         'Institution.InstitutionStandardStudentAbsences',
         'Institution.InstitutionStandardStudentAbsenceType',
-        'Institution.InstitutionStudentWeeklyAttendance',
         'Institution.InstitutionStudentMonthlyAttendance', //POCOR-9611
     ];
     private const FEATURES_WITH_MONTH = [
@@ -112,7 +109,6 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_class_id', ['type' => 'hidden']);
         $this->ControllerAction->field('month', ['type' => 'hidden', 'after' => 'institution_class_id']);  // POCOR-6871
-        $this->ControllerAction->field('week_start_day', ['type' => 'hidden', 'after' => 'month']); //POCOR-9611: week filter for Students Weekly Attendance report
         $this->ControllerAction->field('username', ['type' => 'hidden']);
         $this->ControllerAction->field('openemis_no', ['type' => 'hidden']);
         $this->ControllerAction->field('first_name', ['type' => 'hidden', 'value' => 'x']);
@@ -139,6 +135,7 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('address_area_id', ['type' => 'hidden']);
         $this->ControllerAction->field('date_of_death', ['type' => 'hidden']);
         $this->ControllerAction->field('external_reference', ['type' => 'hidden']);
+        $this->ControllerAction->field('sync_status', ['type' => 'hidden']); //POCOR-9831: security_users.sync_status (POCOR-9590) is not a report filter
         $this->ControllerAction->field('birthplace_area_id', ['type' => 'hidden']);
         $this->ControllerAction->field('photo_content', ['type' => 'hidden']);
         $this->ControllerAction->field('failed_logins', ['type' => 'hidden']);
@@ -248,8 +245,8 @@ class InstitutionStandardsTable extends AppTable
             $attr['type']           = 'select';
             $attr['select']         = false;
             $attr['onChangeReload'] = true;
-            //POCOR-9611: Weekly/Monthly Attendance requires a specific grade — no "All Grades" option
-            if (in_array($report, ['Institution.InstitutionStudentWeeklyAttendance', 'Institution.InstitutionStudentMonthlyAttendance'], true)) {
+            //POCOR-9611: Monthly Attendance requires a specific grade — no "All Grades" option
+            if (in_array($report, ['Institution.InstitutionStudentMonthlyAttendance'], true)) {
                 $attr['options']          = $gradeOptions;
                 $attr['attr']['required'] = true;
             } else {
@@ -326,8 +323,8 @@ class InstitutionStandardsTable extends AppTable
             $attr['type']   = 'select';
             $attr['select'] = false;
             $attr['onChangeReload'] = true;
-            //POCOR-9611: Weekly/Monthly Attendance requires a specific class — mixed modes per class
-            if (in_array($report, ['Institution.InstitutionStudentWeeklyAttendance', 'Institution.InstitutionStudentMonthlyAttendance'], true)) {
+            //POCOR-9611: Monthly Attendance requires a specific class — mixed modes per class
+            if (in_array($report, ['Institution.InstitutionStudentMonthlyAttendance'], true)) {
                 $attr['options']          = $classes;
                 $attr['attr']['required'] = true;
             } else {
@@ -1025,100 +1022,6 @@ class InstitutionStandardsTable extends AppTable
             return $attr;
         }
     }
-    //POCOR-9611: Week dropdown for Students Weekly Attendance report — mirrors Laravel getAttendanceWeeks logic
-    public function onUpdateFieldWeekStartDay(EventInterface $event, array $attr, $action, $request)
-    {
-        $alias = $this->getAlias();
-        $data = $this->request->getData($alias);
-        if (($data['feature'] ?? '') !== 'Institution.InstitutionStudentWeeklyAttendance') { //POCOR-9611
-            return $attr; // hidden for other features
-        }
-
-        $academicPeriodId = (int)($data['academic_period_id'] ?? 0);
-        $weekOptions    = [];
-        $currentWeekKey = null; //POCOR-9611: declared at function scope so the default-inject below always sees it
-
-        if ($academicPeriodId > 0) {
-            $conn = ConnectionManager::get('default');
-
-            //POCOR-9611: Get academic period dates
-            $stmt = $conn->execute('SELECT start_date, end_date FROM academic_periods WHERE id = ? LIMIT 1', [$academicPeriodId]);
-            $period = $stmt->fetch('assoc');
-
-            //POCOR-9611: Get first_day_of_week config (0=Sun→7, 1=Mon, ..., 6=Sat)
-            $stmt = $conn->execute("SELECT value FROM config_items WHERE code = 'first_day_of_week' LIMIT 1");
-            $cfg = $stmt->fetch('assoc');
-            $firstDayOfWeek = ($cfg && $cfg['value'] !== '') ? (int)$cfg['value'] : 1;
-            if ($firstDayOfWeek === 0) {
-                $firstDayOfWeek = 7; // Sunday treated as 7 so Sunday ends the week
-            }
-            // Last day of week index (ISO: 1=Mon…7=Sun); end of week = day before firstDayOfWeek
-            $lastDayIndex = $firstDayOfWeek - 1;
-            if ($lastDayIndex === 0) {
-                $lastDayIndex = 7;
-            }
-
-            if ($period) {
-                $todayStr = date('Y-m-d');
-                $current = new DateTime($period['start_date']);
-                $periodEnd = new DateTime($period['end_date']);
-                $weekIndex = 1;
-
-                do {
-                    //POCOR-9611: Advance to the last-day-of-week (same algorithm as Laravel next('Sunday'))
-                    $weekEnd = clone $current;
-                    $dow = (int)$weekEnd->format('N'); // 1=Mon…7=Sun
-                    if ($dow !== $lastDayIndex) {
-                        $daysToEnd = ($lastDayIndex - $dow + 7) % 7;
-                        if ($daysToEnd === 0) {
-                            $daysToEnd = 7;
-                        }
-                        $weekEnd->modify("+{$daysToEnd} days");
-                    }
-                    if ($weekEnd > $periodEnd) {
-                        $weekEnd = clone $periodEnd;
-                    }
-
-                    $startStr = $current->format('Y-m-d');
-                    $endStr   = $weekEnd->format('Y-m-d');
-                    $startFmt = $current->format('d/m/Y');
-                    $endFmt   = $weekEnd->format('d/m/Y');
-
-                    if ($todayStr >= $startStr && $todayStr <= $endStr) {
-                        $label = sprintf(__('Current Week') . ' %d (%s - %s)', $weekIndex, $startFmt, $endFmt);
-                        $currentWeekKey = $startStr; //POCOR-9611: today falls in this week
-                    } elseif ($todayStr > $endStr) {
-                        $currentWeekKey = $startStr; //POCOR-9611: keep advancing — last past week becomes default when today is beyond the period
-                        $label = sprintf(__('Week') . ' %d (%s - %s)', $weekIndex, $startFmt, $endFmt);
-                    } else {
-                        $label = sprintf(__('Week') . ' %d (%s - %s)', $weekIndex, $startFmt, $endFmt);
-                    }
-
-                    $weekOptions[$startStr] = $label;
-                    $weekIndex++;
-
-                    $current = clone $weekEnd;
-                    $current->modify('+1 day');
-
-                } while ($weekEnd < $periodEnd);
-            }
-        }
-
-        $attr['options']          = $weekOptions;
-        $attr['type']             = 'select';
-        $attr['select']           = false;
-        $attr['onChangeReload']   = false;
-        $attr['attr']['required'] = true; //POCOR-9611: week is required for this report
-        //POCOR-9611: Default to current/latest past week
-        if (empty($data['week_start_day']) && $currentWeekKey !== null) {
-            $data['week_start_day'] = $currentWeekKey;
-            $this->request = $this->request->withData($alias, $data);
-        }
-        if (!empty($data['week_start_day'])) {
-            $attr['attr']['value'] = $data['week_start_day']; //POCOR-9611: attr.attr.value overrides POST/entity for first render
-        }
-        return $attr;
-    }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
@@ -1137,8 +1040,6 @@ class InstitutionStandardsTable extends AppTable
                 return __('Education Grade');
             case 'month':
                 return __('Month');
-            case 'week_start_day': //POCOR-9611
-                return __('Week');
             case 'format':
                 return __('Format');
 

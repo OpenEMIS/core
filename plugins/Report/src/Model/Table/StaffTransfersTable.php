@@ -88,12 +88,16 @@ class StaffTransfersTable extends AppTable {
             $accessibleInstitutionIds = $Institutions->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                 ->find('byAccess', ['userId' => $userId])
                 ->toArray();
-            $conditions[] = [
-                'OR' => [
-                    'NewInstitutions.id IN' => $accessibleInstitutionIds,
-                    'PreviousInstitutions.id IN' => $accessibleInstitutionIds,
-                ]
-            ];
+            if (empty($accessibleInstitutionIds)) {
+                $conditions[] = ['1 = 0']; // no accessible institutions -> no rows (an empty IN list throws)
+            } else {
+                $conditions[] = [
+                    'OR' => [
+                        'NewInstitutions.id IN' => $accessibleInstitutionIds,
+                        'PreviousInstitutions.id IN' => $accessibleInstitutionIds,
+                    ]
+                ];
+            }
         }
         if (!empty($conditions)) {
             $query->where($conditions);

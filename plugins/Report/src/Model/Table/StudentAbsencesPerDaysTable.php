@@ -106,6 +106,7 @@ class StudentAbsencesPerDaysTable extends AppTable
         ,areas.name area_name
         ,institutions.name institution_name
         ,institutions.code institution_code
+        ,institutions.id institution_id
         ,education_grades.name education_grade_name
         ,institution_classes.name institution_class_name
         ,security_users.openemis_no 
@@ -204,24 +205,24 @@ class StudentAbsencesPerDaysTable extends AppTable
 
         $query
             ->select([
-                'area_code' => 'subq.area_code',
-                'area_name' => 'subq.area_name',
-                'institution_code' => 'subq.institution_code',
-                'institution_name' => 'subq.institution_name',
-                'education_grade_name' => 'subq.education_grade_name',
-                'institution_class_name' => 'subq.institution_class_name',
-                'openemis_no' => 'subq.openemis_no',
-                'student_name' => 'subq.student_name',
-                'gender_name' => 'subq.gender_name',
-                'absence_date' => 'subq.absence_date',
-                'attendance_per_day' => 'subq.attendance_per_day',
-                'absence_configuration' => 'subq.absence_configuration',
-                'identity_type' => 'subq.identity_type',
-                'identity_number' => 'subq.identity_number',
-                'student_address' => 'subq.student_address',
-                'student_contacts' => 'subq.student_contacts',
+                'area_code' => 'StudentAbsencesPerDays.area_code',
+                'area_name' => 'StudentAbsencesPerDays.area_name',
+                'institution_code' => 'StudentAbsencesPerDays.institution_code',
+                'institution_name' => 'StudentAbsencesPerDays.institution_name',
+                'education_grade_name' => 'StudentAbsencesPerDays.education_grade_name',
+                'institution_class_name' => 'StudentAbsencesPerDays.institution_class_name',
+                'openemis_no' => 'StudentAbsencesPerDays.openemis_no',
+                'student_name' => 'StudentAbsencesPerDays.student_name',
+                'gender_name' => 'StudentAbsencesPerDays.gender_name',
+                'absence_date' => 'StudentAbsencesPerDays.absence_date',
+                'attendance_per_day' => 'StudentAbsencesPerDays.attendance_per_day',
+                'absence_configuration' => 'StudentAbsencesPerDays.absence_configuration',
+                'identity_type' => 'StudentAbsencesPerDays.identity_type',
+                'identity_number' => 'StudentAbsencesPerDays.identity_number',
+                'student_address' => 'StudentAbsencesPerDays.student_address',
+                'student_contacts' => 'StudentAbsencesPerDays.student_contacts',
             ])
-            ->from(['subq' => $subQuery]);
+            ->from([$this->getAlias() => $subQuery]); //POCOR-9823 alias must match the table so Report.InstitutionSecurity can scope on institution_id
             
     }
 
