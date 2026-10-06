@@ -1126,15 +1126,10 @@ class DirectoryRepository extends Controller
     }
     //For POCOR-8194 End...
 
-    // POCOR-9822 internal search start
-    // Local-DB lookup run before external-search, based on CakePHP DirectoriesTable::getUserInternalSearch().
-    // Search by OpenEMIS ID, by identity (identity number + optional identity type / nationality), or both.
-
     /**
+     * POCOR-9822
      * @param array $params openemis_no and/or identity_number (+ identity_type_id, nationality_id),
-     *                      date_of_birth (optional, narrows the match), student_openemis_no (optional,
-     *                      excluded from the result - e.g. the student a guardian is being added for)
-     * @return array ['data' => [...], 'total' => n]
+     *                      date_of_birth)
      */
     public function internalSearch($params)
     {
@@ -1143,7 +1138,6 @@ class DirectoryRepository extends Controller
         $dateOfBirth = $params['date_of_birth'] ?? null;
         $identityTypeId = $params['identity_type_id'] ?? null;
         $nationalityId = $params['nationality_id'] ?? null;
-        $studentOpenemisNo = $params['student_openemis_no'] ?? null;
 
         $query = DB::table('security_users')
             ->leftJoin('genders', 'genders.id', '=', 'security_users.gender_id')
@@ -1155,9 +1149,6 @@ class DirectoryRepository extends Controller
             ->leftJoin('area_administratives as address_areas', 'address_areas.id', '=', 'security_users.address_area_id')
             ->leftJoin('area_administratives as birth_areas', 'birth_areas.id', '=', 'security_users.birthplace_area_id')
             ->where('security_users.super_admin', '<>', 1);
-
-        // Every field that is sent narrows the match, so any combination works:
-        // openemis_no only, identity_number (+ identity_type_id / nationality_id) only, or both together.
         if (!empty($openemisNo)) {
             $query->where('security_users.openemis_no', $openemisNo);
         }
@@ -1170,7 +1161,6 @@ class DirectoryRepository extends Controller
                     $join->where('user_identities.identity_type_id', '=', $identityTypeId);
                 }
                 if (!empty($nationalityId)) {
-                    // POCOR-9766: tolerate identities stored without a nationality
                     $join->where(function ($q) use ($nationalityId) {
                         $q->where('user_identities.nationality_id', '=', $nationalityId)
                             ->orWhereNull('user_identities.nationality_id');
@@ -1178,16 +1168,13 @@ class DirectoryRepository extends Controller
                 }
             });
         } else {
-            // OpenEMIS ID only: still return the user's identity details
+            // OpenEMIS ID  return the user's identity details
             $query->leftJoin('user_identities', 'user_identities.security_user_id', '=', 'security_users.id');
         }
         $query->leftJoin('identity_types', 'identity_types.id', '=', 'user_identities.identity_type_id');
 
         if (!empty($dateOfBirth)) {
             $query->where('security_users.date_of_birth', date('Y-m-d', strtotime($dateOfBirth)));
-        }
-        if (!empty($studentOpenemisNo)) {
-            $query->where('security_users.openemis_no', '!=', $studentOpenemisNo);
         }
 
         $users = $query->select([
@@ -1228,18 +1215,6 @@ class DirectoryRepository extends Controller
         $thirdName = $user['third_name'] ?? '';
         $lastName = $user['last_name'] ?? '';
 
-        $accountTypes = [];
-        if (!empty($user['is_student'])) {
-            $accountTypes[] = 'Student';
-        }
-        if (!empty($user['is_staff'])) {
-            $accountTypes[] = 'Staff';
-        }
-        if (!empty($user['is_guardian'])) {
-            $accountTypes[] = 'Guardian';
-        }
-
-        // POCOR-9726: fall back to security_users.nationality_id when there is no preferred user nationality
         $nationalityId = !empty($user['main_nationality_id'])
             ? (int)$user['main_nationality_id']
             : (!empty($user['nationality_id']) ? (int)$user['nationality_id'] : null);
@@ -1278,7 +1253,6 @@ class DirectoryRepository extends Controller
             'contact_type_id' => $contactData['contact_type_id'] ?? null,
             'contact_type_name' => $contactData['contact_type_name'] ?? null,
             'contact_value' => $contactData['contact_value'] ?? null,
-            'account_type' => !empty($accountTypes) ? implode(', ', $accountTypes) : 'Others',
             'address_area_id' => $user['address_area_id'],
             'area_name' => $user['area_name'],
             'area_code' => $user['area_code'],
@@ -1287,9 +1261,6 @@ class DirectoryRepository extends Controller
             'birth_area_code' => $user['birth_area_code'],
             'address' => $user['address'],
             'postal_code' => $user['postal_code'],
-            'photo_name' => $user['photo_name'],
-            // blob -> base64 so it can be JSON encoded (Cake does the same for the resource)
-            'photo_content' => $user['photo_content'] !== null ? base64_encode($user['photo_content']) : null,
             'email' => $user['email'],
             'mobile_number' => $user['mobile_number'],
         ];

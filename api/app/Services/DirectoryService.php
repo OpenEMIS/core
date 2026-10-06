@@ -201,7 +201,6 @@ class DirectoryService extends Controller
         }
     }
 
-
     public function getStaffType($params)
     {
         try {
@@ -239,7 +238,7 @@ class DirectoryService extends Controller
     }
     //For POCOR-8194 End...
 
-    // POCOR-9822 start
+    //POCOR-9822
     public function internalSearch($params)
     {
         try {
@@ -253,6 +252,7 @@ class DirectoryService extends Controller
         }
     }
 
+    //POCOR-9822
     public function externalSearch($params)
     {
         try {
