@@ -240,6 +240,19 @@ class DirectoryService extends Controller
     //For POCOR-8194 End...
 
     // POCOR-9822 start
+    public function internalSearch($params)
+    {
+        try {
+            return $this->directoryRepository->internalSearch($params);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to perform directory internal search',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return ['error' => $e->getMessage()];
+        }
+    }
+
     public function externalSearch($params)
     {
         try {
@@ -252,6 +265,5 @@ class DirectoryService extends Controller
             return ['error' => $e->getMessage()];
         }
     }
-    // POCOR-9822 end
 
 }

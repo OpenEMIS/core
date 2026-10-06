@@ -926,7 +926,45 @@ class DirectoryController extends Controller
     //For POCOR-8194 End...
 
     /**
-     * POCOR-9822
+     * @OA\Post(
+     *     path="/api/v4/directories/internal-search",
+     *     summary="Search users in the local database",
+     *     description="Searches the local database before directories/external-search. Send openemis_no, identity_number (optionally with identity_type_id / nationality_id), or both - every field sent must match the same user. date_of_birth optionally narrows the match; student_openemis_no is excluded from the result.",
+     *     tags={"Directories"},
+     *     @OA\Parameter(name="openemis_no", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="nationality_id", in="query", required=false, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="identity_type_id", in="query", required=false, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="identity_number", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="date_of_birth", in="query", required=false, @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="student_openemis_no", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="total", type="integer", example=1)
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function directoryInternalSearch(Request $request)
+    {
+        try {
+            $params = $request->input('params', $request->all());
+            $data = $this->directoryService->internalSearch($params);
+
+            return $this->sendSuccessResponse('Successful.', $data);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse($e->getMessage());
+        }
+    }
+
+    /**
+     *
      * @OA\Post(
      *     path="/api/v4/directories/external-search",
      *     summary="Search an external identity source",
@@ -959,6 +997,6 @@ class DirectoryController extends Controller
         } catch (\Exception $e) {
             return $this->sendErrorResponse($e->getMessage());
         }
-    }
-    // POCOR-9822 end
+    } // POCOR-9822 end
+    
 }

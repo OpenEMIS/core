@@ -615,6 +615,7 @@ Route::group(
         
         // POCOR-9822 start
         Route::post('institutions/external-search/check-configuration', 'InstitutionController@checkConfigurationForExternalSearch');
+        Route::post('directories/internal-search', 'DirectoryController@directoryInternalSearch');
         Route::post('directories/external-search', 'DirectoryController@directoryExternalSearch');
 
         //POCOR-9694: OpenEMIS Runtime — action / aggregate endpoints (v4).

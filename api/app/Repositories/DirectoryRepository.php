@@ -1126,7 +1126,199 @@ class DirectoryRepository extends Controller
     }
     //For POCOR-8194 End...
 
-    
+    // POCOR-9822 internal search start
+    // Local-DB lookup run before external-search, based on CakePHP DirectoriesTable::getUserInternalSearch().
+    // Search by OpenEMIS ID, by identity (identity number + optional identity type / nationality), or both.
+
+    /**
+     * @param array $params openemis_no and/or identity_number (+ identity_type_id, nationality_id),
+     *                      date_of_birth (optional, narrows the match), student_openemis_no (optional,
+     *                      excluded from the result - e.g. the student a guardian is being added for)
+     * @return array ['data' => [...], 'total' => n]
+     */
+    public function internalSearch($params)
+    {
+        $openemisNo = $params['openemis_no'] ?? null;
+        $identityNumber = $params['identity_number'] ?? null;
+        $dateOfBirth = $params['date_of_birth'] ?? null;
+        $identityTypeId = $params['identity_type_id'] ?? null;
+        $nationalityId = $params['nationality_id'] ?? null;
+        $studentOpenemisNo = $params['student_openemis_no'] ?? null;
+
+        $query = DB::table('security_users')
+            ->leftJoin('genders', 'genders.id', '=', 'security_users.gender_id')
+            ->leftJoin('user_nationalities', 'user_nationalities.security_user_id', '=', 'security_users.id')
+            ->leftJoin('nationalities', function ($join) {
+                $join->on('nationalities.id', '=', 'user_nationalities.nationality_id')
+                    ->where('user_nationalities.preferred', '=', 1);
+            })
+            ->leftJoin('area_administratives as address_areas', 'address_areas.id', '=', 'security_users.address_area_id')
+            ->leftJoin('area_administratives as birth_areas', 'birth_areas.id', '=', 'security_users.birthplace_area_id')
+            ->where('security_users.super_admin', '<>', 1);
+
+        // Every field that is sent narrows the match, so any combination works:
+        // openemis_no only, identity_number (+ identity_type_id / nationality_id) only, or both together.
+        if (!empty($openemisNo)) {
+            $query->where('security_users.openemis_no', $openemisNo);
+        }
+
+        if (!empty($identityNumber)) {
+            $query->join('user_identities', function ($join) use ($identityNumber, $identityTypeId, $nationalityId) {
+                $join->on('user_identities.security_user_id', '=', 'security_users.id')
+                    ->where('user_identities.number', '=', $identityNumber);
+                if (!empty($identityTypeId)) {
+                    $join->where('user_identities.identity_type_id', '=', $identityTypeId);
+                }
+                if (!empty($nationalityId)) {
+                    // POCOR-9766: tolerate identities stored without a nationality
+                    $join->where(function ($q) use ($nationalityId) {
+                        $q->where('user_identities.nationality_id', '=', $nationalityId)
+                            ->orWhereNull('user_identities.nationality_id');
+                    });
+                }
+            });
+        } else {
+            // OpenEMIS ID only: still return the user's identity details
+            $query->leftJoin('user_identities', 'user_identities.security_user_id', '=', 'security_users.id');
+        }
+        $query->leftJoin('identity_types', 'identity_types.id', '=', 'user_identities.identity_type_id');
+
+        if (!empty($dateOfBirth)) {
+            $query->where('security_users.date_of_birth', date('Y-m-d', strtotime($dateOfBirth)));
+        }
+        if (!empty($studentOpenemisNo)) {
+            $query->where('security_users.openemis_no', '!=', $studentOpenemisNo);
+        }
+
+        $users = $query->select([
+                'security_users.id', 'security_users.username', 'security_users.openemis_no',
+                'security_users.first_name', 'security_users.middle_name', 'security_users.third_name',
+                'security_users.last_name', 'security_users.email', 'security_users.mobile_number',
+                'security_users.address', 'security_users.postal_code', 'security_users.photo_name',
+                'security_users.photo_content', 'security_users.address_area_id', 'security_users.birthplace_area_id',
+                'security_users.gender_id', 'security_users.date_of_birth', 'security_users.nationality_id',
+                'security_users.is_student', 'security_users.is_staff', 'security_users.is_guardian',
+                'genders.name as gender_name',
+                'identity_types.id as main_identity_type_id',
+                'identity_types.name as main_identity_type_name',
+                'user_identities.number as main_identity_number',
+                'nationalities.id as main_nationality_id',
+                'nationalities.name as main_nationality_name',
+                'address_areas.name as area_name',
+                'address_areas.code as area_code',
+                'birth_areas.name as birth_area_name',
+                'birth_areas.code as birth_area_code',
+            ])
+            ->groupBy('security_users.id')
+            ->get()
+            ->all();
+
+        $result = [];
+        foreach ($users as $user) {
+            $result[] = $this->buildInternalSearchResult((array)$user);
+        }
+
+        return ['data' => $result, 'total' => count($result)];
+    }
+
+    private function buildInternalSearchResult(array $user): array
+    {
+        $firstName = $user['first_name'] ?? '';
+        $middleName = $user['middle_name'] ?? '';
+        $thirdName = $user['third_name'] ?? '';
+        $lastName = $user['last_name'] ?? '';
+
+        $accountTypes = [];
+        if (!empty($user['is_student'])) {
+            $accountTypes[] = 'Student';
+        }
+        if (!empty($user['is_staff'])) {
+            $accountTypes[] = 'Staff';
+        }
+        if (!empty($user['is_guardian'])) {
+            $accountTypes[] = 'Guardian';
+        }
+
+        // POCOR-9726: fall back to security_users.nationality_id when there is no preferred user nationality
+        $nationalityId = !empty($user['main_nationality_id'])
+            ? (int)$user['main_nationality_id']
+            : (!empty($user['nationality_id']) ? (int)$user['nationality_id'] : null);
+        $nationalityName = $user['main_nationality_name'] ?? null;
+        if (empty($nationalityName) && $nationalityId) {
+            $nationalityName = DB::table('nationalities')->where('id', $nationalityId)->value('name');
+        }
+
+        $hasSpecialNeeds = DB::table('user_special_needs_assessments')
+            ->where('security_user_id', $user['id'])
+            ->count() == 1;
+
+        $contactData = $this->getInternalSearchContactData($user['id']);
+        $genderName = $user['gender_name'] ?? null;
+
+        $result = [
+            'id' => $user['id'],
+            'username' => $user['username'],
+            'openemis_no' => $user['openemis_no'],
+            'first_name' => $firstName,
+            'middle_name' => $middleName,
+            'third_name' => $thirdName,
+            'last_name' => $lastName,
+            'name' => implode(' ', array_filter([$firstName, $middleName, $thirdName, $lastName])),
+            'date_of_birth' => !empty($user['date_of_birth']) ? date('Y-m-d', strtotime($user['date_of_birth'])) : null,
+            'gender_id' => $user['gender_id'],
+            'gender' => $genderName ?: null,
+            'gender_name' => $genderName ?: null,
+            'nationality' => $nationalityName ?: null,
+            'nationality_id' => $nationalityId,
+            'identity_type' => $user['main_identity_type_name'] ?: null,
+            'identity_type_id' => !empty($user['main_identity_type_id']) ? (int)$user['main_identity_type_id'] : null,
+            'identity_number' => $user['main_identity_number'] ?: null,
+            'has_special_needs' => $hasSpecialNeeds,
+            'contact_data' => $contactData,
+            'contact_type_id' => $contactData['contact_type_id'] ?? null,
+            'contact_type_name' => $contactData['contact_type_name'] ?? null,
+            'contact_value' => $contactData['contact_value'] ?? null,
+            'account_type' => !empty($accountTypes) ? implode(', ', $accountTypes) : 'Others',
+            'address_area_id' => $user['address_area_id'],
+            'area_name' => $user['area_name'],
+            'area_code' => $user['area_code'],
+            'birthplace_area_id' => $user['birthplace_area_id'],
+            'birth_area_name' => $user['birth_area_name'],
+            'birth_area_code' => $user['birth_area_code'],
+            'address' => $user['address'],
+            'postal_code' => $user['postal_code'],
+            'photo_name' => $user['photo_name'],
+            // blob -> base64 so it can be JSON encoded (Cake does the same for the resource)
+            'photo_content' => $user['photo_content'] !== null ? base64_encode($user['photo_content']) : null,
+            'email' => $user['email'],
+            'mobile_number' => $user['mobile_number'],
+        ];
+
+        return $result;
+    }
+
+    private function getInternalSearchContactData(int $userId): array
+    {
+        $contact = DB::table('user_contacts')
+            ->join('contact_types', 'contact_types.id', '=', 'user_contacts.contact_type_id')
+            ->join('contact_options', 'contact_options.id', '=', 'contact_types.contact_option_id')
+            ->where('user_contacts.security_user_id', $userId)
+            ->where('user_contacts.preferred', 1)
+            ->select(
+                'user_contacts.value as contact_value',
+                'user_contacts.contact_type_id',
+                'contact_types.name as contact_type_name',
+                'contact_options.name as contact_option_name'
+            )
+            ->first();
+
+        return $contact ? (array)$contact : [
+            'contact_value' => null,
+            'contact_type_id' => null,
+            'contact_type' => null,
+        ];
+    }
+
     /**
      *  POCOR-9822
      * @param array $params first_name, last_name, openemis_no, identity_number, nationality_id,
@@ -1144,10 +1336,10 @@ class DirectoryRepository extends Controller
         $nationalityId = $params['nationality_id'] ?? null;
         $identityTypeId = $params['identity_type_id'] ?? null;
 
-        $searchType = $this->resolveExternalSearchType($nationalityId, $identityTypeId);
+        $getSearchType = $this->getExternalSearchType($nationalityId, $identityTypeId);
         $noData = ['data' => [], 'total' => 0];
 
-        if (empty($searchType)) {
+        if (empty($getSearchType)) {
             Log::warning(
                 'External search: no External Data Source - Identity is enabled for this nationality/identity type',
                 ['nationality_id' => $nationalityId, 'identity_type_id' => $identityTypeId]
@@ -1156,37 +1348,32 @@ class DirectoryRepository extends Controller
         }
 
         $attributes = DB::table('external_data_source_attributes')
-            ->where('external_data_source_type', $searchType)
+            ->where('external_data_source_type', $getSearchType)
             ->pluck('value', 'attribute_field')
             ->all();
 
         if (empty($attributes)) {
-            // Most common cause of a silent empty result: no rows in external_data_source_attributes
-            // for this exact external_data_source_type value on this environment/DB.
             Log::warning(
                 'External search: no external_data_source_attributes configured for this search_type',
-                ['search_type' => $searchType]
+                ['search_type' => $getSearchType]
             );
         }
 
         try {
-            if ($searchType === 'UNHCR') {
+            if ($getSearchType === 'UNHCR') {
                 $response = $this->getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth);
-            } elseif ($searchType === 'Seychelles Civil Status') {
+            } elseif ($getSearchType === 'Seychelles Civil Status') {
                 $response = $this->getSeychellesData($attributes, $noData, $identityNumber, $dateOfBirth);
-            } elseif ($searchType === 'OpenEMIS Core') {
+            } elseif ($getSearchType === 'OpenEMIS Core') {
                 $response = $this->getOECoreData($attributes, $noData, $identityNumber);
             } else {
-                // POCOR-9822: the generic JWT-bearer source (Core's "Custom"/"Jordan CSPD" config)
-                // is intentionally unsupported here — not in use, and its config values are
-                // encrypted with a Core-only key we don't want this app depending on.
-                Log::warning('Unsupported external search source requested', ['search_type' => $searchType]);
+                Log::warning('Unsupported external search source requested', ['search_type' => $getSearchType]);
                 $response = $noData;
             }
         } catch (\Exception $e) {
             Log::error(
                 'Failed to perform directory external search',
-                ['search_type' => $searchType, 'message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+                ['search_type' => $getSearchType, 'message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return ['error' => $e->getMessage()];
         }
@@ -1195,11 +1382,9 @@ class DirectoryRepository extends Controller
     }
 
     /**
-     * POCOR-9822: resolves which External Data Source - Identity to use for a nationality/identity
-     * type combo, mirroring InstitutionRepository::checkExternalSearchConfiguration(). The caller
-     * doesn't pass search_type — if more than one enabled source matches, the last one is used.
+     * POCOR-9822
      */
-    private function resolveExternalSearchType($nationalityId, $identityTypeId): ?string
+    private function getExternalSearchType($nationalityId, $identityTypeId): ?string
     {
         if (!$nationalityId || !$identityTypeId) {
             return null;
@@ -1218,13 +1403,12 @@ class DirectoryRepository extends Controller
             ->pluck('config_items.name')
             ->all();
 
-        $openEmisCoreItem = DB::table('config_items')
+        $openEmisdataSource = DB::table('config_items')
             ->where('type', 'External Data Source - Identity')
             ->where('value', 1)
-            ->where('name', 'OpenEMIS Core')
             ->first();
 
-        if ($openEmisCoreItem) {
+        if ($openEmisdataSource) {
             $match = DB::table('external_data_source_attributes')
                 ->where('external_data_source_type', 'OpenEMIS Core')
                 ->where('attribute_field', 'identity_type_id')
@@ -1232,20 +1416,18 @@ class DirectoryRepository extends Controller
                 ->first();
 
             if ($match) {
-                $names[] = $openEmisCoreItem->name;
+                $names[] = $openEmisdataSource->name;
             }
         }
 
         if (empty($names)) {
-            Log::warning('resolveExternalSearchType: no nationalities row maps this nationality_id/identity_type_id to an enabled External Data Source - Identity', [
+            Log::warning('getExternalSearchType: no nationalities row maps this nationality_id/identity_type_id to an enabled External Data Source - Identity', [
                 'nationality_id' => $nationalityId,
                 'identity_type_id' => $identityTypeId,
                 'nationality_row' => (array) (DB::table('nationalities')->where('id', $nationalityId)->first() ?? []),
             ]);
             return null;
         }
-
-        // take the last matching enabled source
         return end($names);
     }
 
@@ -1329,7 +1511,6 @@ class DirectoryRepository extends Controller
 
         // POCOR-9822: some IdentityServer/OAuth clients are registered as client_secret_basic
         // rather than client_secret_post — an 'invalid_client' response on the body-post attempt
-        // (which is what Core's own CakePHP wizard sends) means the server wants Basic auth instead.
         if ($tokenResponse->status() === 400 && ($tokenResponse->json('error') === 'invalid_client')) {
             Log::info('Seychelles external search: body-post client auth was rejected, retrying with Basic auth', [
                 'token_uri' => $tokenUri,
@@ -1498,8 +1679,6 @@ class DirectoryRepository extends Controller
             'created' => now(),
         ]);
     }
-
-    // POCOR-9822 end
 
 }
 
