@@ -5631,7 +5631,6 @@ class InstitutionRepository extends Controller
             ->select('name')
             ->where('type', 'External Data Source - Identity')
             ->where('value', 1)
-            ->where('name', 'OpenEMIS Core')
             ->first();
 
         $coreResults = [];
@@ -5663,6 +5662,5 @@ class InstitutionRepository extends Controller
 
         return $resultArray;
     }
-    // POCOR-9822 end
 
 }

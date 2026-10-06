@@ -1223,10 +1223,6 @@ class DirectoryRepository extends Controller
             $nationalityName = DB::table('nationalities')->where('id', $nationalityId)->value('name');
         }
 
-        $hasSpecialNeeds = DB::table('user_special_needs_assessments')
-            ->where('security_user_id', $user['id'])
-            ->count() == 1;
-
         $contactData = $this->getInternalSearchContactData($user['id']);
         $genderName = $user['gender_name'] ?? null;
 
@@ -1248,7 +1244,6 @@ class DirectoryRepository extends Controller
             'identity_type' => $user['main_identity_type_name'] ?: null,
             'identity_type_id' => !empty($user['main_identity_type_id']) ? (int)$user['main_identity_type_id'] : null,
             'identity_number' => $user['main_identity_number'] ?: null,
-            'has_special_needs' => $hasSpecialNeeds,
             'contact_data' => $contactData,
             'contact_type_id' => $contactData['contact_type_id'] ?? null,
             'contact_type_name' => $contactData['contact_type_name'] ?? null,
@@ -1292,11 +1287,7 @@ class DirectoryRepository extends Controller
 
     /**
      *  POCOR-9822
-     * @param array $params first_name, last_name, openemis_no, identity_number, nationality_id,
-     *                       identity_type_id, date_of_birth, limit, page. The caller does NOT pass
-     *                       search_type — the enabled External Data Source - Identity for the given
-     *                       nationality_id/identity_type_id is resolved here, the same way
-     *                       InstitutionRepository::checkExternalSearchConfiguration() finds it.
+     * @param array $params identity_number, nationality_id,identity_type_id, date_of_birth
      * @return array
      */
     public function externalSearch($params)
@@ -1316,18 +1307,6 @@ class DirectoryRepository extends Controller
                 ['nationality_id' => $nationalityId, 'identity_type_id' => $identityTypeId]
             );
             return $noData;
-        }
-
-        $attributes = DB::table('external_data_source_attributes')
-            ->where('external_data_source_type', $getSearchType)
-            ->pluck('value', 'attribute_field')
-            ->all();
-
-        if (empty($attributes)) {
-            Log::warning(
-                'External search: no external_data_source_attributes configured for this search_type',
-                ['search_type' => $getSearchType]
-            );
         }
 
         try {
@@ -1646,7 +1625,7 @@ class DirectoryRepository extends Controller
             'name' => $nationalityName,
             'visible' => 1,
             'editable' => 1,
-            'created_user_id' => 1,
+            'created_user_id' => JWTAuth::user()->id,
             'created' => now(),
         ]);
     }
