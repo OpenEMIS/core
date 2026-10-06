@@ -6,17 +6,22 @@ use Exception;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\I18n\Date;
 use Cake\Console\Shell;
+use Workflow\Model\Behavior\WorkflowBehavior;
 
 class GenerateStudentUnmarkedAttendancesShell extends Shell
 {
+    const PROCESS_NAME = 'GenerateStudentUnmarkedAttendances';
 
     public function initialize(): void
     {
         parent::initialize();
         $this->InstitutionCases = $this->fetchTable('Cases.InstitutionCases');
         $this->InstitutionCaseRecords = $this->fetchTable('Cases.InstitutionCaseRecords');
+        $this->CaseTypes = $this->fetchTable('Cases.CaseTypes');
+        $this->CasePriorities = $this->fetchTable('Cases.CasePriorities');
         $this->ClassAttendanceRecords = $this->fetchTable('Institution.ClassAttendanceRecords');
 		$this->InstitutionClasses = $this->fetchTable('Institution.InstitutionClasses');
 		$this->Institutions = $this->fetchTable('Institution.Institutions');
@@ -27,9 +32,48 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
         $this->SecurityGroupUsers = $this->fetchTable('Security.SecurityGroupUsers');
 
 		$this->AlertLogs = $this->fetchTable('Alert.AlertLogs');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
     }
 
     public function main()
+    {
+        $mypid = getmypid();
+
+        // POCOR-7626: mirrors UpdateStudentStatusShell's stale-process recovery - without this,
+        // any crash that leaves a system_processes row stuck at RUNNING (as the newEntity()
+        // ArgumentCountError below did, before it was fixed) blocks every future run forever,
+        // since this shell previously had no expiry check at all.
+        $runningProcesses = $this->SystemProcesses->getRunningProcesses(self::PROCESS_NAME);
+        foreach ($runningProcesses as $processData) {
+            $expiryDate = clone($processData['created']);
+            $expiryDate = $expiryDate->addMinutes(30);
+            if ($expiryDate < FrozenTime::now()) {
+                $this->SystemProcesses->updateProcess($processData['id'], FrozenTime::now(), $this->SystemProcesses::COMPLETED);
+                $this->SystemProcesses->killProcess(!empty($processData['process_id']) ? $processData['process_id'] : 0);
+            }
+        }
+
+        if (!empty($this->SystemProcesses->getRunningProcesses(self::PROCESS_NAME))) {
+            $this->out('A previous run of ' . self::PROCESS_NAME . ' is still marked as running. Skipping this run (' . FrozenTime::now() . ')');
+            return;
+        }
+
+        $systemProcessId = $this->SystemProcesses->addProcess(self::PROCESS_NAME, $mypid, self::PROCESS_NAME);
+        $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING);
+
+        try {
+            $this->generateCases();
+            $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::COMPLETED);
+        } catch (\Throwable $e) {
+            // POCOR-7626: catch \Throwable, not just \Exception - a PHP Error (e.g. the
+            // ArgumentCountError this shell used to throw) is not an Exception subclass and
+            // would otherwise skip this block entirely, leaving the process stuck at RUNNING.
+            $this->out('Error in ' . self::PROCESS_NAME . ': ' . $e->getMessage());
+            $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::ERROR);
+        }
+    }
+
+    public function generateCases()
     {
 		$academicPeriodId = $this->AcademicPeriods->getCurrent();
 		$workflowRules = $this->WorkflowRules->find()->where(['feature' => 'StudentUnmarkedAttendances'])
@@ -116,7 +160,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 					if(!empty($dataForAssigneeID)){
 						$assigneeId = $dataForAssigneeID->security_user_id;
 					}else{
-						$assigneeId = 0;
+						$assigneeId = WorkflowBehavior::AUTO_ASSIGN;
 					}
 					//POCOR-6363:: END
 					$recordId = $classAttendanceRecord['institution_class']['id'];
@@ -129,9 +173,18 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 						'feature' => $feature
 					];
 
+					// POCOR-9788: case_type_id/case_priority_id/description became required (POCOR-7613)
+					// after this was written, so save() below was silently failing validation - default
+					// them so the case actually saves.
+					$defaultCaseTypeId = $this->CaseTypes->find()->where(['name' => 'Students'])->first();
+					$defaultCasePriorityId = $this->CasePriorities->find()->where(['name' => 'Medium'])->first();
+
 					$caseData = [
 						'case_number' => '',
 						'title' => $title,
+						'description' => $title,
+						'case_type_id' => $defaultCaseTypeId ? $defaultCaseTypeId->id : null,
+						'case_priority_id' => $defaultCasePriorityId ? $defaultCasePriorityId->id : null,
 						'status_id' => $statusId,
 						'assignee_id' => $assigneeId,
 						'institution_id' => $institutionId,
@@ -141,14 +194,17 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 
 					$patchOptions = ['validate' => false];
 
-					$newEntity = $this->InstitutionCases->newEntity();
+					// CakePHP 5: Table::newEntity() requires its $data argument (no more default
+					// empty-array signature) - the old no-arg call fatal'd with ArgumentCountError
+					// the first time this code path actually ran (POCOR-7626 re-enabled this shell).
+					$newEntity = $this->InstitutionCases->newEntity([]);
 					$newEntity = $this->InstitutionCases->patchEntity($newEntity, $caseData, $patchOptions);
-					$alreadyExistonSameDay = $this->InstitutionCases->find('all',['conditions'=>[strtotime('y-m-d','created')=>date('y-m-d'), 'status_id'=>$statusId, 'assignee_id !=' =>0]])->first();
-					if(empty($alreadyExistonSameDay)){
+					$alreadyExistsCount = $this->InstitutionCaseRecords->find()->where(['record_id' => $recordId, 'feature' => $feature])->count();
+					if ($alreadyExistsCount === 0) {
 						$result = $this->InstitutionCases->save($newEntity);
 
 						$linkedRecords['institution_case_id'] = $result->id;
-						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->newEntity();
+						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->newEntity([]);
 						$newEntityInstitutionCaseRecord = $this->InstitutionCaseRecords->patchEntity($newEntityInstitutionCaseRecord, $linkedRecords, $patchOptions);
 						$this->InstitutionCaseRecords->save($newEntityInstitutionCaseRecord);
 						$this->sendEmail($rule['where']['security_role_id'], $institutionId, $daysUnmarked,$mailed_data);//6023 add param $mailed_data

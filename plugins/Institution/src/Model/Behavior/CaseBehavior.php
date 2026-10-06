@@ -113,7 +113,7 @@ class CaseBehavior extends Behavior
                     }
 
                     $id = $model->getEncodedKeys($caseEntity);
-                    $url = $event->subject()->Html->link($caseEntity->case_number, [
+                    $url = $event->getSubject()->Html->link($caseEntity->case_number, [
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
                         'action' => 'Cases',

@@ -149,22 +149,28 @@ class ImportStaffSalariesTable extends AppTable
         $id = $StaffSalaries->find()->last()->id;
         $StaffSalaries = TableRegistry::getTableLocator()->get('Institution.Salaries');
         $tempRow['net_salary'] =  $grossSal + $addAmount - $deductAmount;
-        if (!empty($addAmount)) {
+        // POCOR-9796: ImportBehavior::_extractRecord() now dispatches
+        // onImportModelSpecificValidation unconditionally, even when an earlier per-column
+        // check already recorded a problem elsewhere in $rowInvalidCodeCols - previously this
+        // whole method was skipped whenever that happened, so these save() calls never ran for
+        // an already-failing row. Gate them on $rowInvalidCodeCols being empty so a row that's
+        // going to be reported as failed anyway never gets a salary transaction created for it.
+        if ($rowInvalidCodeCols->count() === 0 && !empty($addAmount)) {
                 $StaffSalaryTransactions = TableRegistry::getTableLocator()->get('Staff.StaffSalaryTransactions');
                 $data = $StaffSalaryTransactions->newEntity();
                 $data->amount = $addAmount;
                 $data->salary_addition_type_id = $tempRow['salary_addition_type_id'];
                 $data->salary_deduction_type_id = 0;
-                $data->staff_salary_id = $id + 1; 
+                $data->staff_salary_id = $id + 1;
                 $StaffSalaryTransactions->save($data);
         }
-        if (!empty($deductAmount)) {
+        if ($rowInvalidCodeCols->count() === 0 && !empty($deductAmount)) {
                 $StaffSalaryTransactions = TableRegistry::getTableLocator()->get('Staff.StaffSalaryTransactions');
                 $data = $StaffSalaryTransactions->newEntity();
                 $data->amount = $deductAmount;
                 $data->salary_addition_type_id = 0;
                 $data->salary_deduction_type_id = $tempRow['salary_deduction_type_id'];
-                $data->staff_salary_id = $id + 1; 
+                $data->staff_salary_id = $id + 1;
                 $StaffSalaryTransactions->save($data);
         }
 

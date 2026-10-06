@@ -15,6 +15,7 @@ InstitutionStudentAttendancesController.$inject = [
     "$q",
     "$window",
     "$http",
+    "$timeout",
     "UtilsSvc",
     "AlertSvc",
     "AggridLocaleSvc",
@@ -26,6 +27,7 @@ function InstitutionStudentAttendancesController(
     $q,
     $window,
     $http,
+    $timeout,
     UtilsSvc,
     AlertSvc,
     AggridLocaleSvc,
@@ -78,6 +80,11 @@ function InstitutionStudentAttendancesController(
 
     vm.educationGradeListOptions = [];
     vm.selectedEducationGrade = "";
+    // Searchable Education Grade combobox: text bound to the input (doubles as the filter
+    // term while the panel is open, and shows the current selection's name while closed) and
+    // whether the option panel is currently shown.
+    vm.educationGradeSearch = "";
+    vm.educationGradeDropdownOpen = false;
 
     vm.attendancePeriodOptions = [];
     vm.selectedAttendancePeriod = "";
@@ -487,9 +494,47 @@ function InstitutionStudentAttendancesController(
         vm.educationGradeListOptions = educationGradeListOptions;
         if (educationGradeListOptions.length > 0) {
             vm.selectedEducationGrade = educationGradeListOptions[0].id;
+            vm.educationGradeSearch = educationGradeListOptions[0].name;
             vm.gridOptions.context.education_grade_id =
                 vm.selectedEducationGrade;
+        } else {
+            vm.educationGradeSearch = "";
         }
+    };
+
+    // Opens the searchable Education Grade panel and clears the box so the user can type
+    // straight away, same as any standard combobox.
+    vm.openEducationGradeDropdown = function () {
+        if (vm.action === "edit") {
+            return;
+        }
+        vm.educationGradeSearch = "";
+        vm.educationGradeDropdownOpen = true;
+    };
+
+    // Delayed via $timeout so a mousedown-selection on a list item (see
+    // selectEducationGradeOption()) still has a chance to run first - blur fires as soon as
+    // focus leaves the input, before that click completes. Restores the box to the current
+    // selection's name if the panel is dismissed without picking anything.
+    vm.closeEducationGradeDropdown = function () {
+        $timeout(function () {
+            vm.educationGradeDropdownOpen = false;
+            var selected = null;
+            for (var i = 0; i < vm.educationGradeListOptions.length; i++) {
+                if (vm.educationGradeListOptions[i].id === vm.selectedEducationGrade) {
+                    selected = vm.educationGradeListOptions[i];
+                    break;
+                }
+            }
+            vm.educationGradeSearch = selected ? selected.name : "";
+        }, 200);
+    };
+
+    vm.selectEducationGradeOption = function (option) {
+        vm.selectedEducationGrade = option.id;
+        vm.educationGradeSearch = option.name;
+        vm.educationGradeDropdownOpen = false;
+        vm.changeEducationGrade();
     };
 
     /*vm.isMarkableSubjectAttendance = function(selectedClass) {

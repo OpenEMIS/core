@@ -1,16 +1,15 @@
 <?php
+
 namespace Webhook\Model\Table;
 
-use Cake\Event\Event;
 use Cake\ORM\Table;
-use Cake\ORM\Query;
-use Cake\ORM\Entity;
+use Cake\Event\EventInterface;
 use Exception;
 use Cake\Log\Log;
 
 class WebhookEventsTable extends Table
 {
-    const ACTIVE = 1;
+    public const ACTIVE = 1;
 
     public function initialize(array $config): void
     {
@@ -20,7 +19,7 @@ class WebhookEventsTable extends Table
         $this->belongsTo('Webhooks', [
             'foreignKey' => 'webhook_id',
             'joinType' => 'INNER',
-            'className' => 'Webhook.Webhooks'
+            'className' => 'Webhook.Webhooks',
         ]);
     }
 
@@ -32,23 +31,37 @@ class WebhookEventsTable extends Table
         //         'WebhookEvents.event_key' => $eventKey
         //     ])
         //     ->toArray();
-        
-        // if(!empty($body)) { 
-        //     $body = "'".json_encode($body)."'";
+
+        // if (!empty($body)) {
+        //     $body = "'" . json_encode($body) . "'";
         // }
 
-        // $username = isset($params['username']) ? $params['username'] : null;
+        // $username = $params['username'] ?? null;
+
         // foreach ($webhooks as $key => $value) {
-        //     $webhooks[$key]->url = str_replace('{username}', $username, $value->url);
+        //     $webhooks[$key]->url = str_replace(
+        //         '{username}',
+        //         $username,
+        //         $value->url
+        //     );
         // }
+
         // foreach ($webhooks as $webhook) {
-        //     $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook ' . $webhook->url . ' ' . $webhook->method . ' ' . $body ;
+        //     $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook '
+        //         . $webhook->url . ' '
+        //         . $webhook->method . ' '
+        //         . $body;
+
         //     $logs = ROOT . DS . 'logs' . DS . 'Webhook.log & echo $!';
         //     $shellCmd = $cmd . ' >> ' . $logs;
+
         //     try {
         //         $pid = exec($shellCmd);
         //     } catch (Exception $ex) {
-        //         Log::write('error', __METHOD__ . ' exception when triggering : '. $ex);
+        //         Log::write(
+        //             'error',
+        //             __METHOD__ . ' exception when triggering: ' . $ex
+        //         );
         //     }
         // }
     }

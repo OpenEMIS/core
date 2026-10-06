@@ -860,6 +860,15 @@ class StudentsTable extends ControllerActionTable
         $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
+        // POCOR-9829: CakePHP 5's query builder throws (rather than degrading
+        // to a no-op comparison, as CakePHP 4 did) when a plain `field => value`
+        // condition is given a null value. A null $institutionId/$periodId here
+        // (e.g. missing/expired institution session context) used to surface as
+        // a blanket 404 via AppExceptionRenderer; use the `IS`/`IS NOT` operator
+        // syntax so a null scope safely matches no class instead of crashing.
+        $periodKey = $Classes->aliasField('academic_period_id') . ($periodId === null ? ' IS' : '');
+        $institutionKey = $Classes->aliasField('institution_id') . ($institutionId === null ? ' IS' : '');
+
         return $query
             ->select([$Classes->aliasField('name')])
             ->leftJoin(
@@ -874,8 +883,8 @@ class StudentsTable extends ControllerActionTable
                 [$Classes->getAlias() => $Classes->getTable()],
                 [
                     $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id'),
-                    $Classes->aliasField('academic_period_id') => $periodId,
-                    $Classes->aliasField('institution_id') => $institutionId
+                    $periodKey => $periodId,
+                    $institutionKey => $institutionId
                 ]
             );
     }

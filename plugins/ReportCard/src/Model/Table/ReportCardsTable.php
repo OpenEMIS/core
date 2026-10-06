@@ -819,9 +819,18 @@ class ReportCardsTable extends ControllerActionTable
          $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
          $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
          //POCOR-9598: start - getPrincipalRoleId() returns an array of IDs; use IN() so CakePHP doesn't try to cast array as string
-         $staffPosnCondition = is_array($staffPosnId)
-             ? ['InstitutionPositions.staff_position_title_id IN' => $staffPosnId]
-             : ['InstitutionPositions.staff_position_title_id' => $staffPosnId];
+         //POCOR-9808: guard against a null/empty $staffPosnId (e.g. no matching position title
+         //configured for this tenant) -- passing null straight into this array, mixed with the
+         //raw SQL condition below, breaks CakePHP 5's null -> IS NULL auto-conversion and throws
+         //"missing operator (IS, IS NOT)". -1 is not a real staff_position_title_id, so this
+         //condition simply matches no rows, same end result as "no staff found" further down.
+         if (empty($staffPosnId)) {
+             $staffPosnCondition = ['InstitutionPositions.staff_position_title_id' => -1];
+         } elseif (is_array($staffPosnId)) {
+             $staffPosnCondition = ['InstitutionPositions.staff_position_title_id IN' => $staffPosnId];
+         } else {
+             $staffPosnCondition = ['InstitutionPositions.staff_position_title_id' => $staffPosnId];
+         }
          //POCOR-9598: end
          $where = array_merge([
              $Staff->aliasField('institution_id') => $institutionId,

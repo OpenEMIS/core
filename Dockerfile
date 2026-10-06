@@ -89,6 +89,9 @@ COPY ./docker-config/init.sh /usr/bin/init.sh
 COPY ./docker-config/cron/openemis-core /etc/cron.d/openemis-core
 RUN chmod 0644 /etc/cron.d/openemis-core
 
+# Institution > Cases scheduled generation (CakePHP shells, daily off-peak)
+COPY ./docker-config/cron/openemis-core-cases /etc/cron.d/openemis-core-cases
+RUN chmod 0644 /etc/cron.d/openemis-core-cases
 # POCOR-9770: daily Student Status Updates catch-up (see file header for why)
 COPY ./docker-config/cron/openemis-core-student-status /etc/cron.d/openemis-core-student-status
 RUN chmod 0644 /etc/cron.d/openemis-core-student-status

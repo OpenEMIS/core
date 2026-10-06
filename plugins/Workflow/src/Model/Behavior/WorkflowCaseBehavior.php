@@ -2655,10 +2655,13 @@ class WorkflowCaseBehavior extends Behavior
         $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $assigneeId = $SecurityGroupUsers->getFirstAssignee($params);
 
-        if($entity->assignee_id == -1){ //POCOR-7025
-            $entity->assignee_id = -1;
-        }else{
+        // POCOR-7626
+        if (!empty($assigneeId)) {
             $entity->assignee_id = $assigneeId;
+        } elseif (!empty($entity->created_user_id)) {
+            $entity->assignee_id = $entity->created_user_id;
+        } else {
+            $entity->assignee_id = 0;
         }
     }
 

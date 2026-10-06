@@ -466,7 +466,13 @@ class ImportStudentAttendancesTable extends AppTable {
             'subject_id'           => 0,
         ]);
 
-        if (!$markRecord->getErrors()) {
+        // POCOR-9796: ImportBehavior::_extractRecord() now dispatches
+        // onImportModelSpecificValidation unconditionally, even when an earlier per-column
+        // check already recorded a problem elsewhere in $rowInvalidCodeCols - previously this
+        // whole method was skipped whenever that happened, so this save() never ran for an
+        // already-failing row. Gate it on $rowInvalidCodeCols being empty so a row that's going
+        // to be reported as failed anyway never gets an attendance record created for it.
+        if ($rowInvalidCodeCols->count() === 0 && !$markRecord->getErrors()) {
             $StudentAttendanceMarkedRecords->save($markRecord);
         }
 

@@ -44,12 +44,40 @@ class ImportStaffQualificationsTable extends AppTable
             return;
         }
         $plugin = $toolbarButtons['back']['url']['plugin'] ?? null;
+        $controller = $toolbarButtons['back']['url']['controller'] ?? null;
         //// Log::debug('@ImportStaffQualifications::onUpdateToolbarButtons action=' . json_encode($action) . ' plugin=' . json_encode($plugin) . ' backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
         if ($plugin == 'Staff' || $plugin == 'Student') { //POCOR-9584: handle both Staff and Student contexts (add and results)
             //POCOR-9584: use separate action + [0] keys so [1] (encoded params) stays sequential
             //            'Qualifications/index' as a single action key caused CakePHP Router to drop [1]
             $toolbarButtons['back']['url']['action'] = 'Qualifications';
             $toolbarButtons['back']['url'][0] = 'index';
+        } elseif ($controller === 'Directories') {
+            //POCOR-9805: reached via Directory > [person] > Staff Qualifications > Import -
+            //            same class of problem as POCOR-9584 above, the back URL was resolving
+            //            with no identifying pass param at all, landing Cancel on the bare
+            //            Directory listing instead of this person's Staff Qualifications tab.
+            //            DirectoriesController's own action for this tab is 'StaffQualifications'
+            //            (not 'Qualifications' like Staff/Student), so keep it separate rather
+            //            than folding into the branch above.
+            $pass = $this->request->getParam('pass');
+            // POCOR-9805: the 'results' page (after a successful import) has no pass[1] of its
+            // own - fall back to the copy beforeAction() stashed in session while we were still
+            // on 'add', where the URL did carry it.
+            $encodedContext = $pass[1] ?? $this->request->getSession()->read('ImportStaffQualifications.directoryBackPass');
+            if (!empty($encodedContext)) {
+                //POCOR-9805: generateDirectoryBackUrl() (ImportBehavior.php) runs before this and,
+                //            on the 'results' page, leaves the url with ONLY an integer key 1
+                //            (key 0 is explicitly unset there). PHP arrays keep insertion order,
+                //            and the router reads pass params in that order (not sorted by key) -
+                //            so writing [0] then [1] below, with [1] already present, would keep
+                //            [1] in its earlier position and append [0] last, silently swapping the
+                //            pass params to [encoded, 'index'] instead of ['index', encoded] and
+                //            404ing. Unset both first so they're always re-inserted 0 then 1.
+                unset($toolbarButtons['back']['url'][0], $toolbarButtons['back']['url'][1]);
+                $toolbarButtons['back']['url']['action'] = 'StaffQualifications';
+                $toolbarButtons['back']['url'][0] = 'index';
+                $toolbarButtons['back']['url'][1] = $encodedContext;
+            }
         }
         //POCOR-9584: end
         //// Log::debug('@ImportStaffQualifications::onUpdateToolbarButtons result backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
@@ -63,6 +91,25 @@ class ImportStaffQualificationsTable extends AppTable
         if ($this->controller->getName() == 'Profiles') {
             $this->staffId = $session->read('Auth.User.id');
             //// Log::debug('@ImportStaffQualifications::beforeAction from Profiles, staffId=' . json_encode($this->staffId)); //[TEMP-LOG]
+        } else if ($this->controller->getName() == 'Directories') {
+            //POCOR-9805: In Directory context, staff_id is directly present in the encoded
+            //            pass[1] param (e.g. {"staff_id":3540,"security_user_id":3540}) - unlike
+            //            here without this, $this->staffId stayed unset and every imported row
+            //            would fail onImportModelSpecificValidation()'s empty-staffId check.
+            $pass = $this->request->getParam('pass');
+            if (!empty($pass[1])) {
+                $paramsQuery = base64_decode($pass[1]);
+                $jsonEndPosition = strpos($paramsQuery, '}') + 1;
+                $jsonData = substr($paramsQuery, 0, $jsonEndPosition);
+                $decoded = json_decode($jsonData, true);
+                $this->staffId = $decoded['staff_id'] ?? null;
+                // POCOR-9805: the 'results' page (shown after a successful import) has no
+                // pass[1] of its own - it's a different URL reached after form submission, not
+                // one carrying the person-identifying param. Remember it in session here (while
+                // we're still on 'add', where the URL does carry it) so onUpdateToolbarButtons()
+                // can still build a correct back-button URL once we're on 'results' too.
+                $session->write('ImportStaffQualifications.directoryBackPass', $pass[1]);
+            }
         } else if ($this->controller->getName() == 'Students') {
             //POCOR-9584: start - In Students context, student_id is in encoded params (pass[1])
             $pass = $this->request->getParam('pass');

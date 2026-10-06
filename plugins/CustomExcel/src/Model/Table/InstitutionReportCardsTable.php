@@ -6544,11 +6544,10 @@ class InstitutionReportCardsTable extends AppTable
                     ? $periodObj->end_date
                     : FrozenDate::create($year, 12, 31);
 
-                $dateRange = [];
-                while ($start <= $end) {
-                    $dateRange[] = $start->format('Y-m-d'); // Store date
-                    $start = $start->addDay(); // Move to the next day
-                }
+                // POCOR-9808: was its own inline day-by-day loop, duplicating exactly what
+                // generateDateRange() below computes for the sibling placeholder -- shares
+                // the memoized helper instead of rebuilding the same range from scratch.
+                $dateRange = $this->generateDateRange($start, $end);
                 foreach ($dateRange as $k => $date) {
                     $entity[] = [
                         'id' => $k,
@@ -6610,13 +6609,29 @@ class InstitutionReportCardsTable extends AppTable
         return $entity;
     }
 
+    /**
+     * POCOR-9808: memoized per (start, end) pair -- this was being rebuilt from scratch by
+     * every placeholder that needed a full academic-year date range (measured: ~4x redundant
+     * rebuilds of the same ~365-day range within a single Institution profile generation run,
+     * each doing its own addDay() loop). Same result, computed once per unique range instead.
+     */
+    private array $dateRangeCache = [];
+
     private function generateDateRange(FrozenDate $startDate, FrozenDate $endDate): array
     {
+        $cacheKey = $startDate->format('Y-m-d') . '_' . $endDate->format('Y-m-d');
+        if (isset($this->dateRangeCache[$cacheKey])) {
+            return $this->dateRangeCache[$cacheKey];
+        }
+
         $dateRange = [];
         while ($startDate <= $endDate) {
             $dateRange[] = $startDate->format('Y-m-d');
-            $startDate = $startDate->addDay();
+            $startDate = $startDate->addDays(1);
         }
+
+        $this->dateRangeCache[$cacheKey] = $dateRange;
+
         return $dateRange;
     }
 

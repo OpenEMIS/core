@@ -1,0 +1,12 @@
+# Scheduled Institution > Cases generation for the CakePHP core (Student Attendance,
+# Staff Behaviours, Unmarked Attendance). Runs once daily, off-peak, staggered so the
+# three shells never overlap. Separate from docker-config/cron/openemis-core, which is
+# the unrelated Laravel/artisan "OpenEMIS Runtime" entry-point under api/.
+#
+# This file is installed at /etc/cron.d/openemis-core-cases in the Docker image.
+# Format for /etc/cron.d/: minute hour dom month dow USER command
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+0   2  *  *  *  www-data  cd /var/www/html/core && bin/cake GenerateStudentUnmarkedAttendances >> logs/GenerateStudentUnmarkedAttendances.log 2>&1
+15  2  *  *  *  www-data  cd /var/www/html/core && bin/cake GenerateStudentAttendanceCases >> logs/GenerateStudentAttendanceCases.log 2>&1
+30  2  *  *  *  www-data  cd /var/www/html/core && bin/cake GenerateStaffBehaviourCases >> logs/GenerateStaffBehaviourCases.log 2>&1

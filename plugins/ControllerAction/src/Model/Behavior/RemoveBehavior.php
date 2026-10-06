@@ -172,7 +172,12 @@ class RemoveBehavior extends Behavior
             // Logic for restrict delete
             $entity = $model->newEntity([]);
             $controller = $model->controller;
-            $modelNameArray = ['institution_students', 'institution_staff', 'institution_classes' , 'institution_subjects', 'institution_textbooks', 'institution_positions'];//POCOR-8333
+            // POCOR-8333 originally added this special case for institution_students, institution_staff,
+            // institution_classes, institution_subjects, institution_textbooks and institution_positions, but only
+            // institution_classes (POCOR-8323) actually builds a remove URL with the id at pass segment 1 - the
+            // other tables' remove buttons only ever place the id at pass segment 0, so treating them the same way
+            // left the id unresolved and broke delete (POCOR-9825).
+            $modelNameArray = ['institution_classes'];//POCOR-8333
             if(in_array($model->getTable(), $modelNameArray)){//POCOR-8333 starts
                 $ids = empty($model->paramsPass(1)) ? [] : $model->paramsDecode($model->paramsPass(1));
             }else{ // POCOR-8333 ends

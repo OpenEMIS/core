@@ -69,12 +69,31 @@ class UndoStudentStatusTable extends AppTable
     public function beforeAction(EventInterface $event)
     {
         $params = $this->ControllerAction->getQueryString();
-        
+
         if(!empty($params)) {
             $this->institutionId = $params['institution_id'];
         } else {
-            $encodedQueryParams = $this->request->getParam('pass')[1];
-            $this->institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+            // POCOR-9816: pass[1] is not always present (e.g. a resubmission or redirect that
+            // drops the encoded query string segment) -- paramsDecode() throws SecurityException
+            // on an empty/malformed value, which previously crashed every request through this
+            // table whenever that happened. Fall back to the session-held institution instead,
+            // matching InstitutionsController::getInstitutionID()'s own resilience pattern.
+            $pass = $this->request->getParam('pass');
+            $encodedQueryParams = $pass[1] ?? null;
+            $this->institutionId = null;
+
+            if (!empty($encodedQueryParams)) {
+                try {
+                    $decoded = $this->paramsDecode($encodedQueryParams);
+                    $this->institutionId = $decoded['institution_id'] ?? null;
+                } catch (\Exception $e) {
+                    $this->institutionId = null;
+                }
+            }
+
+            if (empty($this->institutionId)) {
+                $this->institutionId = $this->request->getSession()->read('Institution.Institutions.id');
+            }
         }
         $institutionClassTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         
@@ -123,17 +142,20 @@ class UndoStudentStatusTable extends AppTable
         //POCOR-6992 end
 
         if ($errors) {
+            $event->stopPropagation();
             return;
         }
 
         if (isset($data[$alias])) {
             $theData = $data[$alias];
         } else {
+            $event->stopPropagation();
             return $this->Alert->warning('general.notSelected', ['reset' => true]);;
         }
         if (isset($theData['students'])) {
             $theStudents = $theData['students'];
         } else {
+            $event->stopPropagation();
             return $this->Alert->warning('general.notSelected', ['reset' => true]);;
         }
         //POCOR-8829 starts
@@ -180,6 +202,13 @@ class UndoStudentStatusTable extends AppTable
         //  $id = $entity->id;
         //  $params['id'] = $id;
         if (empty($studentIds)) {
+            // POCOR-9816: without stopPropagation(), AddBehavior falls through to its default
+            // $model->save($entity) even though nothing was selected -- since the Undo form
+            // never collects start_date/start_year, that save fails on institution_students'
+            // NOT NULL start_year column. Confirmed live: clicking "Next" with every row
+            // blocked (e.g. all flagged as "already enrolled elsewhere") has no valid checkbox
+            // to submit, so this is the only path reached, and it must not fall through to save.
+            $event->stopPropagation();
             return $this->Alert->warning('general.notSelected', ['reset' => true]);
         } else {
             $data[$alias]['student_ids'] = $studentIds;

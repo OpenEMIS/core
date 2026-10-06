@@ -1,51 +1,67 @@
 <?php
+
 namespace Webhook\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
-use Cake\ORM\Table;
-use Cake\ORM\Query;
+use Cake\Event\EventInterface;
+use Cake\Log\Log;
 use Cake\ORM\Entity;
+use Cake\ORM\Query\SelectQuery;
+use Cake\ORM\Table;
 use Exception;
 
 class WebhooksTable extends Table
 {
-    const ACTIVE = 1;
-    const INACTIVE = 0;
+    public const ACTIVE = 1;
+    public const INACTIVE = 0;
 
-    public $supportedMethod = [
+    public array $supportedMethod = [
         'GET' => 'GET',
         'POST' => 'POST',
         'PUT' => 'PUT',
         'PATCH' => 'PATCH',
-        'DELETE' => 'DELETE'
+        'DELETE' => 'DELETE',
     ];
 
     public function initialize(array $config): void
     {
         parent::initialize($config);
-        $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+        $this->hasMany('WebhookEvents', [
+            'className' => 'Webhook.WebhookEvents',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+        ]);
+
         $this->addBehavior('Timestamp', [
             'events' => [
                 'Model.beforeSave' => [
                     'created' => 'new',
-                    'modified' => 'existing'
-                ]
-            ]
+                    'modified' => 'existing',
+                ],
+            ],
         ]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
+    public function beforeSave(
+        EventInterface $event,
+        Entity $entity,
+        ArrayObject $options
+    ): void {
         $userId = null;
+
         if (isset($options['extra']['user'])) {
-            $userId = $options['extra']['user']['id'];
-        } if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User'])) {
-            $userId = $_SESSION['Auth']['User']['id'];
+            $userId = $options['extra']['user']['id'] ?? null;
         }
-        if (is_null($userId)) {
+
+        if (isset($_SESSION['Auth']['User'])) {
+            $userId = $_SESSION['Auth']['User']['id'] ?? null;
+        }
+
+        if ($userId === null) {
             $userId = 0;
         }
+
         if (!$entity->isNew()) {
             $entity->modified_user_id = $userId;
         } else {
@@ -53,44 +69,84 @@ class WebhooksTable extends Table
         }
     }
 
-    public function findActiveWebhooks(Query $query, array $options)
-    {
-        $eventKey = $options['event_key'];
+    public function findActiveWebhooks(
+        SelectQuery $query,
+        array $options
+    ): SelectQuery {
+        $eventKey = $options['event_key'] ?? null;
 
-        return $query->innerJoinWith('WebhookEvents')
+        return $query
+            ->innerJoinWith('WebhookEvents')
             ->where([
                 'WebhookEvents.event_key' => $eventKey,
-                $this->aliasField('status') => self::ACTIVE
+                $this->aliasField('status') => self::ACTIVE,
             ])
-            ->select([$this->aliasField('url'), $this->aliasField('method')]);
+            ->select([
+                $this->aliasField('url'),
+                $this->aliasField('method'),
+            ]);
     }
 
-    public function triggerShell($eventKey, $params = [], $body = [])
-    { 
+    public function triggerShell(
+        $eventKey,
+        array $params = [],
+        array $body = []
+    ): void {
         $webhooks = $this->find()
             ->innerJoinWith('WebhookEvents')
             ->where([
                 'WebhookEvents.event_key' => trim($eventKey),
-                $this->aliasField('status') => self::ACTIVE
+                $this->aliasField('status') => self::ACTIVE,
             ])
             ->toArray();
-		if (!empty($body)) {
-            $body = json_encode($body);
-            $body = escapeshellarg($body); // POCOR-8994 <-- wrap & escape properly
+
+        $bodyArgument = '';
+
+        if (!empty($body)) {
+            $bodyArgument = escapeshellarg(json_encode($body));
         }
-	
-        $username = isset($params['username']) ? $params['username'] : null;
+
+        $username = $params['username'] ?? null;
+
         foreach ($webhooks as $key => $value) {
-            $webhooks[$key]->url = str_replace('{username}', $username, $value->url);
+            $webhooks[$key]->url = str_replace(
+                '{username}',
+                $username,
+                $value->url
+            );
         }
+
         foreach ($webhooks as $webhook) {
-            $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook ' . $webhook->url . ' ' . $webhook->method . ' ' . $body ;
-            $logs = ROOT . DS . 'logs' . DS . 'Webhook.log & echo $!';
-            $shellCmd = $cmd . ' >> ' . $logs;
+            $url = escapeshellarg($webhook->url);
+            $method = escapeshellarg($webhook->method);
+
+            $cmd = ROOT
+                . DS . 'bin'
+                . DS . 'cake Webhook '
+                . $url
+                . ' '
+                . $method;
+
+            if ($bodyArgument !== '') {
+                $cmd .= ' ' . $bodyArgument;
+            }
+
+            $logs = ROOT
+                . DS . 'logs'
+                . DS . 'Webhook.log';
+
+            $shellCmd = $cmd
+                . ' >> '
+                . escapeshellarg($logs)
+                . ' 2>&1 & echo $!';
+
             try {
                 $pid = exec($shellCmd);
             } catch (Exception $ex) {
-                Log::write('error', __METHOD__ . ' exception when triggering : '. $ex);
+                Log::write(
+                    'error',
+                    __METHOD__ . ' exception when triggering: ' . $ex->getMessage()
+                );
             }
         }
     }

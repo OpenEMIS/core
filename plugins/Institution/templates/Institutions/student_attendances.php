@@ -345,18 +345,37 @@ $panelHeader = $this->fetch('panelHeader');
                             <option value="" ng-if="$ctrl.dayListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
+                    <h5><?= __('Education Grade') ?>: </h5>
+                    <div class="input-select-wrapper" style="position: relative;">
+                        <input type="text"
+                               name="education_grade_search"
+                               autocomplete="off"
+                               ng-model="$ctrl.educationGradeSearch"
+                               ng-click="$ctrl.openEducationGradeDropdown()"
+                               ng-focus="$ctrl.openEducationGradeDropdown()"
+                               ng-blur="$ctrl.closeEducationGradeDropdown()"
+                               ng-disabled="$ctrl.action=='edit'"
+                               placeholder="<?= __('Please select') ?>"
+                               style="width: 100%; box-sizing: border-box;">
+                        <ul ng-if="$ctrl.educationGradeDropdownOpen"
+                            style="position: absolute; z-index: 1000; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: #fff; border: 1px solid #ccc; margin: 2px 0 0; padding: 0; list-style: none; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                            <li ng-repeat="education_grade in $ctrl.educationGradeListOptions | filter: $ctrl.educationGradeSearch"
+                                ng-mousedown="$ctrl.selectEducationGradeOption(education_grade)"
+                                ng-class="{'selected': education_grade.id == $ctrl.selectedEducationGrade}"
+                                style="padding: 8px 12px; cursor: pointer;">
+                                {{ education_grade.name }}
+                            </li>
+                            <li ng-if="!($ctrl.educationGradeListOptions | filter: $ctrl.educationGradeSearch).length"
+                                style="padding: 8px 12px; color: #999; cursor: default;">
+                                <?= __('No Options') ?>
+                            </li>
+                        </ul>
+                    </div>
                     <h5><?= __('Class') ?>: </h5>
                     <div class="input-select-wrapper">
 
                         <select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="class.id as class.name for class in $ctrl.classListOptions" ng-model="$ctrl.selectedClass" ng-change="$ctrl.changeClass();">
                             <option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
-                        </select>
-                    </div>
-                    <h5><?= __('Education Grade') ?>: </h5>
-                    <div class="input-select-wrapper">
-
-                        <select ng-disabled="$ctrl.action=='edit'" name="education_grade" ng-options="education_grade.id as education_grade.name for education_grade in $ctrl.educationGradeListOptions" ng-model="$ctrl.selectedEducationGrade" ng-change="$ctrl.changeEducationGrade();">
-                            <option value="" ng-if="$ctrl.educationGradeListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
                     <!-- <h5 ng-if="$ctrl.isMarkableSubjectAttendance==true"><?= __('Subjects') ?>: </h5>

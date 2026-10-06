@@ -1011,6 +1011,7 @@ class PerformanceTable extends AppTable
         if ($gradeId > 0) {
             $conditions[$this->aliasField('education_grade_id')] = $gradeId;
         }
+        $filterInstitutionIds = $this->parseFilterInstitutionIds($institutionId);
         if (!empty($filterInstitutionIds)) {
             $conditions[$this->aliasField('institution_id IN')] = $filterInstitutionIds;
         } else {//Added condition to get only user's accessiable institution data
@@ -1056,6 +1057,24 @@ class PerformanceTable extends AppTable
             ])
             ->contain(['AssessmentPeriods'])
             ->where([$conditions,]);
+    }
+
+     private function parseFilterInstitutionIds($institutionId): array
+    {
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
+        return $filterInstitutionIds;
     }
 
     /**

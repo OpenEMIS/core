@@ -1,45 +1,72 @@
 <?php
+
 namespace Webhook\Shell;
 
 use Cake\Console\Shell;
-use Cake\Event\Event;
-use Cake\I18n\Time;
-use Cake\Network\Http\Client;
-use Cake\ORM\TableRegistry;
+use Cake\Http\Client;
+use Cake\I18n\FrozenTime;
+use Cake\ORM\Locator\LocatorAwareTrait;
 use Exception;
 
-class WebhookShell extends Shell {
-    public function initialize() {
+class WebhookShell extends Shell
+{
+    use LocatorAwareTrait;
+
+    public function initialize(): void
+    {
         parent::initialize();
     }
 
-    public function main()
+    public function main(): void
     {
-        $this->out('Initialize Webhook Shell ('.Time::now().')...');
+        $this->out(
+            'Initialize Webhook Shell (' . FrozenTime::now() . ')...'
+        );
+
         try {
-            //POCOR-6804: START
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-            $apiToken = $ConfigItems->value('api_settings');
-            //$http = new Client();
+            // POCOR-6804: START
+            $configItems = $this->fetchTable('Configuration.ConfigItems');
+            $apiToken = $configItems->value('api_settings');
+
             $http = new Client();
+
             $options = [
                 'timeout' => 60,
-                'headers' => ['Authorization' => $apiToken],
-                'type' => 'json'
+                'headers' => [
+                    'Authorization' => $apiToken,
+                ],
+                'type' => 'json',
             ];
-            //POCOR-6804: END
-            $url = $this->args[0];
-            $method = strtolower($this->args[1]);
-            $body = $this->args[2];
+            // POCOR-6804: END
+
+            $url = $this->args[0] ?? null;
+            $method = strtolower($this->args[1] ?? 'get');
+            $body = $this->args[2] ?? null;
+
+            if (empty($url)) {
+                throw new Exception('Webhook URL is required.');
+            }
+
             $this->out($url);
             $this->out($method);
-            $response = $http->$method($url, $body, $options);
-            $this->out('Response code: ' . $response->getStatusCode());
-            $this->out('End Processing Webhook Shell '.Time::now().')...');
-        } catch (\Exception $e) {
-            $this->out('Logout Shell > Exception : ');
+
+            $response = $http->{$method}(
+                $url,
+                $body,
+                $options
+            );
+
+            $this->out(
+                'Response code: ' . $response->getStatusCode()
+            );
+
+            $this->out(
+                'End Processing Webhook Shell (' . FrozenTime::now() . ')...'
+            );
+        } catch (Exception $e) {
+            $this->out('Webhook Shell > Exception:');
             $this->out($e->getMessage());
-            $this->out('Time: '.Time::now().'...');
+            $this->out('Time: ' . FrozenTime::now() . '...');
         }
     }
 }
