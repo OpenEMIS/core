@@ -1299,6 +1299,8 @@ class DirectoryRepository extends Controller
         $identityTypeId = $params['identity_type_id'] ?? null;
 
         $getSearchType = $this->getExternalSearchType($nationalityId, $identityTypeId);
+
+       
         $noData = ['data' => [], 'total' => 0];
 
         if (empty($getSearchType)) {
@@ -1308,6 +1310,11 @@ class DirectoryRepository extends Controller
             );
             return $noData;
         }
+
+        $attributes = DB::table('external_data_source_attributes')
+            ->where('external_data_source_type', $getSearchType)
+            ->pluck('value', 'attribute_field')
+            ->all();
 
         try {
             if ($getSearchType === 'UNHCR') {
@@ -1360,7 +1367,6 @@ class DirectoryRepository extends Controller
 
         if ($openEmisdataSource) {
             $match = DB::table('external_data_source_attributes')
-                ->where('external_data_source_type', 'OpenEMIS Core')
                 ->where('attribute_field', 'identity_type_id')
                 ->where('value', $identityTypeId)
                 ->first();
@@ -1631,6 +1637,7 @@ class DirectoryRepository extends Controller
     }
 
 }
+
 
 
 
