@@ -547,4 +547,42 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         }
         return $institution_id;
     }
+
+    /**
+     * Parses a raw submitted date string (as posted by the editable-date-format text input,
+     * e.g. "October 01, 2026") into a Date object, or null if missing/unparseable. Shared by
+     * StudentTransferOutTable and StudentTransferInTable's onUpdateFieldStartDate()/
+     * onUpdateFieldEndDate(), so they can show what was actually posted on a redisplay after a
+     * failed save instead of silently overwriting it (POCOR-9838).
+     */
+    protected function parseSubmittedDate($rawValue)
+    {
+        if (empty($rawValue) || !is_string($rawValue)) {
+            return null;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+            return new Date($rawValue);
+        }
+
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+        $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+        try {
+            try {
+                $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+            } catch (\Exception $e) {
+                $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+            }
+            if ($date !== false && $date !== null) {
+                return new Date($date->format('Y-m-d'));
+            }
+        } catch (\Exception $e) {
+            // unparseable -- treat as not submitted
+        }
+
+        return null;
+    }
 }

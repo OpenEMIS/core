@@ -31,9 +31,12 @@ class CounsellingsTable extends AppTable
             'className' => 'Security.Users',
             'foreignKey' => 'requester_id',
         ]);
-        $this->belongsTo('GuidanceTypes', [
+        //POCOR-9842 guidance_type_id moved to counselling_guidance_types join table
+        $this->belongsToMany('GuidanceTypes', [
             'className' => 'Student.GuidanceTypes',
-            'foreignKey' => 'guidance_type_id',
+            'joinTable' => 'counselling_guidance_types',
+            'foreignKey' => 'counselling_id',
+            'targetForeignKey' => 'guidance_type_id',
         ]);
 
         $this->addBehavior('Excel', [
@@ -42,7 +45,6 @@ class CounsellingsTable extends AppTable
                 'file_content',
                 'counselor_id',
                 'student_id',
-                'guidance_type_id',
                 'requester_id',
                 'modified_user_id',
                 'modified',
@@ -112,8 +114,20 @@ class CounsellingsTable extends AppTable
             }
         }
 
-        if (!empty($institutionId) && $institutionId != 0) {
-            $conditions['InstitutionStudents.institution_id'] = $institutionId;
+        //POCOR-9842 institution_id is a multi-select ({_ids: [...]}); '0' = All Institutions
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = (array)$institutionId->_ids;
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = (array)$institutionId['_ids'];
+        } elseif (!empty($institutionId) && !is_array($institutionId) && !is_object($institutionId)) {
+            $filterInstitutionIds = [$institutionId];
+        }
+        $filterInstitutionIds = array_values(array_filter($filterInstitutionIds, function ($id) {
+            return $id !== '' && $id !== null && (string)$id !== '0';
+        }));
+        if (!empty($filterInstitutionIds)) {
+            $conditions['InstitutionStudents.institution_id IN'] = $filterInstitutionIds;
         }
 
         if ($areaId != -1 && $areaId != '') {
@@ -141,7 +155,8 @@ class CounsellingsTable extends AppTable
                     $query->newExpr("' '"),
                     'Counselors.last_name' => 'identifier',
                 ]),
-                'guidance_type' => 'GuidanceTypes.name',
+                //POCOR-9842 a counselling can have multiple guidance types
+                'guidance_type' => $query->newExpr("GROUP_CONCAT(DISTINCT GuidanceTypes.name ORDER BY GuidanceTypes.name SEPARATOR ', ')"),
                 'requester_openemis_id' => 'Requesters.openemis_no',
                 'requester_name' => $query->func()->concat([
                     'Requesters.first_name' => 'identifier',
@@ -173,10 +188,16 @@ class CounsellingsTable extends AppTable
                 ['Requesters' => 'security_users'],
                 ['Requesters.id = ' . $this->aliasField('requester_id')]
             )
+            //POCOR-9842 Starts
+            ->leftJoin(
+                ['CounsellingGuidanceTypes' => 'counselling_guidance_types'],
+                ['CounsellingGuidanceTypes.counselling_id = ' . $this->aliasField('id')]
+            )
             ->leftJoin(
                 ['GuidanceTypes' => 'guidance_types'],
-                ['GuidanceTypes.id = ' . $this->aliasField('guidance_type_id')]
+                ['GuidanceTypes.id = CounsellingGuidanceTypes.guidance_type_id']
             )
+            //POCOR-9842 Ends
             ->where($conditions)
             ->order([
                 $this->aliasField('date') => 'DESC',
