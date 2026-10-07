@@ -27,7 +27,7 @@ use App\Model\Table\AppTable;
  *
  * @ticket POCOR-9831
  */
-class StudentAttendanceWeeklyReportTable extends AppTable
+class StudentAttendanceReportTable extends AppTable
 {
     //POCOR-9831: status => cell fill colour
     const STATUS_COLOURS = [
