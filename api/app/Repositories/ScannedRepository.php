@@ -230,7 +230,19 @@ class ScannedRepository extends Controller
             if ($dateFrom && $dateTo && $dateFrom->gt($dateTo)) {
                 [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
             }
-            $userListingRecord = ScannedAttendance::with('securityUser');
+            $userListingRecord = ScannedAttendance::with(['securityUser' => function ($query) {
+                // POCOR-9847: exclude photo_content (longblob) -- raw binary image
+                // bytes are not valid UTF-8, and json_encode()-ing them is what was
+                // throwing "Malformed UTF-8 characters" on this endpoint.
+                $query->select(
+                    'id', 'openemis_no', 'username', 'first_name', 'middle_name',
+                    'third_name', 'last_name', 'preferred_name', 'email',
+                    'mobile_number', 'address', 'postal_code', 'address_area_id',
+                    'birthplace_area_id', 'gender_id', 'date_of_birth',
+                    'nationality_id', 'identity_type_id', 'identity_number',
+                    'status', 'photo_name', 'is_student', 'is_staff', 'is_guardian'
+                );
+            }]);
             if ($dateFrom && $dateTo) {
                 $userListingRecord = $userListingRecord->whereBetween('datetime', [
                     $dateFrom->format('Y-m-d H:i:s'),
