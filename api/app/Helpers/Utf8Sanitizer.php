@@ -18,7 +18,20 @@ class Utf8Sanitizer
         }
 
         if (is_string($data)) {
-            return mb_convert_encoding($data, 'UTF-8', 'UTF-8');
+            if (mb_check_encoding($data, 'UTF-8')) {
+                return $data;
+            }
+
+            // Not valid UTF-8 -- most likely a legacy Latin-1/Windows-1252 value
+            // (common for text written before a column's charset was fixed, or by
+            // non-UTF-8-aware clients). Re-encoding from that assumption recovers
+            // the real characters; a straight UTF-8 -> UTF-8 convert would instead
+            // replace each invalid byte with a literal '?', destroying the value.
+            $recovered = @mb_convert_encoding($data, 'UTF-8', 'Windows-1252');
+
+            return $recovered !== false && mb_check_encoding($recovered, 'UTF-8')
+                ? $recovered
+                : mb_convert_encoding($data, 'UTF-8', 'UTF-8');
         }
 
         return $data;
