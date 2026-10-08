@@ -1,3 +1,6 @@
+### 5.21.2 - 2026-10-08
+- Bug Fixed: Insitutions > Scanned (API) :  https://demo.axaemis.ai/core/api/v4/scanned shows 500 Server 
+
 ### 5.21.1 - 2026-10-05
 - Bug Fixed: Institutions > Students > Transfer Pending Out : System sets "1 January 2026" as the default Start date in New institution
 - Bug Fixed: Core>Reports>Student>Counselling Report: User sees Error status when trying to generate report.
