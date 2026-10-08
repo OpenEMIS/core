@@ -503,6 +503,27 @@ class ReportListBehavior extends Behavior {
 			$reportEndDate = date("Ymd", strtotime($reportData['report_end_date']));
 			$name = mb_substr($alias . ': ' . $featureList[$feature] . ' - ' . $academicPeriodData->name . ' - ' . $institutionLabel . ' - ' . $gradeName . ' - ' . $reportStartDate . ' - ' . $reportEndDate, 0, 200);
 		}
+		//POCOR-9840: short name for the same reason as POCOR-9831
+		if ($feature == 'Report.InstitutionScanned') {
+			$reportData = $data[$alias];
+			$institutionIds = [];
+			if (is_array($reportData['institution_id'] ?? null) && isset($reportData['institution_id']['_ids'])) {
+				$institutionIds = array_values(array_filter((array)$reportData['institution_id']['_ids'], function ($id) {
+					return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+				}));
+			}
+			if (count($institutionIds) == 1) {
+				$institutionLabel = $Institutions->get($institutionIds[0])->code;
+			} elseif (count($institutionIds) > 1) {
+				$institutionLabel = count($institutionIds) . ' ' . __('Institutions');
+			} else {
+				$institutionLabel = __('All Institutions');
+			}
+			$reportStartDate = date("Ymd", strtotime($reportData['report_start_date']));
+			$reportEndDate = date("Ymd", strtotime($reportData['report_end_date']));
+			$periodLabel = !empty($reportData['academic_period_id']) ? $AcademicPeriod->get($reportData['academic_period_id'])->name . ' - ' : '';
+			$name = mb_substr($alias . ': ' . $featureList[$feature] . ' - ' . $periodLabel . $institutionLabel . ' - ' . $reportStartDate . ' - ' . $reportEndDate, 0, 200);
+		}
 
 		$params = $data[$alias];
 

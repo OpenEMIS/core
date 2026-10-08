@@ -198,15 +198,12 @@ class ScannedRepository extends Controller
             if (!empty($params['openemis_no'])) {
                 $query->where('openemis_no', $params['openemis_no']);
             }
-            
-            $scanUser = $query->get();
-            
-            if ($scanUser->isEmpty()) {
-                return $this->sendErrorResponse('No scanned data found.');
-            }
-            
-            return $scanUser;
-            
+            // POCOR-9840: export for  the Scanned page lists 
+            $this->applyListingFilters($query, $params);
+
+            // POCOR-9840: an empty result is still exported (headings only), not an error
+            return $query->orderBy('datetime')->get();
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to export Scanned User Data',
@@ -224,23 +221,8 @@ class ScannedRepository extends Controller
     {
         try {
             $params = $request->all();
-            $dateTo = !empty($params['date_to']) ? Carbon::parse($params['date_to'])->endOfDay() : null;
-            $dateFrom = !empty($params['date_from']) ? Carbon::parse($params['date_from'])->startOfDay() : null;
-
-            if ($dateFrom && $dateTo && $dateFrom->gt($dateTo)) {
-                [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
-            }
             $userListingRecord = ScannedAttendance::with('securityUser');
-            if ($dateFrom && $dateTo) {
-                $userListingRecord = $userListingRecord->whereBetween('datetime', [
-                    $dateFrom->format('Y-m-d H:i:s'),
-                    $dateTo->format('Y-m-d H:i:s')
-                ]);
-            } elseif ($dateFrom) {
-                $userListingRecord = $userListingRecord->whereDate('datetime', '>=', $dateFrom->format('Y-m-d'));
-            } elseif ($dateTo) {
-                $userListingRecord = $userListingRecord->whereDate('datetime', '<=', $dateTo->format('Y-m-d'));
-            }
+            $this->applyListingFilters($userListingRecord, $params);
 
             if (isset($params['order'])) {
                 $orderBy = $params['order_by'] ?? 'ASC';
@@ -268,6 +250,60 @@ class ScannedRepository extends Controller
             ]);
             return $this->sendErrorResponse('Failed to retrieve scanned list');
         }
+    }
+
+    /**
+     * POCOR-9840
+     * Filters shared by the Scanned listing and its export:
+     * - date_from / date_to: scan date range 
+     *   student of that institution on the scan date
+     */
+    private function applyListingFilters($query, array $params)
+    {
+        $dateTo = !empty($params['date_to']) ? Carbon::parse($params['date_to'])->endOfDay() : null;
+        $dateFrom = !empty($params['date_from']) ? Carbon::parse($params['date_from'])->startOfDay() : null;
+
+        if ($dateFrom && $dateTo && $dateFrom->gt($dateTo)) {
+            [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+        }
+        if ($dateFrom && $dateTo) {
+            $query->whereBetween('datetime', [
+                $dateFrom->format('Y-m-d H:i:s'),
+                $dateTo->format('Y-m-d H:i:s')
+            ]);
+        } elseif ($dateFrom) {
+            $query->whereDate('datetime', '>=', $dateFrom->format('Y-m-d'));
+        } elseif ($dateTo) {
+            $query->whereDate('datetime', '<=', $dateTo->format('Y-m-d'));
+        }
+
+        if (!empty($params['institution_id']) && is_numeric($params['institution_id'])) {
+            $institutionId = (int) $params['institution_id'];
+            $query->whereExists(function ($users) use ($institutionId) {
+                $users->select(DB::raw(1))
+                    ->from('security_users')
+                    ->whereColumn('security_users.openemis_no', 'institution_scanned.openemis_no')
+                    ->where(function ($enrolment) use ($institutionId) {
+                        $enrolment->whereExists(function ($students) use ($institutionId) {
+                            $students->select(DB::raw(1))
+                                ->from('institution_students')
+                                ->whereColumn('institution_students.student_id', 'security_users.id')
+                                ->where('institution_students.institution_id', $institutionId)
+                                ->whereRaw('institution_students.start_date <= DATE(institution_scanned.datetime)')
+                                ->whereRaw('institution_students.end_date >= DATE(institution_scanned.datetime)');
+                        })->orWhereExists(function ($staff) use ($institutionId) {
+                            $staff->select(DB::raw(1))
+                                ->from('institution_staff')
+                                ->whereColumn('institution_staff.staff_id', 'security_users.id')
+                                ->where('institution_staff.institution_id', $institutionId)
+                                ->whereRaw('institution_staff.start_date <= DATE(institution_scanned.datetime)')
+                                ->whereRaw('(institution_staff.end_date IS NULL OR institution_staff.end_date >= DATE(institution_scanned.datetime))');
+                        });
+                    });
+            });
+        }
+
+        return $query;
     }
 
     public function scanUserDetails($scannedId)
