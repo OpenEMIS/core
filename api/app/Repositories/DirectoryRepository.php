@@ -1138,7 +1138,44 @@ class DirectoryRepository extends Controller
         $dateOfBirth = $params['date_of_birth'] ?? null;
         $identityTypeId = $params['identity_type_id'] ?? null;
         $nationalityId = $params['nationality_id'] ?? null;
+        $genderId = $params['gender_id'] ?? null;
 
+        if (!empty($identityNumber)) {
+            $users = $this->runInternalSearchQuery(
+                $openemisNo, $identityNumber, $dateOfBirth, $identityTypeId, $nationalityId, $genderId,
+                /* viaUserIdentities */ false
+            );
+
+            if (empty($users)) {
+                $users = $this->runInternalSearchQuery(
+                    $openemisNo, $identityNumber, $dateOfBirth, $identityTypeId, $nationalityId, $genderId,
+                    /* viaUserIdentities */ true
+                );
+            }
+        } else {
+            $users = $this->runInternalSearchQuery(
+                $openemisNo, $identityNumber, $dateOfBirth, $identityTypeId, $nationalityId, $genderId,
+                /* viaUserIdentities */ true
+            );
+        }
+
+        $result = [];
+        foreach ($users as $user) {
+            $result[] = $this->buildInternalSearchResult((array)$user);
+        }
+
+        return ['data' => $result, 'total' => count($result)];
+    }
+
+    private function runInternalSearchQuery(
+        $openemisNo,
+        $identityNumber,
+        $dateOfBirth,
+        $identityTypeId,
+        $nationalityId,
+        $genderId,
+        bool $viaUserIdentities
+    ): array {
         $query = DB::table('security_users')
             ->leftJoin('genders', 'genders.id', '=', 'security_users.gender_id')
             ->leftJoin('user_nationalities', 'user_nationalities.security_user_id', '=', 'security_users.id')
@@ -1149,11 +1186,12 @@ class DirectoryRepository extends Controller
             ->leftJoin('area_administratives as address_areas', 'address_areas.id', '=', 'security_users.address_area_id')
             ->leftJoin('area_administratives as birth_areas', 'birth_areas.id', '=', 'security_users.birthplace_area_id')
             ->where('security_users.super_admin', '<>', 1);
+
         if (!empty($openemisNo)) {
             $query->where('security_users.openemis_no', $openemisNo);
         }
 
-        if (!empty($identityNumber)) {
+        if (!empty($identityNumber) && $viaUserIdentities) {
             $query->join('user_identities', function ($join) use ($identityNumber, $identityTypeId, $nationalityId) {
                 $join->on('user_identities.security_user_id', '=', 'security_users.id')
                     ->where('user_identities.number', '=', $identityNumber);
@@ -1168,16 +1206,29 @@ class DirectoryRepository extends Controller
                 }
             });
         } else {
-            // OpenEMIS ID  return the user's identity details
+            if (!empty($identityNumber)) {
+                $query->where('security_users.identity_number', $identityNumber);
+                if (!empty($identityTypeId)) {
+                    $query->where('security_users.identity_type_id', $identityTypeId);
+                }
+                if (!empty($nationalityId)) {
+                    $query->where('security_users.nationality_id', $nationalityId);
+                }
+            }
             $query->leftJoin('user_identities', 'user_identities.security_user_id', '=', 'security_users.id');
         }
         $query->leftJoin('identity_types', 'identity_types.id', '=', 'user_identities.identity_type_id');
+        $query->leftJoin('identity_types as primary_identity_types', 'primary_identity_types.id', '=', 'security_users.identity_type_id');
 
         if (!empty($dateOfBirth)) {
             $query->where('security_users.date_of_birth', date('Y-m-d', strtotime($dateOfBirth)));
         }
 
-        $users = $query->select([
+        if (!empty($genderId)) {
+            $query->where('security_users.gender_id', $genderId);
+        }
+
+        return $query->select([
                 'security_users.id', 'security_users.username', 'security_users.openemis_no',
                 'security_users.first_name', 'security_users.middle_name', 'security_users.third_name',
                 'security_users.last_name', 'security_users.email', 'security_users.mobile_number',
@@ -1186,9 +1237,9 @@ class DirectoryRepository extends Controller
                 'security_users.gender_id', 'security_users.date_of_birth', 'security_users.nationality_id',
                 'security_users.is_student', 'security_users.is_staff', 'security_users.is_guardian',
                 'genders.name as gender_name',
-                'identity_types.id as main_identity_type_id',
-                'identity_types.name as main_identity_type_name',
-                'user_identities.number as main_identity_number',
+                DB::raw('COALESCE(identity_types.id, primary_identity_types.id) as main_identity_type_id'),
+                DB::raw('COALESCE(identity_types.name, primary_identity_types.name) as main_identity_type_name'),
+                DB::raw('COALESCE(user_identities.number, security_users.identity_number) as main_identity_number'),
                 'nationalities.id as main_nationality_id',
                 'nationalities.name as main_nationality_name',
                 'address_areas.name as area_name',
@@ -1199,13 +1250,6 @@ class DirectoryRepository extends Controller
             ->groupBy('security_users.id')
             ->get()
             ->all();
-
-        $result = [];
-        foreach ($users as $user) {
-            $result[] = $this->buildInternalSearchResult((array)$user);
-        }
-
-        return ['data' => $result, 'total' => count($result)];
     }
 
     private function buildInternalSearchResult(array $user): array
