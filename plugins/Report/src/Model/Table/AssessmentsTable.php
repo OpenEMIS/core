@@ -448,6 +448,7 @@ class AssessmentsTable extends AppTable
                             'subject_weight' => 'AssessmentItems.weight',
                         ])
                         ->enableHydration(false)
+                        ->all()
                         ->toArray();
             }
         } else {
@@ -653,6 +654,7 @@ class AssessmentsTable extends AppTable
         ];
       
         $results = $SubjectStudents->find('StudentResults', $options)
+            ->all()
             ->toArray();
         $student_results = [];
         $student_results = [];
