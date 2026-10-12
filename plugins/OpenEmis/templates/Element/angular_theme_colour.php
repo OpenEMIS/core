@@ -41,4 +41,9 @@ app-root .kdx-datepicker .btn-input:hover {
     border-color: #<?= h($secondaryColour) ?> !important;
     color: #FFF !important;
 }
+/* POCOR-9855* header icon alignment /
+.header-navigation .btn-group {
+    flex-direction: row;
+    align-items: stretch;
+}
 </style>
