@@ -1330,21 +1330,23 @@ class AssessmentItemResultsTable extends AppTable
 
         $results = $query->toArray(); //Now we fetch results
 
-        // Step 2: Preload marks per class
-        $marksPerClass = [];
+        // Step 2: Preload marks once per assessment
+        // POCOR-9852
+        $marksPerStudent = [];
+        $markAssessmentIds = !empty($assessmentIds) ? array_unique($assessmentIds) : [-1];
 
-        foreach ($classIds as $classId) {
+        foreach ($markAssessmentIds as $markAssessmentId) {
             $marks = self::getMarksForClass([
                 "academic_period_id" => $academicPeriodId,
-                "class_id" => $classId
+                "assessment_id" => $markAssessmentId
             ]);
             if (!is_array($marks)) {
                 $marks = [];
             }
 
-            $marksWithSimpleMarks = self::getMarksWithSimpleMarks($marks);
-            $marksPerStudent = self::getMarksPerStudentPerSubjectArray($marksWithSimpleMarks);
-            $marksPerClass[$classId] = $marksPerStudent;
+            foreach (self::getMarksWithSimpleMarks($marks) as $record) {
+                $marksPerStudent[$record['student_id']][$record['education_subject_id']][$record['assessment_period_id']][] = $record;
+            }
         }
 
         // Step 3: Process result rows
@@ -1360,7 +1362,7 @@ class AssessmentItemResultsTable extends AppTable
                 continue; // Skip if classId is not present
             }
 
-            $marks = $marksPerClass[$classId][$studentId][$subjectId][$assessmentPeriodId] ?? [];
+            $marks = $marksPerStudent[$studentId][$subjectId][$assessmentPeriodId] ?? [];
 
             $totalMarks = array_sum(array_column($marks, 'simple_mark'));
             $result['marks'] = round($totalMarks, 2);
