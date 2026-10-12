@@ -34,6 +34,7 @@ class CurricularsTable extends AppTable
             'autoFields' => false
         ]);
         $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity'); //POCOR-9823 restrict export to the user's accessible institutions
     }
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)

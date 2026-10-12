@@ -17,6 +17,7 @@ use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use Survey\Model\Table\SurveyFormsTable as SurveyForms;
+use Cake\I18n\FrozenDate;
 
 class InstitutionSurveysTable extends ControllerActionTable
 {
@@ -1308,6 +1309,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $Statuses = $this->Statuses;
         $doneStatus = WorkflowSteps::DONE;
         $roles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $SurveyStatuses = TableRegistry::getTableLocator()->get('Survey.SurveyStatuses');
         $userRole = $roles->find()
             ->select([$roles->aliasField('security_role_id')])
             ->where([$roles->aliasField('security_user_id')  => $userId])->first();
@@ -1315,15 +1317,23 @@ class InstitutionSurveysTable extends ControllerActionTable
         $workflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
         // $this->copyBuildSurveyRecords($controller);//POCOR-7412
         // POCOR-8496: superAdmin can see all
-        $isSuperAdmin = $session->read('Auth.User.super_admin');;
+        $isSuperAdmin = $session->read('Auth.User.super_admin');
+        
+        $today = FrozenDate::now()->format('Y-m-d');
+        $endDateCondition = [
+            $SurveyStatuses->aliasField('date_disabled >=') => $today
+        ];
+
         if (isset($roleId)) {
             $where = [
                 $this->aliasField('assignee_id') => $userId,
-                // $workflowStepsRoles->aliasField('security_role_id') => $roleId,
-            ]; //POCOR-9824
+                'Assignees.super_admin IS NOT' => 1,
+                $endDateCondition
+            ];
         }
         if ($isSuperAdmin) {
-            $where = [];
+            // $where = [];
+            $where = $endDateCondition;
         }
         //POCOR-9429: This check is added to restrict users which don't have any roles assigned.
         if (!isset($roleId) && !$isSuperAdmin) {
@@ -1365,6 +1375,17 @@ class InstitutionSurveysTable extends ControllerActionTable
                     $workflowStepsRoles->aliasField('workflow_step_id = ') . $this->aliasField('status_id')
                 ]
             )
+            ->innerJoin(
+                [$SurveyStatuses->getAlias() => $SurveyStatuses->getTable()],
+                [
+                    $SurveyStatuses->aliasField('survey_form_id = ')
+                        . $this->aliasField('survey_form_id'),
+
+                    $SurveyStatuses->aliasField('date_enabled <=') => $today,
+                    $SurveyStatuses->aliasField('date_disabled >=') => $today
+                ]
+            )
+            ->group($this->aliasField('id'))
             ->where($where)
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
