@@ -25,13 +25,25 @@ class POCOR9855 extends AbstractMigration
         }
 
         $row = $this->fetchRow("
-            SELECT MAX(`order`) AS max_order, MAX(`parent_id`) AS parent_id
+            SELECT MAX(`order`) AS max_order
             FROM `security_functions`
             WHERE `module` = 'Institutions'
               AND `category` = 'General'
             ");
         $order = ((int)($row['max_order'] ?? 0)) + 1;
-        $parentId = $row['parent_id'] ?? null;
+
+        // Use the same parent as the Attachments
+        $rowParent = $this->fetchRow("
+            SELECT `parent_id` FROM `security_functions`
+            WHERE `module` = 'Institutions'
+              AND `controller` = 'Institutions'
+              AND `category` = 'General'
+              AND `name` = 'Attachments'
+              LIMIT 1
+            ");
+        
+        $parentId = $rowParent['parent_id'];
+        
         $record = [
             [
                 'name' => 'Scanned', 'controller' => 'Institutions', 'module' => 'Institutions', 'category' => 'General', 'parent_id' => $parentId, '_view' => 'Scanned.index|Scanned.view', '_edit' => NULL, '_add' => NULL, '_delete' => NULL, '_execute' => NULL, 'order' => $order, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
