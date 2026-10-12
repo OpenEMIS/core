@@ -40,7 +40,8 @@ class ReportsController extends AppController
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
             'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']],
             'Meals' => ['className' => 'Report.Meals', 'actions' => ['index', 'add']],//POCOR-9267 
-            'InstitutionInfrastructures' => ['className' => 'Report.InstitutionInfrastructures', 'actions' => ['index', 'add']]//POCOR-9562 
+            'InstitutionInfrastructures' => ['className' => 'Report.InstitutionInfrastructures', 'actions' => ['index', 'add']],//POCOR-9562 
+            'Education' => ['className' => 'Report.Education', 'actions' => ['index', 'add']]//POCOR-9835
         ];
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
@@ -339,6 +340,11 @@ class ReportsController extends AppController
             ];
                 
         }
+        elseif ($module == 'Education') {//POCOR-9835 Starts
+            $options = [
+                'Report.EducationStructureSystems' => __('Systems'),
+            ];
+        }//POCOR-9835 Ends
         return $options;
     }
     //POCOR-9563[END]
