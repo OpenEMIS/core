@@ -2435,11 +2435,15 @@ class StudentsTable extends ControllerActionTable
         $academicPeriod = $this->request->getQueryParams()['academic_period_id'];
         $institutionId = $this->getInstitutionID();
         $connection = ConnectionManager::get('default');
+        // POCOR-9845: exclude inactive (status=0) users, matching the Students listing
+        // and the other dashboard student-count charts - client-confirmed dashboards
+        // should agree with the listing, not the other way around.
         $sql = "SELECT FLOOR(DATEDIFF(CURRENT_DATE, u.date_of_birth) / 365.25) AS age,
                     COUNT(DISTINCT s.student_id) AS student_count
                     FROM security_users u
                     INNER JOIN  institution_students s ON s.student_id = u.id
                     WHERE  s.institution_id = " . $institutionId . " AND academic_period_id = " . $academicPeriod . "
+                    AND u.status = 1
                     GROUP BY  age ORDER BY age";
 
         $ageCounts = $connection->execute($sql)->fetchAll('assoc');
@@ -2524,7 +2528,15 @@ class StudentsTable extends ControllerActionTable
                 }
 
                 foreach ($genderOptions as $genderId => $genderName) {
-                    $queryCondition = array_merge(['Genders.id' => $genderId, 'AcademicPeriods.id' => $periodId], $_conditions);
+                    // POCOR-9845: exclude inactive (status=0) users, matching the same
+                    // filter indexBeforeQuery() already applies to the Students listing
+                    // (added under POCOR-9410) - client-confirmed these dashboard counts
+                    // should agree with the listing, not the other way around.
+                    $queryCondition = array_merge([
+                        'Genders.id' => $genderId,
+                        'AcademicPeriods.id' => $periodId,
+                        $this->Users->aliasField('status') => 1
+                    ], $_conditions);
 
                     $studentsByYear = $this
                         ->find('list', [
@@ -2579,7 +2591,11 @@ class StudentsTable extends ControllerActionTable
         $studentsByGradeConditions = [
             $this->aliasField('academic_period_id') => $currentYearId,
             $this->aliasField('education_grade_id') . ' IS NOT NULL',
-            'Genders.name IS NOT NULL'
+            'Genders.name IS NOT NULL',
+            // POCOR-9845: exclude inactive (status=0) users, matching the Students
+            // listing and getNumberOfStudentsByYear() - client-confirmed dashboards
+            // should agree with the listing, not the other way around.
+            $this->Users->aliasField('status') => 1
         ];
         $studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
         $query = $this->find();
@@ -2672,7 +2688,11 @@ class StudentsTable extends ControllerActionTable
         $studentsByGradeConditions = [
             $this->aliasField('academic_period_id') => $currentYearId,
             $this->aliasField('education_grade_id') . ' IS NOT NULL',
-            'Genders.name IS NOT NULL'
+            'Genders.name IS NOT NULL',
+            // POCOR-9845: exclude inactive (status=0) users, matching the Students
+            // listing and getNumberOfStudentsByYear() - client-confirmed dashboards
+            // should agree with the listing, not the other way around.
+            $this->Users->aliasField('status') => 1
         ];
         $studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
         $query = $this->find();
