@@ -55,17 +55,22 @@ class EnrollmentOutliersTable extends AppTable  {
 		$academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 		$institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 		$this->ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-		$main_query  = "(SELECT academic_periods.name academic_period_name 	
-				        ,institutions.code institution_code			
-				        ,institutions.name institution_name			
+		// POCOR-9845: exclude inactive (status=0) users, matching the Students
+		// listing and the dashboard student-count charts.
+		$main_query  = "(SELECT academic_periods.name academic_period_name
+				        ,institutions.code institution_code
+				        ,institutions.name institution_name
 				        ,COUNT(DISTINCT(institution_students.student_id)) count_students
 				    FROM institution_students
 				    INNER JOIN academic_periods
 				    ON academic_periods.id = institution_students.academic_period_id
 				    INNER JOIN institutions
 				    ON institutions.id = institution_students.institution_id
+				    INNER JOIN security_users
+				    ON security_users.id = institution_students.student_id
 				    WHERE academic_periods.id = $academicPeriodId
 				    AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8))
+				    AND security_users.status = 1
 				    GROUP BY institutions.id)";
 		$subquery = $this->ConfigItems
 		->find()

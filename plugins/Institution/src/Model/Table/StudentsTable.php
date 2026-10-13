@@ -2432,12 +2432,14 @@ class StudentsTable extends ControllerActionTable
     // Function use by the mini dashboard (For Institution Students)(POCOR-8721 start - for query optimization)
     public function getNumberOfStudentsByAge($params = [])
     {
-        $academicPeriod = $this->request->getQueryParams()['academic_period_id'];
-        $institutionId = $this->getInstitutionID();
+        $academicPeriod = (int)$this->request->getQueryParams()['academic_period_id'];
+        $institutionId = (int)$this->getInstitutionID();
         $connection = ConnectionManager::get('default');
         // POCOR-9845: exclude inactive (status=0) users, matching the Students listing
         // and the other dashboard student-count charts - client-confirmed dashboards
         // should agree with the listing, not the other way around.
+        // Cast to int: both values come from the query string (not purely
+        // server-derived), and this SQL concatenates them directly.
         $sql = "SELECT FLOOR(DATEDIFF(CURRENT_DATE, u.date_of_birth) / 365.25) AS age,
                     COUNT(DISTINCT s.student_id) AS student_count
                     FROM security_users u
