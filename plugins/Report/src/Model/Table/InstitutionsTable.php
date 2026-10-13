@@ -1212,7 +1212,7 @@ class InstitutionsTable extends AppTable
                 'Report.InstitutionInfrastructureSummaryReport',
                 'Report.StudentBehaviours', //POCOR-7517
                 'Report.TeacherClasses', //POCOR-9064
-                'Report.StudentAttendanceWeeklyReport', //POCOR-9831
+                'Report.StudentAttendanceReport', //POCOR-9831
                 'Report.StudentAttendances', //POCOR-9813
             ]))) {
                 $Areas = self::getDynamicTableInstance('Area.AreaLevels');
@@ -1867,9 +1867,8 @@ class InstitutionsTable extends AppTable
                         }
                         /*POCOR-6304 Ends*/
                     }
-                    if(!$superAdmin){
-                        $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
-                    }
+                    //POCOR-9823 "All Institutions" 
+                    //already scoped via find('byAccess'), and every export applies the same access check.
                     if(in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport', 'Report.StudentAttendanceReport', 'Report.StudentAttendances'])) { //POCOR-8417 //POCOR-9831
                         $attr['attr']['multiple'] = true;
                         unset($institutionOptions['']);
@@ -2819,7 +2818,7 @@ class InstitutionsTable extends AppTable
     }
 
     /**
-     * POCOR-9831: Institution Class filter for Student Attendance Weekly Report.
+     * POCOR-9831: Institution Class filter for Student Attendance Report.
      * Optional - "All Classes" (0) is the default. Specific classes are listed only when
      * exactly one institution is selected, narrowed by the selected Education Grade.
      */

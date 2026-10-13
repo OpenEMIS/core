@@ -1,5 +1,5 @@
 <?php
-//POCOR-9831: Student Attendance Weekly Report - moved from Institutions > Statistics > Standard (POCOR-9611)
+//POCOR-9831: Student Attendance Report - moved from Institutions > Statistics > Standard (POCOR-9611)
 namespace Report\Model\Table;
 
 use ArrayObject;
@@ -13,7 +13,7 @@ use Cake\Datasource\ConnectionManager;
 use App\Model\Table\AppTable;
 
 /**
- * Student Attendance Weekly Report (Reports > Institutions).
+ * Student Attendance Report (Reports > Institutions).
  *
  * One Excel row per student x attendance slot (period or subject) of the student's class,
  * one column per working day between Start Date and End Date, plus per-row totals.
