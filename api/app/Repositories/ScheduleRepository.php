@@ -206,19 +206,6 @@ class ScheduleRepository extends Controller
         }
     }
 
-    public function checkSubjectExistSameTimeslot($data)
-    {
-        $query = InstitutionScheduleLessonDetails::join('institution_schedule_lesson_rooms', 'institution_schedule_lesson_details.id',   '=', 'institution_schedule_lesson_rooms.institution_schedule_lesson_detail_id')
-            ->where('institution_schedule_lesson_details.day_of_week', '=', $data['day_of_week'])
-            ->where('institution_schedule_lesson_details.institution_schedule_timeslot_id', '=', $data['institution_schedule_timeslot_id'])
-            ->where('institution_schedule_lesson_details.institution_schedule_timetable_id', '=', $data['institution_schedule_timetable_id'])
-            ->where('institution_schedule_lesson_details.lesson_type', '=', $data['lesson_type'])
-            ->where('institution_schedule_lesson_rooms.institution_room_id', '=', $data['schedule_lesson_room']['institution_room_id'])
-            ->first();
-
-            return $query;
-    }
-
     //POCOR-9858: start - room clash check across timetables
     /**
      * Returns an error message when the room is already used at an overlapping time on the same

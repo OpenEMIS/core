@@ -754,7 +754,10 @@ export class StudentTimetableComponent implements OnInit {
             // this.dialogRef.close(this.addNewLesson[index]);
             console.log(this.addNewLesson[index], "this.addNewLesson[index]");
 
-            this.timetableData[this.indexOfRow].data[this.indexOfDay].subject.push(this.addNewLesson[index]);
+            //POCOR-9858: keep a reference so the lesson can be taken off the grid if the save fails
+            const pendingCell = this.timetableData[this.indexOfRow].data[this.indexOfDay];
+            const pendingLesson = this.addNewLesson[index];
+            pendingCell.subject.push(pendingLesson);
             let obj = {};
             if (this.addNewLesson[index].type == "curriculum") {
                 obj = {
@@ -800,12 +803,26 @@ export class StudentTimetableComponent implements OnInit {
                     }
                 },
                 error: (error: any) => {
+                    //POCOR-9858: the save failed - take the lesson pushed above off the grid
+                    // (getTimeTableLesson() alone does not clear a cell that has no saved lessons)
+                    const pendingIndex = pendingCell.subject.indexOf(pendingLesson);
+                    if (pendingIndex > -1) {
+                        pendingCell.subject.splice(pendingIndex, 1);
+                    }
                     if (error) {
-                        if (error.message == "Token Expired") {
+                        //POCOR-9858: ApiService.handleError reports every 401 (expired or invalid token) as
+                        // 'Token has expired' - drop the stale token and log in again
+                        if (error.message == "Token has expired" || error.message == "Token Expired") {
                             localStorage.removeItem("loginToken");
+                            this.loginData();
+                            this._kdAlertEvent.error({
+                                title: 'Your session was refreshed. Please add the lesson again.',
+                                showCloseButton: true,
+                                tapToDismiss: true,
+                            });
+                            return;
                         }
                         //POCOR-9858: show why the lesson was not saved (e.g. room already used by another timetable)
-                        // and reload the grid so the lesson pushed above does not stay on screen
                         let toasterConfig: any = {
                             title: error?.description || 'Lesson could not be added.',
                             showCloseButton: true,
