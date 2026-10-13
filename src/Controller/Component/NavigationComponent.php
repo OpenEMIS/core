@@ -2667,6 +2667,11 @@ class NavigationComponent extends Component
             //     'parent' => 'Reports',
             //     'params' => ['plugin' => 'Report'],
             // ],
+            'Reports.Education' => [//POCOR-9835: first item under Reports, above Institutions
+                'title' => 'Education',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
             'Reports.Institutions' => [
                 'title' => 'Institutions',
                 'parent' => 'Reports',
@@ -2701,11 +2706,6 @@ class NavigationComponent extends Component
             ],
             'Reports.InstitutionInfrastructures' => [
                 'title' => 'Infrastructure',
-                'parent' => 'Reports',
-                'params' => ['plugin' => 'Report'],
-            ],
-            'Reports.Education' => [//POCOR-9835
-                'title' => 'Education',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],

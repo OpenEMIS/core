@@ -7,6 +7,7 @@ use App\Model\Table\AppTable;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 
 /**
  * Reports > Education module page.
@@ -24,6 +25,15 @@ class EducationTable extends AppTable
 
         $this->addBehavior('Excel', ['pages' => false]);
         $this->addBehavior('Report.ReportList');
+    }
+
+    //POCOR-9835: academic_period_id has a default, so the automatic "required" rule is not added - require it here
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->notEmptyString('feature')
+            ->notEmptyString('academic_period_id');
     }
 
     public function beforeAction(EventInterface $event)
