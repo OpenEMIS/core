@@ -643,6 +643,9 @@ class ScheduleTimetablesTable extends ControllerActionTable
                 '0' => 'view',
                 '1' => $encodedQueryString
             ];
+            //POCOR-9858: without stopPropagation AddBehavior carries on after this handler and the
+            // request ends on the default redirect to the index (Timetable list) instead of this URL
+            $event->stopPropagation();
             return $this->controller->redirect($timetableEditUrl);
         } else {
             $this->controller->Alert->error('general.add.failed');
