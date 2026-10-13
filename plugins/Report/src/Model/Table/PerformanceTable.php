@@ -880,8 +880,9 @@ class PerformanceTable extends AppTable
             $academicPeriodId = $request->getData($this->getAlias())['academic_period_id'] ?? $AcademicPeriods->getCurrent();
             if ($gradeId > 0) {
                 $condition[$this->Assessments->aliasField('education_grade_id')] = $gradeId;
-            } else {
-                // POCOR-9852: "All Grades" only lists periods of the selected programme's grades
+            } elseif ($this->request->getData()['Performance']['feature'] == 'Report.Assessments') {
+                // POCOR-9852: for the Assessment report, "All Grades" only lists periods of the
+                // selected programme's grades. Assessment Missing Mark Entry keeps its old list
                 $programmeId = $request->getData($this->getAlias())['education_programme_id'] ?? null;
                 if (!empty($programmeId)) {
                     $programmeGradeIds = $this->EducationGrades->find()
