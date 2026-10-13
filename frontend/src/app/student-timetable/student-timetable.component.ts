@@ -185,6 +185,7 @@ export class StudentTimetableComponent implements OnInit {
     institution_name: any = '';
     timetable_name: string = '';
     institution_class_name: string = ''; //POCOR-9858: header showed hard-coded "Primary 1-A"
+    reloginDone: boolean = false; //POCOR-9858: re-login at most once per page load on a 401
 
     constructor(
         public dialog: MatDialog,
@@ -247,14 +248,25 @@ export class StudentTimetableComponent implements OnInit {
                 applyThemeFromResponse(response, this.themeArray.btnGroup[0].dropdownContent);
             },
             error: (error: any) => {
-                if (error) {
-                    if (error.error == "Token Expired") {
-                        localStorage.removeItem("loginToken");
-                        this.loginData();
-                    }
+                //POCOR-9858: the API returns 401 {error:"Token Expired"} or {error:"Token Invalid"} (e.g. a token
+                // left in localStorage by another deployment on the same domain) and ApiService turns both into
+                // message "Token has expired". Only "Token Expired" was handled, so an invalid token was never
+                // replaced and the login endpoint was never called.
+                if (this.isTokenError(error) && !this.reloginDone) {
+                    this.reloginDone = true; // re-login once per page load to avoid a loop if login keeps failing
+                    localStorage.removeItem("loginToken");
+                    this.loginData();
                 }
             }
         })
+    }
+
+    //POCOR-9858: true for any authentication failure reported by the API
+    isTokenError(error: any): boolean {
+        return error?.message == "Token has expired"
+            || error?.message == "Token Expired"
+            || error?.error == "Token Expired"
+            || error?.error == "Token Invalid";
     }
 
     loginApi(userName: string, password: string) {
