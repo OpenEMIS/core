@@ -184,6 +184,7 @@ export class StudentTimetableComponent implements OnInit {
     schedule_term_id: any;
     institution_name: any = '';
     timetable_name: string = '';
+    institution_class_name: string = ''; //POCOR-9858: header showed hard-coded "Primary 1-A"
 
     constructor(
         public dialog: MatDialog,
@@ -337,6 +338,7 @@ export class StudentTimetableComponent implements OnInit {
                         this.timetable_name = response?.data?.name;
                         this.academic_period_id = response?.data?.academic_period_id;
                         this.institution_class_id = response?.data?.institution_class_id;
+                        this.institution_class_name = response?.data?.institution_class?.name; //POCOR-9858
                         this.schedule_term_id = response?.data?.institution_schedule_term_id;
                         this.timeSlotById();
                     }
@@ -802,6 +804,15 @@ export class StudentTimetableComponent implements OnInit {
                         if (error.message == "Token Expired") {
                             localStorage.removeItem("loginToken");
                         }
+                        //POCOR-9858: show why the lesson was not saved (e.g. room already used by another timetable)
+                        // and reload the grid so the lesson pushed above does not stay on screen
+                        let toasterConfig: any = {
+                            title: error?.description || 'Lesson could not be added.',
+                            showCloseButton: true,
+                            tapToDismiss: true,
+                        };
+                        this._kdAlertEvent.error(toasterConfig);
+                        this.getTimeTableLesson();
                     }
                 }
             })

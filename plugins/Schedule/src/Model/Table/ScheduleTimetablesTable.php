@@ -633,12 +633,14 @@ class ScheduleTimetablesTable extends ControllerActionTable
             $institutionId = $result->institution_id;
             $params['institution_id'] = $institutionId;
             $params['timetable_id'] = $timetableId;
+            $params['id'] = $timetableId; //POCOR-9858: ScheduleTimetable falls back to 'id' when timetable_id is missing
             $encodedQueryString = $this->paramsEncode($params);
+            //POCOR-9858: Start Scheduling opens the scheduling page of the new timetable (POCOR-9592 had sent it to the Overview list)
             $timetableEditUrl = [
                 'plugin' => $this->controller->getPlugin(),
                 'controller' => $this->controller->getName(),
-                'action' => 'ScheduleTimetableOverview', // POCOR-9592 intially ScheduleTimetable
-                '0' => 'index',                          // POCOR-9592 intially edit
+                'action' => 'ScheduleTimetable',
+                '0' => 'view',
                 '1' => $encodedQueryString
             ];
             return $this->controller->redirect($timetableEditUrl);

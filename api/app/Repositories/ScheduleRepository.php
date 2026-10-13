@@ -126,15 +126,19 @@ class ScheduleRepository extends Controller
         DB::beginTransaction();
         try {
             $lessonType = $data['lesson_type'];
+            //POCOR-9858: Room is optional - an empty selection means "no room", not a room id
+            $roomId = $data['schedule_lesson_room']['institution_room_id'] ?? null;
+            $hasRoom = !empty($roomId);
 
-            if ($lessonType == 1 && isset($data['schedule_lesson_room'])) {
-                $record = $this->checkSubjectExistSameTimeslot($data);
+            if ($hasRoom) {
+                //POCOR-9858: the room must be free at this day/time in every timetable, not only in this one
+                $conflict = $this->findRoomConflict($data, $roomId);
 
-                if ($record) {
-                    // room already exist for subject
+                if ($conflict) {
+                    DB::rollback();
                     return [
                         'status' => false,
-                        'msg' => 'Selected Room already occupied by another subject.'
+                        'msg' => $conflict
                     ];
                 }
             }
@@ -181,9 +185,9 @@ class ScheduleRepository extends Controller
                 InstitutionScheduleNonCurriculumLessons::insert($nonCurriculum);
             }
 
-            if (isset($data['schedule_lesson_room'])) {
+            if ($hasRoom) { //POCOR-9858: no room row when no room was selected (institution_room_id is NOT NULL)
                 $room = [
-                    "institution_room_id" => $data['schedule_lesson_room']['institution_room_id'],
+                    "institution_room_id" => $roomId,
                     'institution_schedule_lesson_detail_id' => $lessonId
                 ];
 
@@ -214,6 +218,118 @@ class ScheduleRepository extends Controller
 
             return $query;
     }
+
+    //POCOR-9858: start - room clash check across timetables
+    /**
+     * Returns an error message when the room is already used at an overlapping time on the same
+     * day by any timetable in the same academic period whose term overlaps this timetable's term.
+     * Times are compared (not timeslot ids) because each timetable can use a different interval.
+     */
+    public function findRoomConflict($data, $roomId)
+    {
+        $timetableId = $data['institution_schedule_timetable_id'];
+        $timetable = DB::table('institution_schedule_timetables as t')
+            ->leftJoin('institution_schedule_terms as term', 'term.id', '=', 't.institution_schedule_term_id')
+            ->where('t.id', $timetableId)
+            ->select('t.academic_period_id', 'term.start_date', 'term.end_date')
+            ->first();
+        if (!$timetable) {
+            return null;
+        }
+
+        $window = $this->getTimeslotWindow($data['institution_schedule_timeslot_id']);
+        if (!$window) {
+            return null;
+        }
+
+        $candidates = DB::table('institution_schedule_lesson_details as d')
+            ->join('institution_schedule_lesson_rooms as r', 'r.institution_schedule_lesson_detail_id', '=', 'd.id')
+            ->join('institution_schedule_timetables as t', 't.id', '=', 'd.institution_schedule_timetable_id')
+            ->leftJoin('institution_schedule_terms as term', 'term.id', '=', 't.institution_schedule_term_id')
+            ->leftJoin('institution_classes as c', 'c.id', '=', 't.institution_class_id')
+            ->where('r.institution_room_id', $roomId)
+            ->where('d.day_of_week', $data['day_of_week'])
+            ->where('t.academic_period_id', $timetable->academic_period_id)
+            ->select(
+                'd.institution_schedule_timeslot_id',
+                't.id as timetable_id',
+                't.name as timetable_name',
+                'c.name as class_name',
+                'term.start_date',
+                'term.end_date'
+            )
+            ->get();
+
+        foreach ($candidates as $candidate) {
+            if (!$this->datesOverlap($timetable->start_date, $timetable->end_date, $candidate->start_date, $candidate->end_date)) {
+                continue;
+            }
+            $otherWindow = $this->getTimeslotWindow($candidate->institution_schedule_timeslot_id);
+            if (!$otherWindow) {
+                continue;
+            }
+            if ($window['start'] < $otherWindow['end'] && $otherWindow['start'] < $window['end']) {
+                if ($candidate->timetable_id == $timetableId) {
+                    return __('Selected Room already occupied by another subject.');
+                }
+                return __('Selected Room is already used at this time by timetable') . ' "' . $candidate->timetable_name . '"'
+                    . (!empty($candidate->class_name) ? ' (' . __('Class') . ': ' . $candidate->class_name . ')' : '') . '.';
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Start/end time (H:i:s) of a timeslot: shift option start time plus the earlier slots of the
+     * same interval, ordered by 'order' - same calculation as TimetableOverviewService (POCOR-9594).
+     */
+    private function getTimeslotWindow($timeslotId)
+    {
+        static $cache = [];
+        if (array_key_exists($timeslotId, $cache)) {
+            return $cache[$timeslotId];
+        }
+
+        $slot = DB::table('institution_schedule_timeslots')->where('id', $timeslotId)->first();
+        if (!$slot) {
+            return $cache[$timeslotId] = null;
+        }
+
+        $startTime = DB::table('institution_schedule_intervals as i')
+            ->join('institution_shifts as s', 's.id', '=', 'i.institution_shift_id')
+            ->join('shift_options as so', 'so.id', '=', 's.shift_option_id')
+            ->where('i.id', $slot->institution_schedule_interval_id)
+            ->value('so.start_time');
+        if (empty($startTime)) {
+            return $cache[$timeslotId] = null;
+        }
+
+        $slots = DB::table('institution_schedule_timeslots')
+            ->where('institution_schedule_interval_id', $slot->institution_schedule_interval_id)
+            ->orderBy('order', 'asc')
+            ->get();
+
+        $current = new \DateTime($startTime);
+        foreach ($slots as $item) {
+            $end = clone $current;
+            $end->add(new \DateInterval('PT' . max(1, (int)$item->interval) . 'M'));
+            $cache[$item->id] = ['start' => $current->format('H:i:s'), 'end' => $end->format('H:i:s')];
+            $current = $end;
+        }
+
+        return $cache[$timeslotId] ?? null;
+    }
+
+    private function datesOverlap($startA, $endA, $startB, $endB)
+    {
+        // A timetable without term dates is treated as covering the whole academic period
+        if (empty($startA) || empty($endA) || empty($startB) || empty($endB)) {
+            return true;
+        }
+        return $startA <= $endB && $startB <= $endA;
+    }
+    //POCOR-9858: end
 
 
 
