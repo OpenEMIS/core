@@ -6250,8 +6250,17 @@ class InstitutionsController extends AppController
     public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate, $openemisNo, $staffUserPriId = '')
     {
         // Normalize null values
-        $endDate = $endDate === 'null' ? null : new Date($endDate);
-        $startDate = $startDate === 'null' ? null : new Date($startDate);
+        // POCOR-9830: this only checked against the STRING 'null', not actual null - the
+        // real null Add Staff always passes as $endDate (getPositions() sets it explicitly
+        // to null) fell through to new Date(null), which resolves to TODAY, not an empty
+        // value. That made getExcludePositions()'s !empty($endDate) check always true,
+        // permanently routing into the narrower InDateRange branch instead of the correct
+        // "still occupying as of the new start date" fallback (end_date IS NULL OR
+        // end_date >= startDate - the inclusive end-date rule from the spec), silently
+        // over-excluding positions depending on how an existing occupant's dates compared
+        // to today vs. the new hire's start date.
+        $endDate = empty($endDate) || $endDate === 'null' ? null : new Date($endDate);
+        $startDate = empty($startDate) || $startDate === 'null' ? null : new Date($startDate);
 
         $this->autoRender = false;
         $userId = $this->Auth->user('id');
@@ -6295,13 +6304,14 @@ class InstitutionsController extends AppController
             ->where([$SecurityUsers->aliasField('openemis_no') => $openemisNo])
             ->first();
         $staffUserPriId = $SecurityUsersData->id;
-        $expectedStaffStatuses = $this->getSpecificInstitutionStaff($institutionId, $staffUserPriId);
-//        Log::debug('$expectedStaffStatuses');
-//        Log::debug(print_r($expectedStaffStatuses, true));
-
-        if (!empty($expectedStaffStatuses && !empty($staffUserPriId))) {//POCOR-8613
-            $positionConditions[$StaffTable->Positions->aliasField('staff_position_title_id') . ' NOT IN '] = $expectedStaffStatuses;
-        }
+        // POCOR-9830: title-based exclusion (POCOR-8613) removed - filtering by
+        // staff_position_title_id was too broad and hid every position sharing a title
+        // (e.g. all Teacher slots) whenever the staff already held just one of them.
+        // The actual "don't let them double-book the same position" exclusion is handled
+        // below via getPositionHeldByStaff(), which excludes by specific position ID, not
+        // by title. Same bug and same fix already applied to the sibling Transfer-In/
+        // Release-In code path in InstitutionPositionsTable::getInstitutionPositions()
+        // (POCOR-9628), never applied here where Add Staff actually uses it.
 
         $SecurityGroupUsers = self::getDynamicTableInstance('Security.SecurityGroupUsers');
         $staffMinRole = $SecurityGroupUsers->find()

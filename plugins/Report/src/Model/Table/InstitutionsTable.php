@@ -126,7 +126,6 @@ class InstitutionsTable extends AppTable
             $validator = $validator
                 ->notEmpty('institution_id');
         }
-
         if (in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport', 'Report.StudentAttendances', 'Report.StudentAttendanceReport'])) { //POCOR-8417 //POCOR-9831
             $validator
                 ->notEmpty('area_level_id', __('This field cannot be left empty'))
@@ -1140,7 +1139,6 @@ class InstitutionsTable extends AppTable
                     'Report.StudentAttendances', //POCOR-9813
                     'Report.StudentAttendanceReport', //POCOR-9831
 
-
                 ]
             )) || (((in_array($feature, ['Report.Institutions']) || in_array($feature, ['Report.StaffBehaviours'])) && !empty($data['institution_filter']) && $data['institution_filter'] == self::NO_STUDENT))) {
 
@@ -1214,8 +1212,8 @@ class InstitutionsTable extends AppTable
                 'Report.InstitutionInfrastructureSummaryReport',
                 'Report.StudentBehaviours', //POCOR-7517
                 'Report.TeacherClasses', //POCOR-9064
+                'Report.StudentAttendanceWeeklyReport', //POCOR-9831
                 'Report.StudentAttendances', //POCOR-9813
-                'Report.StudentAttendanceReport', //POCOR-9831
             ]))) {
                 $Areas = self::getDynamicTableInstance('Area.AreaLevels');
                 $entity = $attr['entity'];
@@ -1875,11 +1873,6 @@ class InstitutionsTable extends AppTable
                     if(in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport', 'Report.StudentAttendanceReport', 'Report.StudentAttendances'])) { //POCOR-8417 //POCOR-9831
                         $attr['attr']['multiple'] = true;
                         unset($institutionOptions['']);
-
-                        // POCOR-Institution-AllExclusivity: selecting a specific institution should
-                        // still allow "All Institutions" to be picked afterwards. Only once "All
-                        // Institutions" itself is selected do the specific institutions become
-                        // disabled (and any of them already selected are cleared).
                         if (is_array($institutionOptions) && array_key_exists('0', $institutionOptions)) {
                             $selectedInstitutionIds = [];
                             if (isset($data['institution_id']) && is_array($data['institution_id']) && isset($data['institution_id']['_ids'])) {
@@ -1888,11 +1881,7 @@ class InstitutionsTable extends AppTable
                                 });
                             }
                             $allInstitutionsSelected = in_array('0', $selectedInstitutionIds);
-
                             if ($allInstitutionsSelected) {
-                                // "All Institutions" wins - disable every other option and force it
-                                // to be the only value selected (covers the case where both were
-                                // submitted together, e.g. a stale/duplicate selection).
                                 $formattedInstitutionOptions = [];
                                 foreach ($institutionOptions as $optKey => $optLabel) {
                                     if ((string)$optKey === '0') {
@@ -2452,18 +2441,9 @@ class InstitutionsTable extends AppTable
             if (!empty($filteredIds)) {
                 $conditions['Institutions.id IN'] = $filteredIds;
             }
-        } elseif (!empty($areaId) && $areaId != -1) {
-            // "All Institutions" selected -> get institutions by area
-            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-            $areaInstitutionIds = $Institutions->find()
-                ->select(['id'])
-                ->where(['area_id' => $areaId])
-                ->extract('id')
-                ->toArray();
-            if (!empty($areaInstitutionIds)) {
-                $conditions['Institutions.id IN'] = $areaInstitutionIds;
-            }
         }
+        //POCOR-9823 "All Institutions": no extra id filter - the area condition above already covers the
+        //selected area and its child areas (the old exact area_id lookup here dropped child-area institutions).
         //POCOR-9449 Start
         $query
             ->contain(['Areas', 'AreaAdministratives', 'Statuses'])
@@ -2471,7 +2451,12 @@ class InstitutionsTable extends AppTable
                 'area_code' => 'Areas.code',
                 'area_administrative_code' => 'AreaAdministratives.code',
                 'institution_status' => 'Statuses.name'
-            ])->where($conditions);  
+            ])->where($conditions);
+
+        //POCOR-9823
+        if (!$superAdmin) {
+            $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => $this->aliasField('id')]);
+        }
     }
 
     public
