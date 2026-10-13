@@ -1,3 +1,9 @@
+### 5.21.3 - 2026-10-13
+- Bug Fixed: Reports : Allow selection of All institutions in filter
+- Bug Fixed: Core>Institution>Students>All Status from dropdown: When selecting All statuses from the dropdown, the selection slides back automatically to Enrolled.
+- Bug Fixed: Workbench : Invalid items showing up in workbench
+- Bug Fixed: Core>Institution>Staff > Add : Available teacher position is not showing up on the Add Staff Dropdown
+
 ### 5.21.2 - 2026-10-08
 - Bug Fixed: Insitutions > Scanned (API) :  https://demo.axaemis.ai/core/api/v4/scanned shows 500 Server 
 
