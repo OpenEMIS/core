@@ -23,8 +23,8 @@ class InstitutionSecurityBehavior extends Behavior {
 		// The cloning of the table registry object is just in case in the main model, the table registry object is
 		// use on the same model which might cause the alias to be different
 		$institutionTableClone1 = clone TableRegistry::getTableLocator()->get('Institution.Institutions');
-		$institutionTableClone1->getAlias('InstitutionSecurityArea');
-		// find from security areas
+		$institutionTableClone1->setAlias('InstitutionSecurityArea'); 
+		//POCOR-9823
 		$institutionsSecurityArea = $institutionTableClone1->find()
 			->innerJoin(['Areas' => 'areas'], [
 				'Areas.id = '. $institutionTableClone1->aliasField('area_id')
@@ -43,7 +43,7 @@ class InstitutionSecurityBehavior extends Behavior {
 			->select(['id' => $institutionTableClone1->aliasField('id')]);
 		
 		$institutionTableClone2 = clone TableRegistry::getTableLocator()->get('Institution.Institutions');
-		$institutionTableClone2->getAlias('InstitutionSecurity');
+		$institutionTableClone2->setAlias('InstitutionSecurity'); //POCOR-9823
 
 		// find from security group institutions
 		$institutionSecurity = $institutionTableClone2->find()

@@ -25,8 +25,6 @@ class InstitutionScannedTable extends AppTable
             'pages' => false,
             'autoFields' => false,
         ]);
-        // no 'Institutions' association here (the institution is derived per scan), so the
-        // behavior's generic scoping no-ops - byAccess is applied manually in onExcelBeforeQuery
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
@@ -103,8 +101,6 @@ class InstitutionScannedTable extends AppTable
                     'conditions' => ['ScanInstitutions.scan_id = ' . $this->aliasField('id')],
                 ],
             ])
-            // not aliased 'Institutions': byAccess builds its EXISTS subqueries on an 'Institutions'
-            // alias too, which would turn the correlation into Institutions.id = Institutions.id
             ->leftJoin(['ScannedInstitutions' => 'institutions'], ['ScannedInstitutions.id = ScanInstitutions.institution_id'])
             ->where($conditions)
             ->order([
@@ -226,7 +222,6 @@ class InstitutionScannedTable extends AppTable
         })));
     }
 
-    // areas.lft/rght are nested-set columns - every descendant of a node lies within its range
     public function getChildren($id, $idArray)
     {
         $Areas = TableRegistry::getTableLocator()->get('Area.Areas');

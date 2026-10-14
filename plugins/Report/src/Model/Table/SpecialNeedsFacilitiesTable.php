@@ -142,6 +142,21 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
             }
         }
 
+        //POCOR-9823 Report.InstitutionSecurity only scopes the lands SELECT; the floors/rooms/buildings
+        //UNION branches need the same access check, so restrict them to the user's accessible institutions.
+        if (!$requestData->super_admin) {
+            $accessInstitutions = clone TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $accessInstitutions->setAlias('AccessInstitutions');
+            $accessibleInstitutionIds = $accessInstitutions->find()->select([$accessInstitutions->aliasField('id')]);
+            $this->getBehavior('InstitutionSecurity')->findByAccess($accessibleInstitutionIds, [
+                'user_id' => $requestData->user_id,
+                'institution_field_alias' => $accessInstitutions->aliasField('id'),
+            ]);
+            $conditionsFloors[$InstitutionFloors->aliasField('institution_id') . ' IN'] = $accessibleInstitutionIds;
+            $conditionsRooms[$InstitutionRooms->aliasField('institution_id') . ' IN'] = $accessibleInstitutionIds;
+            $conditionsBuildings[$InstitutionBuildings->aliasField('institution_id') . ' IN'] = $accessibleInstitutionIds;
+        }
+
          $query
             ->select([
                 'institution_code' => 'Institutions.code',
