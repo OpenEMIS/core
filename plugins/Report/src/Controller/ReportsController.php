@@ -171,7 +171,7 @@ class ReportsController extends AppController
                 'Report.InstitutionSubjects' => __('Subjects'),
                 'Report.StudentWithdrawalReport' => __('Student Withdrawal Report'),
                 'Report.TeacherClasses' => __('Teacher Classes'), //POCOR-9064
-                'Report.StudentAttendanceWeeklyReport' => __('Student Attendance Weekly Report'), //POCOR-9831
+                'Report.StudentAttendanceReport' => __('Student Attendance Report'), //POCOR-9831 //POCOR-9850: renamed from Student Attendance Weekly Report
                 'Report.StudentAttendances' => __('Student Attendance'), //POCOR-9813
                 // 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
                 // 'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
