@@ -42,7 +42,7 @@ class POCOR9855 extends AbstractMigration
               LIMIT 1
             ");
         
-        $parentId = $rowParent['parent_id'];
+        $parentId = $rowParent['parent_id'] ?? null;
         
         $record = [
             [
@@ -60,6 +60,7 @@ class POCOR9855 extends AbstractMigration
               AND `module` = 'Institutions'
               AND `category` = 'General'
               AND `name` = 'Scanned'
+              AND `_view` LIKE '%Scanned.index%'
         ");
 
         // Remove backup table
