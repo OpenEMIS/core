@@ -391,6 +391,24 @@ class AlertTriggerService
     }
 
     /**
+     * POCOR-9862: Get ALL active alert rules for a feature (e.g. 1-day and 4-day attendance rules).
+     *
+     * @param string $featureName Feature name (e.g., 'StudentAttendance')
+     * @return array List of alert rule objects
+     */
+    public static function getActiveAlertRules(string $featureName): array
+    {
+        return DB::table('alert_rules')
+            ->where('feature', $featureName)
+            ->join('alerts', 'alerts.name', '=', 'alert_rules.feature')
+            ->where('alerts.frequency', '!=', 'Never')
+            ->where('alert_rules.enabled', 1)
+            ->select('alert_rules.*')
+            ->get()
+            ->all();
+    }
+
+    /**
      * POCOR-9509 Phase 3: Trigger Laravel alert command
      *
      * Dispatches the appropriate alert command based on process name.
