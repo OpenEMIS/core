@@ -5617,6 +5617,7 @@ class InstitutionRepository extends Controller
             ->select('config_items.id', 'config_items.name')
             ->where('config_items.type', 'External Data Source - Identity')
             ->where('config_items.value', 1)
+            ->where('config_items.name', '!=', 'OpenEMIS Core')
             ->join('nationalities', function ($join) use ($nationalityId, $identityTypeId) {
                 $join->on('nationalities.external_validation', '=', 'config_items.id')
                     ->where('nationalities.id', '=', $nationalityId)
@@ -5630,11 +5631,13 @@ class InstitutionRepository extends Controller
             ->select('name')
             ->where('type', 'External Data Source - Identity')
             ->where('value', 1)
+            ->where('name', 'OpenEMIS Core')
             ->first();
 
         $coreResults = [];
         if ($openEmisCoreItem) {
             $match = DB::table('external_data_source_attributes')
+                ->where('external_data_source_type', 'OpenEMIS Core')
                 ->where('attribute_field', 'identity_type_id')
                 ->where('value', $identityTypeId)
                 ->first();
