@@ -237,7 +237,10 @@ class ScannedRepository extends Controller
     {
         try {
             $params = $request->all();
-            $userListingRecord = ScannedAttendance::with('securityUser');
+            // POCOR-9847: never load photo_content (LONGBLOB) for the listing
+            $userListingRecord = ScannedAttendance::with(['securityUser' => function ($query) {
+                $query->select(self::SCANNED_SECURITY_USER_COLUMNS);
+            }]);
             $this->applyListingFilters($userListingRecord, $params);
 
             if (isset($params['order'])) {
