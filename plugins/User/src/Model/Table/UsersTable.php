@@ -730,7 +730,6 @@ class UsersTable extends AppTable
     {
         $prefix = $this->getOpenemisIdPrefix();
         $connection = $this->getConnection();
-        $openemisTemps = TableRegistry::getTableLocator()->get('User.OpenemisTemps');
         $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 
         $usersTableSql = $connection->quoteIdentifier($this->getTable());
@@ -751,36 +750,22 @@ class UsersTable extends AppTable
         while ($attempts < 100) {
             $newOpenemisNo = $prefix . $nextSuffix;
 
-            if (!$this->exists([$this->aliasField('openemis_no') => $newOpenemisNo])
-                && !$openemisTemps->exists(['openemis_no' => $newOpenemisNo])) {
-                if ($attempts === 0) {
-                    $insertSql = 'INSERT INTO ' . $tempTableSql . ' (' . $openemisNoSql . ', ip_address, created)'
-                        . ' SELECT CAST(COALESCE(' . $maxExpr . ', 0) + 1 AS CHAR), :ip_address, NOW()'
-                        . ' FROM ' . $usersTableSql
-                        . ' WHERE ' . $usersTableSql . '.' . $openemisNoSql . ' IS NOT NULL'
-                        . ' AND ' . $usersTableSql . '.' . $openemisNoSql . ' REGEXP :pattern';
-
-                    try {
-                        $connection->execute($insertSql, [
-                            'ip_address' => $ipAddress,
-                            'pattern' => $pattern,
-                        ]);
-                    } catch (\Exception $exception) {
-                        $openemisTemp = $openemisTemps->newEntity([
-                            'openemis_no' => $newOpenemisNo,
-                            'ip_address' => $ipAddress,
-                        ]);
-                        $openemisTemps->save($openemisTemp);
-                    }
-                } else {
+            //POCOR-9867: the old code reserved the number WITHOUT the configured prefix while the
+            //guard looked for the prefixed value, so the reservation was invisible and the same id
+            //went out twice. Reserve the prefixed value in one INSERT and let its UNIQUE index pick
+            //the winner - that also closes the check-then-act race the two exists() calls left open.
+            if (!$this->exists([$this->aliasField('openemis_no') => $newOpenemisNo])) {
+                try {
                     $connection->execute(
                         'INSERT INTO ' . $tempTableSql . ' (' . $openemisNoSql . ', ip_address, created)'
                         . ' VALUES (:openemis_no, :ip_address, NOW())',
                         ['openemis_no' => $newOpenemisNo, 'ip_address' => $ipAddress]
                     );
-                }
 
-                return $newOpenemisNo;
+                    return $newOpenemisNo;
+                } catch (\Exception $exception) {
+                    // lost the reservation to a concurrent request - try the next number
+                }
             }
 
             $nextSuffix = $this->incrementNumericString($nextSuffix);

@@ -7125,7 +7125,7 @@ class InstitutionsController extends AppController
             $result = $this->handleStudentTransfer($requestData, $userRecordId, $userId);
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         }
-        $securityUserResult = $this->saveSecurityUser($studentData);
+        $securityUserResult = $this->saveSecurityUser($studentData, (int)($requestData['student_id'] ?? 0) ?: null); //POCOR-9867
         if ($securityUserResult instanceof \Cake\ORM\Entity || $securityUserResult instanceof EntityInterface) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
@@ -7186,7 +7186,7 @@ class InstitutionsController extends AppController
             $result = $this->handleStaffTransfer($requestData, $userRecordId, $userId);
             return $this->sendJsonResponse(['message' => 'success', 'staff' => $result], 200);
         }
-        $securityUserResult = $this->saveSecurityUser($staffData);
+        $securityUserResult = $this->saveSecurityUser($staffData, (int)($requestData['staff_id'] ?? 0) ?: null); //POCOR-9867
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
@@ -7273,7 +7273,7 @@ class InstitutionsController extends AppController
      *
      * @return \Cake\Datasource\EntityInterface|\Cake\Http\Response
      */
-    private function saveSecurityUser(array $userData): \Cake\Datasource\EntityInterface|Response
+    private function saveSecurityUser(array $userData, ?int $selectedExistingUserId = null): \Cake\Datasource\EntityInterface|Response
     {
         $securityUsers = self::getDynamicTableInstance('User.Users'); // POCOR-8706
         if($userData['mobile_number'] == ''){
@@ -7320,9 +7320,29 @@ class InstitutionsController extends AppController
         // POCOR-9793 end
 
         if ($existing) {
+            //POCOR-9867: an Add must never silently become an overwrite of a DIFFERENT person.
+            //A duplicate openemis_no reaches here two ways: the generator issued it twice, or the
+            //Add wizard leaked it from an abandoned Internal Search selection. Either way, only
+            //update when this really is the same account.
+            if (!$this->isSameSecurityUser($existing, $userData, $selectedExistingUserId)) {
+                Log::error(sprintf(
+                    'POCOR-9867: refused to overwrite security_user id=%s (%s %s) with a different person (%s %s) submitted under openemis_no=%s',
+                    $existing->id,
+                    (string)$existing->first_name,
+                    (string)$existing->last_name,
+                    (string)($userData['first_name'] ?? ''),
+                    (string)($userData['last_name'] ?? ''),
+                    (string)($userData['openemis_no'] ?? '')
+                ));
+
+                return $this->sendJsonResponse([
+                    'message' => __('This OpenEMIS ID already belongs to another account. Please start the Add process again, or use the Internal Search step to select the existing person.')
+                ], 409);
+            }
             // Prevent accidental username/password overwrite during update
             $userData['id'] = $existing->id;
-            unset($userData['username'], $userData['password']);
+            //POCOR-9867: an update must not rewrite created/created_user_id
+            unset($userData['username'], $userData['password'], $userData['created'], $userData['created_user_id']);
             $entity = $securityUsers->patchEntity($existing, $userData);
         } else {
             // POCOR-9181 [START]
@@ -7386,6 +7406,43 @@ class InstitutionsController extends AppController
                 500
             );
         }
+    }
+
+    /**
+     * POCOR-9867: is the row matched on openemis_no really the account being saved?
+     * True when the wizard explicitly identified it (staff_id/student_id/guardian_id), or when the
+     * submitted name + DOB still match the stored row (an idempotent retry / double submit).
+     */
+    private function isSameSecurityUser($existing, array $userData, ?int $selectedExistingUserId): bool
+    {
+        if (!empty($selectedExistingUserId) && (int)$existing->id === (int)$selectedExistingUserId) {
+            return true;
+        }
+
+        $norm = static function ($value): string {
+            return mb_strtolower(trim((string)$value));
+        };
+
+        foreach (['first_name', 'last_name'] as $field) {
+            if (!array_key_exists($field, $userData)) {
+                return false;
+            }
+            if ($norm($userData[$field]) !== $norm($existing->{$field})) {
+                return false;
+            }
+        }
+
+        // date_of_birth is the tiebreaker for genuine namesakes.
+        $submittedDob = !empty($userData['date_of_birth']) ? substr((string)$userData['date_of_birth'], 0, 10) : null;
+        $existingDob = $existing->date_of_birth instanceof \DateTimeInterface
+            ? $existing->date_of_birth->format('Y-m-d')
+            : (!empty($existing->date_of_birth) ? substr((string)$existing->date_of_birth, 0, 10) : null);
+
+        if ($submittedDob !== null && $existingDob !== null && $submittedDob !== $existingDob) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -8634,7 +8691,7 @@ class InstitutionsController extends AppController
         $studentOpenemisNo = (isset($requestData['student_openemis_no'])) ? $requestData['student_openemis_no'] : null;
         $guardianRelationId = (isset($requestData['guardian_relation_id'])) ? $requestData['guardian_relation_id'] : null;
 //        Log::debug(print_r($userData, true));
-        $securityUserResult = $this->saveSecurityUser($userData);
+        $securityUserResult = $this->saveSecurityUser($userData, (int)($requestData['guardian_id'] ?? 0) ?: null); //POCOR-9867
 //        Log::debug(print_r($securityUserResult, true));
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
@@ -8691,7 +8748,7 @@ class InstitutionsController extends AppController
         $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData)) ? $requestData['student_openemis_no'] : null;
         $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData)) ? $requestData['guardian_relation_id'] : null;
 //        Log::debug(print_r($userData, true));
-        $securityUserResult = $this->saveSecurityUser($userData);
+        $securityUserResult = $this->saveSecurityUser($userData, (int)($requestData['guardian_id'] ?? 0) ?: null); //POCOR-9867
 //        Log::debug(print_r($securityUserResult, true));
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
