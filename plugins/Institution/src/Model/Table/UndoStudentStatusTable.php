@@ -254,9 +254,24 @@ class UndoStudentStatusTable extends AppTable
                 break;
             case 'reconfirm':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
-                $cancelUrl = $this->ControllerAction->url('add');
-                $cancelUrl = array_diff_key($cancelUrl, $this->request->getQuery());
-                $buttons[1]['url'] = $cancelUrl;
+                // POCOR-9848: ControllerAction->url('add') drops the encoded pass segment (paramsPass()
+                // reads getAttribute('pass'), which is empty in CakePHP 5), so Cancel landed on a bare
+                // Undo/add, paramsDecode() threw "Wrong number of segments" and the error renderer sent
+                // the user to error404. Build the URL with the encoded query string, as reconfirm() and
+                // the toolbar Back button already do.
+                $params = $this->ControllerAction->getQueryString();
+                if (!empty($params)) {
+                    $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+                } else {
+                    $encodedQueryParams = $this->request->getParam('pass')[1];
+                }
+                $buttons[1]['url'] = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Undo',
+                    '0' => 'add',
+                    '1' => $encodedQueryParams
+                ];
                 break;
         }
     }
