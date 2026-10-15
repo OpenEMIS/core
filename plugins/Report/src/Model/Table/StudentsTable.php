@@ -954,6 +954,9 @@ class StudentsTable extends AppTable
         if (!empty($enrolled)) {
             $conditions['InstitutionStudent.student_status_id'] = $enrolled;
         }
+        // POCOR-9845: exclude inactive (status=0) users, matching the Students
+        // listing and the dashboard student-count charts.
+        $conditions[$this->aliasField('status')] = 1;
         $query->join([
             'InstitutionStudent' => [
                 'type' => 'inner',
