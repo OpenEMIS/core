@@ -172,16 +172,33 @@ class UndoStudentStatusTable extends AppTable
                     //POCOR-6992 start
                     $studentEnrollRecord = $institutionStudent->find()->where(['student_status_id' => $currentId, 'student_id' => $studentId])->first();
                     $enrolledInstitutionId = '';
+                    $institutionCode = '';
+                    $institutionName = '';
                     if (!empty($studentEnrollRecord)) {
                         $enrolledInstitutionId = $studentEnrollRecord->institution_id;
                         $getInstitutions = $institution->find()->where(['id' => $enrolledInstitutionId])->first();
-                        $institutionCode = $getInstitutions->code;
-                        $institutionName = $getInstitutions->name;
+                        // POCOR-9900: $getInstitutions can be empty if the enrolled institution_id
+                        // no longer resolves to an institution record -- guard before reading
+                        // ->code/->name so this doesn't crash the Undo request.
+                        if (!empty($getInstitutions)) {
+                            $institutionCode = $getInstitutions->code;
+                            $institutionName = $getInstitutions->name;
+                        }
                     }
 
                     $studentPromoteRecord = $institutionStudent->find()->where(['student_status_id' => $promoteId, 'student_id' => $studentId, 'academic_period_id' => $entity->academic_period_id])->first();
-                    $promoteInstitutionId = $studentPromoteRecord->institution_id;
-                    if(!empty($studentPromoteRecord)) { //POCOR-8564
+                    // POCOR-9900: $studentPromoteRecord->institution_id used to be read BEFORE this
+                    // emptiness check (the "//POCOR-8564" guard below was added but placed after the
+                    // dereference, so it never actually prevented the crash). Whenever a selected
+                    // student has no institution_students row matching this exact
+                    // (student_status_id=PROMOTED, academic_period_id) combination -- which depends on
+                    // that institution's own student data (e.g. promotions recorded with a different
+                    // academic period, or data irregularities specific to that school) -- this threw an
+                    // uncaught "Attempt to read property institution_id on null" and crashed the whole
+                    // Undo "Next" action, which is what made Undo Promoted appear broken for some
+                    // institutions while working fine for others.
+                    if (!empty($studentPromoteRecord)) { //POCOR-8564
+                        $promoteInstitutionId = $studentPromoteRecord->institution_id;
                         if ($promoteInstitutionId != $enrolledInstitutionId && !empty($enrolledInstitutionId)) {
                             $message = __('There is an existing enrolment. Please contact ') . "$institutionCode" . ' - ' . $institutionName;
                             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
