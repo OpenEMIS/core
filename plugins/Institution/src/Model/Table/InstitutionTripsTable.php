@@ -42,6 +42,38 @@ class InstitutionTripsTable extends ControllerActionTable
                 ['institution_id']
             ]
         ]);
+
+        // POCOR-9854: required for the 'information_section'/'passengers_section'
+        // fields in addEditBeforeAction() to actually render - 'type' => 'section'
+        // is not a built-in field type; this behavior is what gives it an
+        // onGetSectionElement() getter and the override/rowClass attributes needed
+        // to display as a section header instead of an empty, invisible field.
+        $this->addBehavior('OpenEmis.Section');
+    }
+
+    // POCOR-9854: InstitutionTripsController is driven by the third-party "Page"
+    // framework (vendor/korditpteltd/ikpge-cakephp-page), whose PageComponent::
+    // autoContains() only auto-eager-loads manyToOne (belongsTo) associations - it
+    // skips hasMany ones entirely. InstitutionTripPassengers is a hasMany, so it was
+    // never being loaded onto the fetched entity, meaning $entity->has(
+    // 'institution_trip_passengers') was always false and the Passengers
+    // section/list always rendered empty regardless of actual data. Forcing the
+    // contain here guarantees it loads no matter which Page-framework code path
+    // triggers the fetch (view/edit), without needing to patch vendor code.
+    //
+    // The index listing builds its own query with a narrowed select() that doesn't
+    // include `id` - without it, CakePHP's eager loader can't match child
+    // InstitutionTripPassengers rows back to their parent trip and throws
+    // "Unable to load InstitutionTripPassengers association ... foreign key ...
+    // is selected". select() appends rather than replaces, so re-adding `id` here
+    // is always safe even when a query already selects it or selects nothing
+    // explicit at all.
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
+    {
+        if (!empty($query->clause('select'))) {
+            $query->select($this->aliasField('id'));
+        }
+        $query->contain(['InstitutionTripPassengers']);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -488,6 +520,39 @@ class InstitutionTripsTable extends ControllerActionTable
 
         // $this->fields['days']['multiple'] = true;
         // $this->fields['days']['options'] = $InstitutionBuses;
+
+        // POCOR-9854: already-saved passengers may no longer be in the "currently
+        // enrolled" options list (e.g. the trip is from a past academic period and
+        // the student has since graduated/promoted) - merge their labels in too,
+        // otherwise the chosenSelect widget has nothing to render their tag from.
+        if ($this->action == 'edit' && $entity->has('institution_trip_passengers') && !empty($entity->institution_trip_passengers)) {
+            $Students = TableRegistry::getTableLocator()->get('Institution.Students');
+            $existingOptions = [];
+            foreach ($entity->institution_trip_passengers as $passenger) {
+                $student = $Students
+                    ->find()
+                    ->contain(['Users'])
+                    ->where([
+                        'Students.student_id' => $passenger->student_id,
+                        'Students.education_grade_id' => $passenger->education_grade_id,
+                        'Students.academic_period_id' => $passenger->academic_period_id,
+                        'Students.institution_id' => $passenger->institution_id
+                    ])
+                    ->first();
+
+                if (!empty($student)) {
+                    $encodedKeys = $this->paramsEncode([
+                        'student_id' => $passenger->student_id,
+                        'education_grade_id' => $passenger->education_grade_id,
+                        'academic_period_id' => $passenger->academic_period_id,
+                        'institution_id' => $passenger->institution_id
+                    ]);
+                    $existingOptions[$encodedKeys] = $student->user->name_with_id;
+                }
+            }
+
+            $this->fields['assigned_students']['options'] = $existingOptions + ($this->fields['assigned_students']['options'] ?? []);
+        }
     }
 
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -497,6 +562,21 @@ class InstitutionTripsTable extends ControllerActionTable
         $this->fields['academic_period_id']['default'] = $this->AcademicPeriods->getCurrent();
         $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
         $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
+
+        // POCOR-9854: client-approved reference design groups the main trip
+        // details under an "Information" header, separate from the Passengers
+        // section added further below. Final position is pinned explicitly via
+        // setFieldOrder() below rather than relied on via 'before'/'after' -
+        // ControllerActionBehavior::getOrderValue() resolves those relative to
+        // the target field's 'order' value AT THE MOMENT this call runs, which
+        // proved too fragile to position a header reliably (confirmed by direct
+        // introspection: it did not land where intended either before or after
+        // academic_period_id's own field() call).
+        $this->field('information_section', [
+            'type' => 'section',
+            'title' => __('Information'),
+            'visible' => ['edit' => true, 'add' => true]
+        ]);
 
         $this->field('name', ['attr' => ['label' => __('Name')]]);
 
@@ -532,7 +612,34 @@ class InstitutionTripsTable extends ControllerActionTable
         ]);
         // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
-        // dump($this->fields);die;
+        // POCOR-9854: client-confirmed Passengers should show on Add as well as Edit,
+        // listing students currently enrolled in the selected Academic Period
+        // (getSelectedAcademicPeriod() already resolves 'add' to the current period).
+        // Shown as its own section after Comment, matching the client-approved
+        // reference design, with the select itself labelled "Assigned Students".
+        if ($this->action == 'edit' || $this->action == 'add') {
+            $this->field('passengers_section', [
+                'type' => 'section',
+                'title' => __('Passengers'),
+                'visible' => ['edit' => true, 'add' => true]
+            ]);
+
+            $this->fields['assigned_students']['options'] = $this->getAssignedStudentOptions();
+            $this->field('assigned_students', [
+                'type' => 'chosenSelect',
+                'attr' => ['label' => __('Assigned Students'), 'multiple' => true],
+                'visible' => ['edit' => true, 'add' => true]
+            ]);
+        }
+
+        // POCOR-9854: pin the final field order explicitly rather than rely on
+        // per-field 'before'/'after' hints (see comment on information_section
+        // above for why those proved unreliable here).
+        $this->setFieldOrder([
+            'information_section', 'academic_period_id', 'name', 'trip_type_id',
+            'institution_transport_provider_id', 'institution_bus_id', 'trip_repeat',
+            'days', 'comment', 'passengers_section', 'assigned_students'
+        ]);
     }
     // POCOR-6169 end
 
@@ -548,6 +655,20 @@ class InstitutionTripsTable extends ControllerActionTable
                     $arr[$key] = ['id'=>$dayss['day']];
                 }
                 $row['days'] = $arr;
+
+                // POCOR-9854: pre-select existing passengers on the Passengers field
+                $passengers = [];
+                foreach ($row->institution_trip_passengers as $key => $passenger) {
+                    $encodedKeys = $this->paramsEncode([
+                        'student_id' => $passenger->student_id,
+                        'education_grade_id' => $passenger->education_grade_id,
+                        'academic_period_id' => $passenger->academic_period_id,
+                        'institution_id' => $passenger->institution_id
+                    ]);
+                    $passengers[$key] = ['id' => $encodedKeys];
+                }
+                $row['assigned_students'] = $passengers;
+
                 return $row;
             });
         });
@@ -558,6 +679,7 @@ class InstitutionTripsTable extends ControllerActionTable
     public function viewAfterAction(EventInterface $event,Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity, $extra);
+        $this->setupPassengersView($entity, $extra);
     }
     // view page POCOR-6169
 
@@ -593,6 +715,157 @@ class InstitutionTripsTable extends ControllerActionTable
     }
     // setup fields for view and edit POCOR-6152
 
+    // POCOR-9854: Passengers section on View - read-only, filterable by Education
+    // Grade / Student Status / Gender. Mirrors the filter+table pattern already used
+    // for Institution Classes' Students tab (InstitutionClassesTable::viewAfterAction()),
+    // for visual/behavioural consistency across the app.
+    //
+    // InstitutionTripPassengers only stores a denormalized (student_id,
+    // education_grade_id, academic_period_id, institution_id) snapshot - it has no
+    // direct Gender/StudentStatus/SpecialNeeds association of its own, so the actual
+    // display data is looked up from the live Institution.Students enrollment table
+    // via that composite key, same as getAssignedStudentOptions() and
+    // addEditAfterAction() already do.
+    private function setupPassengersView(Entity $entity, ArrayObject $extra)
+    {
+        $extra['selectedGrade'] = -1;
+        $extra['selectedStatus'] = -1;
+        $extra['selectedGender'] = -1;
+        if (array_key_exists('queryString', $this->request->getQuery())) {
+            $queryString = $this->paramsDecode($this->request->getQuery('queryString'));
+            if (!empty($queryString)) {
+                if (isset($queryString['grade'])) {
+                    $extra['selectedGrade'] = $queryString['grade'];
+                }
+                if (isset($queryString['status'])) {
+                    $extra['selectedStatus'] = $queryString['status'];
+                }
+                if (isset($queryString['gender'])) {
+                    $extra['selectedGender'] = $queryString['gender'];
+                }
+            }
+        }
+
+        $passengers = [];
+        if ($entity->has('institution_trip_passengers') && !empty($entity->institution_trip_passengers)) {
+            $Students = TableRegistry::getTableLocator()->get('Institution.Students');
+
+            $conditions = [];
+            foreach ($entity->institution_trip_passengers as $passenger) {
+                $conditions[] = [
+                    'Students.student_id' => $passenger->student_id,
+                    'Students.education_grade_id' => $passenger->education_grade_id,
+                    'Students.academic_period_id' => $passenger->academic_period_id,
+                    'Students.institution_id' => $passenger->institution_id
+                ];
+            }
+
+            $passengers = $Students
+                ->find()
+                ->contain(['Users.Genders', 'Users.SpecialNeeds', 'EducationGrades', 'StudentStatuses'])
+                ->where(['OR' => $conditions])
+                ->toArray();
+        }
+
+        $baseUrl = $this->url($this->action, true);
+        $params = $this->getQueryString();
+
+        $gradeOptions = [];
+        $statusOptions = [];
+        $genderOptions = [];
+
+        foreach ($passengers as $key => $student) {
+            if (!empty($student->education_grade)) {
+                $gradeOptions[$student->education_grade->id]['name'] = $student->education_grade->name;
+                $gradeOptions[$student->education_grade->id]['order'] = $student->education_grade->order;
+                $params['grade'] = $student->education_grade->id;
+                $params['status'] = $extra['selectedStatus'];
+                $params['gender'] = $extra['selectedGender'];
+                $gradeOptions[$student->education_grade->id]['url'] = $this->setQueryString($baseUrl, $params);
+            }
+
+            if (!empty($student->student_status)) {
+                $statusOptions[$student->student_status->id]['name'] = $student->student_status->name;
+                $statusOptions[$student->student_status->id]['order'] = $student->student_status->id;
+                $params['grade'] = $extra['selectedGrade'];
+                $params['status'] = $student->student_status->id;
+                $params['gender'] = $extra['selectedGender'];
+                $statusOptions[$student->student_status->id]['url'] = $this->setQueryString($baseUrl, $params);
+            }
+
+            if (!empty($student->user) && !empty($student->user->gender)) {
+                $genderOptions[$student->user->gender->id]['name'] = $student->user->gender->name;
+                $genderOptions[$student->user->gender->id]['order'] = $student->user->gender->id;
+                $params['grade'] = $extra['selectedGrade'];
+                $params['status'] = $extra['selectedStatus'];
+                $params['gender'] = $student->user->gender->id;
+                $genderOptions[$student->user->gender->id]['url'] = $this->setQueryString($baseUrl, $params);
+            }
+
+            if ($extra['selectedGrade'] != -1 && (empty($student->education_grade) || $student->education_grade->id != $extra['selectedGrade'])) {
+                unset($passengers[$key]);
+                continue;
+            }
+            if ($extra['selectedStatus'] != -1 && (empty($student->student_status) || $student->student_status->id != $extra['selectedStatus'])) {
+                unset($passengers[$key]);
+                continue;
+            }
+            if ($extra['selectedGender'] != -1 && (empty($student->user) || empty($student->user->gender) || $student->user->gender->id != $extra['selectedGender'])) {
+                unset($passengers[$key]);
+                continue;
+            }
+        }
+
+        $gradeOptions[-1]['name'] = count($gradeOptions) > 0 ? '-- ' . __('All Grades') . ' --' : '-- ' . __('No Options') . ' --';
+        $gradeOptions[-1]['order'] = 0;
+        $params['grade'] = -1;
+        $params['status'] = $extra['selectedStatus'];
+        $params['gender'] = $extra['selectedGender'];
+        $gradeOptions[-1]['url'] = $this->setQueryString($baseUrl, $params);
+        uasort($gradeOptions, function ($a, $b) {
+            return $a['order'] - $b['order'];
+        });
+
+        $statusOptions[-1]['name'] = count($statusOptions) > 0 ? '-- ' . __('All Statuses') . ' --' : '-- ' . __('No Options') . ' --';
+        $statusOptions[-1]['order'] = 0;
+        $params['grade'] = $extra['selectedGrade'];
+        $params['status'] = -1;
+        $params['gender'] = $extra['selectedGender'];
+        $statusOptions[-1]['url'] = $this->setQueryString($baseUrl, $params);
+        uasort($statusOptions, function ($a, $b) {
+            return $a['order'] - $b['order'];
+        });
+
+        $genderOptions[-1]['name'] = count($genderOptions) > 0 ? '-- ' . __('All Genders') . ' --' : '-- ' . __('No Options') . ' --';
+        $genderOptions[-1]['order'] = 0;
+        $params['grade'] = $extra['selectedGrade'];
+        $params['status'] = $extra['selectedStatus'];
+        $params['gender'] = -1;
+        $genderOptions[-1]['url'] = $this->setQueryString($baseUrl, $params);
+        uasort($genderOptions, function ($a, $b) {
+            return $a['order'] - $b['order'];
+        });
+
+        $this->field('passengers', [
+            'label' => '',
+            'override' => true,
+            'after' => 'created',
+            'type' => 'element',
+            'element' => 'Institution.Trips/passengers',
+            'data' => [
+                'baseUrl' => $baseUrl,
+                'params' => $params,
+                'students' => $passengers,
+                'filter' => [
+                    'education_grades' => ['options' => $gradeOptions, 'selected' => $extra['selectedGrade']],
+                    'student_status' => ['options' => $statusOptions, 'selected' => $extra['selectedStatus']],
+                    'genders' => ['options' => $genderOptions, 'selected' => $extra['selectedGender']],
+                ]
+            ],
+            'visible' => ['view' => true]
+        ]);
+    }
+
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
     private function getProviderOptions()
     {
@@ -608,6 +881,58 @@ class InstitutionTripsTable extends ControllerActionTable
         ->toArray();
     }
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
+
+    // POCOR-9854: options for the Passengers multi-select, listing students
+    // currently enrolled at this institution for the trip's academic period.
+    private function getAssignedStudentOptions()
+    {
+        $institutionId = $this->getInstitutionID();
+        $academicPeriodId = $this->getSelectedAcademicPeriod($this->request);
+
+        $Students = TableRegistry::getTableLocator()->get('Institution.Students');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+        $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+
+        $query = $Students
+            ->find()
+            ->select([
+                $Students->aliasField('student_id'),
+                $Students->aliasField('education_grade_id'),
+                $Students->aliasField('academic_period_id'),
+                $Students->aliasField('institution_id'),
+                $Students->Users->aliasField('openemis_no'),
+                $Students->Users->aliasField('first_name'),
+                $Students->Users->aliasField('middle_name'),
+                $Students->Users->aliasField('third_name'),
+                $Students->Users->aliasField('last_name'),
+                $Students->Users->aliasField('preferred_name')
+            ])
+            ->contain([$Students->Users->getAlias()])
+            ->where([
+                $Students->aliasField('institution_id') => $institutionId,
+                $Students->aliasField('academic_period_id') => $academicPeriodId,
+                $Students->aliasField('student_status_id') => $enrolledStatus
+            ])
+            ->group([$Students->aliasField('student_id')])
+            ->order([
+                $Students->Users->aliasField('first_name'),
+                $Students->Users->aliasField('last_name')
+            ]);
+
+        $options = [];
+        foreach ($query as $result) {
+            $encodedKeys = $this->paramsEncode([
+                'student_id' => $result->student_id,
+                'education_grade_id' => $result->education_grade_id,
+                'academic_period_id' => $result->academic_period_id,
+                'institution_id' => $result->institution_id
+            ]);
+
+            $options[$encodedKeys] = $result->user->name_with_id;
+        }
+
+        return $options;
+    }
 
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
     public function onUpdateFieldInstitutionBusId(EventInterface $event, array $attr, $action, $request) {
@@ -658,6 +983,8 @@ class InstitutionTripsTable extends ControllerActionTable
                 return __('Bus');
             case 'days':
                 return __('Days');
+            case 'passengers':
+                return __('Passengers');
             case 'name':
                 return __('Name');
             case 'comment':
