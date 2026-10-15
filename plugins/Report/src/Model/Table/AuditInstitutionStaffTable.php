@@ -61,15 +61,21 @@ class AuditInstitutionStaffTable extends AppTable
         $startDate   = $requestData->report_start_date ?? null;
         $endDate     = $requestData->report_end_date ?? null;
         //Apply  start_date and end_date filters
-        $startDateObj = $this->parseDate($startDate);
-        $endDateObj   = $this->parseDate($endDate) ?? FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'));
-
         //POCOR-9860: parseDate() returns null on an unparseable param. Fail loudly
         //here - ReportShell catches \Exception and marks the process as Error with
         //a message. Without this the null reaches ->format() below as a PHP Error,
         //which ReportShell does NOT catch, leaving the report stuck on Pending.
+        //Only a genuinely EMPTY end date defaults; an unparseable one is an error.
+        $startDateObj = $this->parseDate($startDate);
         if (!$startDateObj) {
             throw new \InvalidArgumentException('Invalid report start date: ' . $startDate);
+        }
+
+        $endDateObj = empty($endDate)
+            ? FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'))
+            : $this->parseDate($endDate);
+        if (!$endDateObj) {
+            throw new \InvalidArgumentException('Invalid report end date: ' . $endDate);
         }
 
         $query->where(function (QueryExpression $exp) use ($startDateObj, $endDateObj) {

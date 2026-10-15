@@ -59,28 +59,28 @@ class AuditInstitutionStudentsTable extends AppTable
         //configured `date_format` is honoured. The previous hard-coded
         //'d-m-Y H:i:s' threw InvalidArgumentException on sites set to anything
         //else (e.g. BS-MOE uses 'F d, Y'), failing the report with status Error.
-        $where = [];
-        if (!empty($startDate)) {
-            $startDateObj = $this->parseReportDate($startDate);
-
-            // If endDate is empty, default to end of current year
-            $endDateObj = $this->parseReportDate($endDate)
-                ?? FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'));
-
-            //POCOR-9860: an unparseable start date must fail the report, not
-            //silently leave $where empty and export the whole table.
-            if (!$startDateObj) {
-                throw new \InvalidArgumentException('Invalid report start date: ' . $startDate);
-            }
-
-            if ($startDateObj && $endDateObj) {
-                //parseReportDate() returns a date, so re-apply the day boundaries
-                $where[] = [
-                    $this->aliasField('start_date') . ' <=' => $endDateObj->format('Y-m-d') . ' 23:59:59',
-                    $this->aliasField('end_date') . ' >=' => $startDateObj->format('Y-m-d') . ' 00:00:00'
-                ];
-            }
+        //POCOR-9860: a missing or unparseable start date must fail the report,
+        //not leave $where empty and export the whole table. This matches the
+        //Deleted Records and Institution Staff reports - previously this one
+        //silently skipped the filter while the others errored. Only a genuinely
+        //EMPTY end date defaults; an unparseable one is an error.
+        $startDateObj = $this->parseReportDate($startDate);
+        if (!$startDateObj) {
+            throw new \InvalidArgumentException('Invalid report start date: ' . $startDate);
         }
+
+        $endDateObj = empty($endDate)
+            ? FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'))
+            : $this->parseReportDate($endDate);
+        if (!$endDateObj) {
+            throw new \InvalidArgumentException('Invalid report end date: ' . $endDate);
+        }
+
+        //parseReportDate() returns a date, so re-apply the day boundaries
+        $where = [[
+            $this->aliasField('start_date') . ' <=' => $endDateObj->format('Y-m-d') . ' 23:59:59',
+            $this->aliasField('end_date') . ' >=' => $startDateObj->format('Y-m-d') . ' 00:00:00'
+        ]];
 
         //Select only required fields
         $query

@@ -248,9 +248,11 @@ class AppTable extends Table
             $editableFormat . ' H:i:s',
             // Date only, for report forms that store the date without a suffix.
             $editableFormat,
-            // Legacy fallbacks, in case the param was stored under a previous setting.
-            'd-m-Y H:i:s', 'd-m-Y',
-            'd/m/Y H:i:s', 'd/m/Y',
+            // ISO only. Deliberately NO 'd-m-Y' / 'd/m/Y' fallback: those are
+            // ambiguous with 'm-d-Y' / 'm/d/Y', so on a month-first site a value
+            // the configured format rejects (e.g. '13/01/2026') would be silently
+            // accepted with day and month swapped. ISO cannot be misread, and
+            // anything else fails loudly rather than returning a wrong range.
             'Y-m-d H:i:s', 'Y-m-d',
         ];
 
@@ -270,7 +272,12 @@ class AppTable extends Table
                 continue;
             }
 
-            return FrozenDate::createFromTimestamp($dateObject->getTimestamp());
+            // Built from the Y-m-d string rather than createFromTimestamp():
+            // the constructor is stable across Chronos versions, and
+            // composer.lock and the installed vendor tree currently disagree on
+            // which Chronos is in play. Verified equivalent across timezones
+            // from UTC-10 to UTC+14.
+            return new FrozenDate($dateObject->format('Y-m-d'));
         }
 
         Log::write('error', __METHOD__ . ' could not parse report date: ' . $date);
