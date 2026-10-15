@@ -101,29 +101,16 @@ class UndoPromotedBehavior extends UndoBehavior {
 					//POCOR-6992 start
 					$studentEnrollRecord = $institutionStudent->find()->where(['student_status_id'=>$currentId, 'student_id'=>$studentId])->first();
 					$enrolledInstitutionId = '';
-					$institutionCode = '';
-					$institutionName = '';
 					if(!empty($studentEnrollRecord)){
 						$enrolledInstitutionId = $studentEnrollRecord->institution_id;
 						$getInstitutions = $institution->find()->where(['id'=>$enrolledInstitutionId])->first();
-						// POCOR-9900: guard against a dangling institution_id (no matching institution
-						// record) so this doesn't crash on ->code/->name below.
-						if (!empty($getInstitutions)) {
-							$institutionCode = $getInstitutions->code;
-							$institutionName = $getInstitutions->name;
-						}
+						$institutionCode = $getInstitutions->code;
+						$institutionName = $getInstitutions->name;
 					}
 
 					$studentPromoteRecord = $institutionStudent->find()->where(['student_status_id'=>$promoteId, 'student_id'=>$studentId,'academic_period_id'=>$entity->academic_period_id])->first();
-					// POCOR-9900: this save-time lookup never had the null guard that addBeforeSave()
-					// got in POCOR-8564 (and that one was itself placed after the dereference, so it
-					// didn't help either -- see UndoStudentStatusTable::addBeforeSave()). Dereferencing
-					// institution_id on a null $studentPromoteRecord threw an uncaught error and crashed
-					// the final Undo save for any institution/student combination where no
-					// institution_students row matches this exact (PROMOTED, academic_period_id) pair,
-					// instead of just skipping the cross-institution check and proceeding with the undo.
-					$promoteInstitutionId = !empty($studentPromoteRecord) ? $studentPromoteRecord->institution_id : null;
-					if (!empty($studentPromoteRecord) && $promoteInstitutionId != $enrolledInstitutionId && !empty($enrolledInstitutionId)){
+					$promoteInstitutionId = $studentPromoteRecord->institution_id;
+					if($promoteInstitutionId != $enrolledInstitutionId && !empty($enrolledInstitutionId)){
 						$message = __('There is an existing enrolment. Please contact ')."$institutionCode" .' - '. $institutionName;
 			            return false; //POCOR-6992 end
 

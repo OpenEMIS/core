@@ -9,7 +9,6 @@ use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
@@ -128,32 +127,6 @@ class UndoStudentStatusTable extends AppTable
 
     public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
-        // ======================================================================
-        // POCOR-9900 TEMPORARY DIAGNOSTIC -- REMOVE AFTER THIS TEST.
-        // Unconditionally short-circuits with a highly visible alert so we can tell,
-        // purely from the browser, whether this method is even reached for a given
-        // institution/student selection before any of the real logic below runs.
-        // Two already-deployed fixes (null-deref guard + validation-error alert) did
-        // not change the observed "silent reset to blank form" symptom for C.C.
-        // Sweeting Senior High -- this will tell us if the request is even getting here.
-        // ======================================================================
-        $diagParams = $this->ControllerAction->getQueryString();
-        if (empty($diagParams)) {
-            $diagParams = $this->getQueryString();
-        }
-        $diagEncodedQueryParams = $this->ControllerAction->paramsEncode($diagParams);
-        $diagInstitutionId = method_exists($this, 'getInstitutionID') ? $this->getInstitutionID() : null;
-        $diagMessage = 'DIAGNOSTIC (POCOR-9900): addBeforeSave() reached. institution_id=' . var_export($diagInstitutionId, true) . ' data=' . json_encode($data->getArrayCopy());
-        Log::write('debug', $diagMessage);
-        $this->Alert->error($diagMessage, ['type' => 'string', 'reset' => true]);
-        $url = $this->ControllerAction->url('view');
-        $url[0] = 'add';
-        $url[1] = $diagEncodedQueryParams;
-        $event->stopPropagation();
-        return $this->controller->redirect($url);
-        // ======================================================================
-        // END TEMPORARY DIAGNOSTIC
-        // ======================================================================
         $alias = $this->getAlias();
         $studentIds = [];
         $errors = $entity->getErrors();
@@ -169,30 +142,8 @@ class UndoStudentStatusTable extends AppTable
         //POCOR-6992 end
 
         if ($errors) {
-            // POCOR-9848: this used to stop here with zero feedback -- the "Next" button
-            // just reset the whole form back to blank with no alert and no indication why,
-            // which looked exactly like "Undo Promoted isn't working" for whichever
-            // institution/student combination happened to fail validation here. Log what
-            // actually failed and show it to the user instead of silently bailing out.
-            Log::write('debug', 'UndoStudentStatus addBeforeSave validation errors: ' . json_encode($errors));
-            $params = $this->ControllerAction->getQueryString();
-            if (empty($params)) {
-                $params = $this->getQueryString();
-            }
-            $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
-            $errorMessages = [];
-            foreach ($errors as $field => $fieldErrors) {
-                if (is_array($fieldErrors)) {
-                    $errorMessages = array_merge($errorMessages, array_values($fieldErrors));
-                }
-            }
-            $message = !empty($errorMessages) ? implode(' ', $errorMessages) : __('An error occurred while validating your selection.');
-            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-            $url = $this->ControllerAction->url('view');
-            $url[0] = 'add';
-            $url[1] = $encodedQueryParams;
             $event->stopPropagation();
-            return $this->controller->redirect($url);
+            return;
         }
 
         if (isset($data[$alias])) {
