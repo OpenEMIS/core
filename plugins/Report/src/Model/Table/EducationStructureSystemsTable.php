@@ -50,7 +50,7 @@ class EducationStructureSystemsTable extends AppTable
                 'education_level_name' => 'EducationLevels.name',
                 'education_level_isced' => 'EducationLevelIsced.name',
                 'education_cycle_name' => 'EducationCycles.name',
-                'admission_age' => $this->aliasField('admission_age'), //POCOR-9835: one row per grade, so use the grade's own admission age
+                'admission_age' => 'EducationCycles.admission_age', //POCOR-9835: cycle's admission age (constant per cycle) - grade admission_age increments per grade
                 'education_programme_code' => 'EducationProgrammes.code',
                 'education_programme_name' => 'EducationProgrammes.name',
                 'education_field_of_study' => 'EducationFieldOfStudies.name',
@@ -75,9 +75,14 @@ class EducationStructureSystemsTable extends AppTable
             ->leftJoin(['EducationFieldOfStudies' => 'education_field_of_studies'], ['EducationFieldOfStudies.id = EducationProgrammes.education_field_of_study_id'])
             //POCOR-9835: LEFT, not INNER - the field of study above is optional, an INNER join here dropped those programmes' grades
             ->leftJoin(['EducationProgrammeOrientations' => 'education_programme_orientations'], ['EducationProgrammeOrientations.id = EducationFieldOfStudies.education_programme_orientation_id'])
-            //POCOR-9835: visible filter in the join condition so grades without (visible) subjects are still listed
-            ->leftJoin(['EducationGradesSubjects' => 'education_grades_subjects'], ['EducationGradesSubjects.education_grade_id = ' . $this->aliasField('id'), 'EducationGradesSubjects.visible' => 1])
-            ->leftJoin(['EducationSubjects' => 'education_subjects'], ['EducationSubjects.id = EducationGradesSubjects.education_subject_id', 'EducationSubjects.visible' => 1])
+            //POCOR-9835: both visible filters in the grade subject join condition so grades without (visible) subjects are still listed once,
+            // and a visible grade subject pointing at a hidden subject does not add a blank subject row
+            ->leftJoin(['EducationGradesSubjects' => 'education_grades_subjects'], [
+                'EducationGradesSubjects.education_grade_id = ' . $this->aliasField('id'),
+                'EducationGradesSubjects.visible' => 1,
+                'EXISTS (SELECT 1 FROM education_subjects VisibleSubjects WHERE VisibleSubjects.id = EducationGradesSubjects.education_subject_id AND VisibleSubjects.visible = 1)',
+            ])
+            ->leftJoin(['EducationSubjects' => 'education_subjects'], ['EducationSubjects.id = EducationGradesSubjects.education_subject_id'])
             ->where([
                 'EducationSystems.academic_period_id' => $academicPeriodId,
                 $this->aliasField('visible') => 1,
