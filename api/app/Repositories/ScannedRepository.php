@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\SecurityUsers;
 use App\Models\ScannedAttendance;
+use App\Helpers\Utf8Sanitizer;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\ScannedAttendanceRequest;
@@ -25,6 +26,21 @@ use App\Http\Requests\ScannedAttendanceRequest;
  */
 class ScannedRepository extends Controller
 {
+    /**
+     * POCOR-9847: columns to pull from the related SecurityUsers row wherever it's
+     * eager-loaded here. Excludes photo_content (longblob raw binary image bytes) --
+     * that column is not valid UTF-8, and json_encode()-ing it is what was throwing
+     * "Malformed UTF-8 characters" and breaking the /scanned endpoints.
+     */
+    private const SCANNED_SECURITY_USER_COLUMNS = [
+        'id', 'openemis_no', 'username', 'first_name', 'middle_name',
+        'third_name', 'last_name', 'preferred_name', 'email',
+        'mobile_number', 'address', 'postal_code', 'address_area_id',
+        'birthplace_area_id', 'gender_id', 'date_of_birth',
+        'nationality_id', 'identity_type_id', 'identity_number',
+        'status', 'photo_name', 'is_student', 'is_staff', 'is_guardian',
+    ];
+
      /**
      * Save scanned user data to the database.
      * POCOR-8666
@@ -171,7 +187,7 @@ class ScannedRepository extends Controller
             $userListingRecord = $query->get()->toArray();
 
             $resp['data'] = $userListingRecord;
-            return $resp;
+            return Utf8Sanitizer::clean($resp);
 
         } catch (\Exception $e) {
             Log::error(
@@ -230,7 +246,9 @@ class ScannedRepository extends Controller
             if ($dateFrom && $dateTo && $dateFrom->gt($dateTo)) {
                 [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
             }
-            $userListingRecord = ScannedAttendance::with('securityUser');
+            $userListingRecord = ScannedAttendance::with(['securityUser' => function ($query) {
+                $query->select(self::SCANNED_SECURITY_USER_COLUMNS);
+            }]);
             if ($dateFrom && $dateTo) {
                 $userListingRecord = $userListingRecord->whereBetween('datetime', [
                     $dateFrom->format('Y-m-d H:i:s'),
@@ -258,7 +276,10 @@ class ScannedRepository extends Controller
                 ];
             }
 
-            return $resp;
+            // POCOR-9847: safety net -- any remaining malformed-UTF-8 bytes in free-text
+            // columns (access/location/security_user name fields) get stripped here so
+            // json_encode() downstream never throws, even for rows not yet repaired.
+            return Utf8Sanitizer::clean($resp);
 
         } catch (\Exception $e) {
             Log::error('Failed to fetch list from DB', [
@@ -273,13 +294,16 @@ class ScannedRepository extends Controller
     public function scanUserDetails($scannedId)
     {
         try {
-            $userDetails = ScannedAttendance::with('securityUser')->where('id', $scannedId)->first();
-            return $userDetails;
+            $userDetails = ScannedAttendance::with(['securityUser' => function ($query) {
+                $query->select(self::SCANNED_SECURITY_USER_COLUMNS);
+            }])->where('id', $scannedId)->first();
+
+            return $userDetails ? Utf8Sanitizer::clean($userDetails->toArray()) : $userDetails;
         } catch (\Exception $e) {
             Log::error('Failed to fetch Scanned User Data from db', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'parameters' => $params ?? [] 
+                'scanned_id' => $scannedId,
             ]);
             return $this->sendErrorResponse('Failed to fetch Scanned User Data from db');
         }

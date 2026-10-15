@@ -247,7 +247,13 @@ class StudentsTable extends AppTable
                     $fieldsOrder[] = 'area_level_id';
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'institution_dropdown'; //POCOR-9842
                     $fieldsOrder[] = 'format';
+                    //POCOR-9842 same "All Institutions" exclusivity script as Report.Students
+                    $this->ControllerAction->field('institution_dropdown', [
+                        'type'   => 'element',
+                        'element'=> 'institutiondropdown',
+                    ]);
                     break;
             }
             $this->ControllerAction->setFieldOrder($fieldsOrder);
@@ -564,8 +570,27 @@ class StudentsTable extends AppTable
         $validator = $validator
             ->notEmpty('academic_period_id')
             ->notEmpty('area_level_id')
-            ->notEmpty('area_education_id')
-            ->notEmpty('institution_id');
+            ->notEmpty('area_education_id');
+
+        //POCOR-9842 institution_id is now a multi-select ({_ids: [...]})
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
         return $validator;
     }
 
@@ -831,7 +856,7 @@ class StudentsTable extends AppTable
                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     }
 
-                    if(in_array($feature, ['Report.Students', 'Report.StudentsPhoto', 'Report.BodyMassStatusReports', 'Report.StudentContacts', 'Report.StudentIdentities', 'Report.StudentsEnrollmentSummary', 'Report.StudentsGraduationSummary', 'Report.StudentNotAssignedClass', 'Report.StudentsRiskAssessment', 'Report.SpecialNeeds', 'Report.HealthReports', 'Report.SubjectsBookLists'])) { //POCOR-8417
+                    if(in_array($feature, ['Report.Students', 'Report.StudentsPhoto', 'Report.BodyMassStatusReports', 'Report.StudentContacts', 'Report.StudentIdentities', 'Report.StudentsEnrollmentSummary', 'Report.StudentsGraduationSummary', 'Report.StudentNotAssignedClass', 'Report.StudentsRiskAssessment', 'Report.SpecialNeeds', 'Report.HealthReports', 'Report.SubjectsBookLists', 'Report.Counsellings'])) { //POCOR-8417 //POCOR-9842 added Counsellings
                         $attr['attr']['multiple'] = true;
                         unset($institutionOptions['']);
 

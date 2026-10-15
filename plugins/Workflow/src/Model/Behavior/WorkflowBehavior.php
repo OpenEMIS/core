@@ -2429,7 +2429,16 @@ class WorkflowBehavior extends Behavior
             }
 
             //POCOR-5677 & POCOR-6028 starts
-            if ($entity->has('status_id') && $entity->status_id == 95) {
+            // POCOR-9838: this used to unconditionally force start_date/end_date to
+            // "<start_year>-01-01"/"<start_year>-12-31" on every transition to step 95
+            // (Student Transfer's "Pending Approval"), silently discarding whatever date the
+            // user actually chose and saved on the transfer -- this was the ticket's original
+            // bug, surviving one layer below the form-level fix because it runs here via
+            // $model->save() with no further validation. Now only fills in the dates as a
+            // fallback when they're genuinely empty, and uses the academic period's real
+            // start_date/end_date (not a hardcoded Jan 1/Dec 31, which can fall outside a
+            // non-calendar-year period).
+            if ($entity->has('status_id') && $entity->status_id == 95 && (empty($entity->start_date) || empty($entity->end_date))) {
                 // update in institution_student_transfers table start and end date after change status open to pending approval
                 $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $AcademicData = $AcademicPeriods
@@ -2437,8 +2446,12 @@ class WorkflowBehavior extends Behavior
                             ->where([$AcademicPeriods->aliasField('id') => $entity->academic_period_id])
                             ->first();
 
-                $entity->start_date = $AcademicData->start_year.'-01-01';
-                $entity->end_date = $AcademicData->start_year.'-12-31';
+                if (empty($entity->start_date)) {
+                    $entity->start_date = $AcademicData->start_date;
+                }
+                if (empty($entity->end_date)) {
+                    $entity->end_date = $AcademicData->end_date;
+                }
                 $model->save($entity);
             }
             //POCOR-5677 & POCOR-6028 ends
