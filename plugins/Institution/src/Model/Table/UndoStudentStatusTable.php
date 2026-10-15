@@ -9,6 +9,7 @@ use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
@@ -142,8 +143,30 @@ class UndoStudentStatusTable extends AppTable
         //POCOR-6992 end
 
         if ($errors) {
+            // POCOR-9848: this used to stop here with zero feedback -- the "Next" button
+            // just reset the whole form back to blank with no alert and no indication why,
+            // which looked exactly like "Undo Promoted isn't working" for whichever
+            // institution/student combination happened to fail validation here. Log what
+            // actually failed and show it to the user instead of silently bailing out.
+            Log::write('debug', 'UndoStudentStatus addBeforeSave validation errors: ' . json_encode($errors));
+            $params = $this->ControllerAction->getQueryString();
+            if (empty($params)) {
+                $params = $this->getQueryString();
+            }
+            $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+            $errorMessages = [];
+            foreach ($errors as $field => $fieldErrors) {
+                if (is_array($fieldErrors)) {
+                    $errorMessages = array_merge($errorMessages, array_values($fieldErrors));
+                }
+            }
+            $message = !empty($errorMessages) ? implode(' ', $errorMessages) : __('An error occurred while validating your selection.');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            $url = $this->ControllerAction->url('view');
+            $url[0] = 'add';
+            $url[1] = $encodedQueryParams;
             $event->stopPropagation();
-            return;
+            return $this->controller->redirect($url);
         }
 
         if (isset($data[$alias])) {
