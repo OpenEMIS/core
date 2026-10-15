@@ -128,6 +128,32 @@ class UndoStudentStatusTable extends AppTable
 
     public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
+        // ======================================================================
+        // POCOR-9900 TEMPORARY DIAGNOSTIC -- REMOVE AFTER THIS TEST.
+        // Unconditionally short-circuits with a highly visible alert so we can tell,
+        // purely from the browser, whether this method is even reached for a given
+        // institution/student selection before any of the real logic below runs.
+        // Two already-deployed fixes (null-deref guard + validation-error alert) did
+        // not change the observed "silent reset to blank form" symptom for C.C.
+        // Sweeting Senior High -- this will tell us if the request is even getting here.
+        // ======================================================================
+        $diagParams = $this->ControllerAction->getQueryString();
+        if (empty($diagParams)) {
+            $diagParams = $this->getQueryString();
+        }
+        $diagEncodedQueryParams = $this->ControllerAction->paramsEncode($diagParams);
+        $diagInstitutionId = method_exists($this, 'getInstitutionID') ? $this->getInstitutionID() : null;
+        $diagMessage = 'DIAGNOSTIC (POCOR-9900): addBeforeSave() reached. institution_id=' . var_export($diagInstitutionId, true) . ' data=' . json_encode($data->getArrayCopy());
+        Log::write('debug', $diagMessage);
+        $this->Alert->error($diagMessage, ['type' => 'string', 'reset' => true]);
+        $url = $this->ControllerAction->url('view');
+        $url[0] = 'add';
+        $url[1] = $diagEncodedQueryParams;
+        $event->stopPropagation();
+        return $this->controller->redirect($url);
+        // ======================================================================
+        // END TEMPORARY DIAGNOSTIC
+        // ======================================================================
         $alias = $this->getAlias();
         $studentIds = [];
         $errors = $entity->getErrors();
