@@ -60,38 +60,32 @@ class InstitutionStudentAbsenceDetails extends Model
      */
     protected function processAbsenceAlert(): bool
     {
-        //POCOR-9862: evaluate every enabled rule (was only the first one, so e.g. a 4-day rule never fired)
-        $alertRules = AlertTriggerService::getActiveAlertRules('StudentAttendance');
+        $alertRule = AlertTriggerService::getActiveAlertRule('StudentAttendance', (int) $this->institution_id);
 
-        if (empty($alertRules)) {
+        if (!$alertRule) {
             return false;
         }
 
-        $triggered = false;
-        foreach ($alertRules as $alertRule) {
-            $result = AlertTriggerService::triggerAlert(
-                processName: 'AlertStudentAbsence',
-                featureName: 'StudentAttendance',
-                userId: (int) ($this->created_user_id ?: 1),
-                ruleId: (int) $alertRule->id,
-                entityId: null,
-                context: [
-                    'rule_id' => (int) $alertRule->id, //POCOR-9862: keeps the dedupe checksum distinct per rule
-                    'student_id' => (int) $this->student_id,
-                    'institution_id' => (int) $this->institution_id,
-                    'academic_period_id' => (int) $this->academic_period_id,
-                    'institution_class_id' => $this->institution_class_id ? (int) $this->institution_class_id : null,
-                    'period' => $this->period,
-                    'subject_id' => $this->subject_id,
-                    'date' => $this->date,
-                ],
-                entityType: 'StudentAttendance',
-                triggerType: 'threshold_exceeded'
-            );
-            $triggered = $triggered || (bool) ($result['success'] ?? false) || (bool) ($result['duplicate'] ?? false);
-        }
+        $result = AlertTriggerService::triggerAlert(
+            processName: 'AlertStudentAbsence',
+            featureName: 'StudentAttendance',
+            userId: (int) ($this->created_user_id ?: 1),
+            ruleId: (int) $alertRule->id,
+            entityId: null,
+            context: [
+                'student_id' => (int) $this->student_id,
+                'institution_id' => (int) $this->institution_id,
+                'academic_period_id' => (int) $this->academic_period_id,
+                'institution_class_id' => $this->institution_class_id ? (int) $this->institution_class_id : null,
+                'period' => $this->period,
+                'subject_id' => $this->subject_id,
+                'date' => $this->date,
+            ],
+            entityType: 'StudentAttendance',
+            triggerType: 'threshold_exceeded'
+        );
 
-        return $triggered;
+        return (bool) ($result['success'] ?? false) || (bool) ($result['duplicate'] ?? false);
     }
 
 
