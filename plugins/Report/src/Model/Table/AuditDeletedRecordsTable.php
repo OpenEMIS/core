@@ -194,15 +194,12 @@ class AuditDeletedRecordsTable extends AppTable
         if (empty($date)) {
             return null;
         }
-
-        // with time first
-        $dt = FrozenDate::createFromFormat('d-m-Y H:i:s', $date);
-        if ($dt) {
-            return $dt;
+        $timestamp = strtotime($date);
+        if ($timestamp === false) {
+            return null;
         }
 
-        // without time
-        return FrozenDate::createFromFormat('d-m-Y', $date);
+        return FrozenDate::createFromTimestamp($timestamp);
     }
 
 }

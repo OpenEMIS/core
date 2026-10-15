@@ -61,13 +61,19 @@ class AuditInstitutionStaffTable extends AppTable
         $startDate   = $requestData->report_start_date ?? null;
         $endDate     = $requestData->report_end_date ?? null;
         //Apply  start_date and end_date filters
+        // POCOR-9822: $startDateObj is null whenever no start date filter was supplied (the normal
+        // case for most reports here), so only add the lower-bound condition when one exists —
+        // calling ->format() on null previously threw an uncatchable PHP \Error (not an \Exception),
+        // crashing the report shell before it could even reach its own try/catch, which left the
+        // report stuck at status=1 (In Progress) forever instead of being marked as failed.
         $startDateObj = $this->parseDate($startDate);
-        $endDateObj   = $this->parseDate($endDate) ??FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'));
+        $endDateObj   = $this->parseDate($endDate) ?? FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'));
 
         $query->where(function (QueryExpression $exp) use ($startDateObj, $endDateObj) {
-        return $exp
-            ->gte($this->aliasField('start_date'), $startDateObj->format('Y-m-d'))
-            ->lte($this->aliasField('start_date'), $endDateObj->format('Y-m-d'));
+            if ($startDateObj) {
+                $exp->gte($this->aliasField('start_date'), $startDateObj->format('Y-m-d'));
+            }
+            return $exp->lte($this->aliasField('start_date'), $endDateObj->format('Y-m-d'));
         });
         //Select only required fields
         $query
@@ -290,15 +296,12 @@ class AuditInstitutionStaffTable extends AppTable
         if (empty($date)) {
             return null;
         }
-
-        // with time first
-        $dt = FrozenDate::createFromFormat('d-m-Y H:i:s', $date);
-        if ($dt) {
-            return $dt;
+        $timestamp = strtotime($date);
+        if ($timestamp === false) {
+            return null;
         }
 
-        // without time
-        return FrozenDate::createFromFormat('d-m-Y', $date);
+        return FrozenDate::createFromTimestamp($timestamp);
     }
 
 }
