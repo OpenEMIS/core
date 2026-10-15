@@ -41,7 +41,18 @@ app-root .kdx-datepicker .btn-input:hover {
     border-color: #<?= h($secondaryColour) ?> !important;
     color: #FFF !important;
 }
-/* POCOR-9855* header icon alignment */
+/* POCOR-9851: toolbar.scss forces a grey background on page header toolbar buttons (e.g. Export) */
+app-root .kdx-toolbar .kdx-toolbar-left .btn,
+app-root .kdx-toolbar .kdx-toolbar-left .btn:first-child {
+    background-color: #<?= h($productColour) ?> !important;
+    border-color: #<?= h($productColour) ?> !important;
+    color: #FFF !important;
+}
+app-root .kdx-toolbar .kdx-toolbar-left .btn:hover,
+app-root .kdx-toolbar .kdx-toolbar-left .btn:focus {
+    background-color: #<?= h($secondaryColour) ?> !important;
+    border-color: #<?= h($secondaryColour) ?> !important;
+}
 .header-navigation .btn-group {
     flex-direction: row;
     align-items: stretch;
