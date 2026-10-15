@@ -203,5 +203,17 @@ class AuditDeletedRecordsTable extends AppTable
     }
 
 
+    private function parseDate(?string $date): ?FrozenDate
+    {
+        if (empty($date)) {
+            return null;
+        }
+        $timestamp = strtotime($date);
+        if ($timestamp === false) {
+            return null;
+        }
+
+        return FrozenDate::createFromTimestamp($timestamp);
+    }
 
 }
