@@ -55,14 +55,14 @@ class AuditDeletedRecordsTable extends AppTable
         //user asked for. Only a genuinely EMPTY end date defaults (to year end);
         //an end date that is present but unparseable is an error, same as the
         //start date.
-        $startDateObj = $this->parseDate($startDate);
+        $startDateObj = $this->parseReportDate($startDate);
         if (!$startDateObj) {
             throw new \InvalidArgumentException('Invalid report start date: ' . $startDate);
         }
 
         $endDateObj = empty($endDate)
             ? FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'))
-            : $this->parseDate($endDate);
+            : $this->parseReportDate($endDate);
         if (!$endDateObj) {
             throw new \InvalidArgumentException('Invalid report end date: ' . $endDate);
         }
@@ -203,15 +203,5 @@ class AuditDeletedRecordsTable extends AppTable
     }
 
 
-    /**
-     * POCOR-9860: delegates to AppTable::parseReportDate(), which honours the
-     * installation's configured `date_format`. The previous implementation
-     * hard-coded 'd-m-Y H:i:s' and threw InvalidArgumentException on every site
-     * configured otherwise (e.g. BS-MOE uses 'F d, Y'), failing the report.
-     */
-    private function parseDate(?string $date): ?FrozenDate
-    {
-        return $this->parseReportDate($date);
-    }
 
 }

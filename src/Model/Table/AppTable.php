@@ -222,10 +222,14 @@ class AppTable extends Table
      * PHP reads '01/10/2026' as m/d/Y (10 Jan), but a 'd/m/Y' site means 1 Oct.
      * This mirrors ControllerAction\Model\Traits\PickerTrait::convertForDatePicker().
      *
+     * Returns null when empty or unparseable - the caller decides whether that
+     * is an error, and reports the offending value. No logging here, or a bad
+     * date would be recorded twice.
+     *
      * @param string|null $date Raw date param.
      * @return \Cake\I18n\FrozenDate|null Null when empty or unparseable.
      */
-    public function parseReportDate(?string $date)
+    public function parseReportDate(?string $date): ?FrozenDate
     {
         if (empty($date)) {
             return null;
@@ -279,8 +283,6 @@ class AppTable extends Table
             // from UTC-10 to UTC+14.
             return new FrozenDate($dateObject->format('Y-m-d'));
         }
-
-        Log::write('error', __METHOD__ . ' could not parse report date: ' . $date);
 
         return null;
     }
