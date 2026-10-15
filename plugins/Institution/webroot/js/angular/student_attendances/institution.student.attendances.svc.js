@@ -298,10 +298,11 @@ function InstitutionStudentAttendancesSvc(
         }).ajax({ success: success, defer: true });
     }
 
-    function getClassOptions(institutionId, academicPeriodId) {
-        const key = getCacheKey(institutionId, academicPeriodId);
+    // Classes of the institution/period, optionally limited to those running the given
+    // education grade (multi-grade classes are returned for each of their grades)
+    function getClassOptions(institutionId, academicPeriodId, educationGradeId) {
+        const key = getCacheKey(institutionId, academicPeriodId, educationGradeId);
         if (cache.classes[key]) {
-            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.classes[key]);
         }
 
@@ -315,16 +316,21 @@ function InstitutionStudentAttendancesSvc(
             }
         };
 
-        return InstitutionClasses.find("classesByInstitutionAndAcademicPeriod", {
+        var params = {
             institution_id: institutionId,
             academic_period_id: academicPeriodId,
-        }).ajax({ success: success, defer: true });
+        };
+        if (educationGradeId) {
+            params.education_grade_id = educationGradeId;
+        }
+        return InstitutionClasses.find("classesByInstitutionAndAcademicPeriod", params)
+            .ajax({ success: success, defer: true });
     }
 
-    function getEducationGradeOptions(institutionId, academicPeriodId, classId) {
-        const key = getCacheKey(institutionId, academicPeriodId, classId);
+    // All education grades that have classes in the institution for the academic period
+    function getEducationGradeOptions(institutionId, academicPeriodId) {
+        const key = getCacheKey(institutionId, academicPeriodId);
         if (cache.grades[key]) {
-            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.grades[key]);
         }
 
@@ -338,10 +344,9 @@ function InstitutionStudentAttendancesSvc(
             }
         };
 
-        return InstitutionClasses.find("gradesByInstitutionAndAcademicPeriodAndInstitutionClass", {
+        return InstitutionClasses.find("gradesByInstitutionAndAcademicPeriod", {
             institution_id: institutionId,
             academic_period_id: academicPeriodId,
-            institution_class_id: classId,
         }).ajax({ success: success, defer: true });
     }
 

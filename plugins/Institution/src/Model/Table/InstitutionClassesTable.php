@@ -2223,6 +2223,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $academicPeriodId = $options['academic_period_id'];
         $staffId = $options['user']['id'];
         $isStaff = $options['user']['is_staff'];
+        $educationGradeId = isset($options['education_grade_id']) ? (int)$options['education_grade_id'] : 0;
 
         $query
             ->select([
@@ -2234,6 +2235,18 @@ class InstitutionClassesTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $academicPeriodId
             ])
             ->order([$this->aliasField('name')]);
+
+        // Student Attendance: limit classes to the selected education grade
+        // (a multi-grade class is listed under each of its grades)
+        if ($educationGradeId > 0) {
+            $query->innerJoin(
+                ['ClassGradeFilter' => 'institution_class_grades'],
+                [
+                    'ClassGradeFilter.institution_class_id = ' . $this->aliasField('id'),
+                    'ClassGradeFilter.education_grade_id' => $educationGradeId
+                ]
+            );
+        }
 
         if ($options['user']['super_admin'] == 0) {
             $query
@@ -2412,6 +2425,77 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         return false;
+    }
+
+    /**
+     * Student Attendance: education grades that have at least one class (visible to the
+     * current user) in the institution for the academic period. Used to drive the Class list.
+     */
+    public function findGradesByInstitutionAndAcademicPeriod(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $institutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+        $EducationCycles = TableRegistry::getTableLocator()->get('Education.EducationCycles');
+        $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
+
+        // Reuse the class finder so the same class-level permissions apply
+        $classOptions = $options;
+        unset($classOptions['education_grade_id']);
+        $classIds = $this->find('classesByInstitutionAndAcademicPeriod', $classOptions)
+            ->select([$this->aliasField('id')], true)
+            ->order([], true)
+            ->distinct([$this->aliasField('id')])
+            ->extract('id')
+            ->toArray();
+
+        if (empty($classIds)) {
+            $classIds = [-1];
+        }
+
+        $query->select([
+            'id' => $EducationGrades->aliasField('id'),
+            'name' => $EducationGrades->aliasField('name')
+        ])
+            ->innerJoin(
+                [$institutionClassGrades->getAlias() => $institutionClassGrades->getTable()],
+                [$this->aliasField('id = ') . $institutionClassGrades->aliasField('institution_class_id')]
+            )->innerJoin(
+                [$EducationGrades->getAlias() => $EducationGrades->getTable()],
+                [$EducationGrades->aliasField('id = ') . $institutionClassGrades->aliasField('education_grade_id')]
+            )->innerJoin(
+                [$EducationProgrammes->getAlias() => $EducationProgrammes->getTable()],
+                [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
+            )->innerJoin(
+                [$EducationCycles->getAlias() => $EducationCycles->getTable()],
+                [$EducationCycles->aliasField('id = ') . $EducationProgrammes->aliasField('education_cycle_id')]
+            )->innerJoin(
+                [$EducationLevels->getAlias() => $EducationLevels->getTable()],
+                [$EducationLevels->aliasField('id = ') . $EducationCycles->aliasField('education_level_id')]
+            )
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('id IN') => $classIds
+            ])
+            ->group([
+                $EducationGrades->aliasField('id'),
+                $EducationGrades->aliasField('name'),
+                $EducationLevels->aliasField('order'),
+                $EducationCycles->aliasField('order'),
+                $EducationProgrammes->aliasField('order'),
+                $EducationGrades->aliasField('order')
+            ])
+            ->order([
+                $EducationLevels->aliasField('order') => 'ASC',
+                $EducationCycles->aliasField('order') => 'ASC',
+                $EducationProgrammes->aliasField('order') => 'ASC',
+                $EducationGrades->aliasField('order') => 'ASC'
+            ]);
+
+        return $query;
     }
 
     public function findGradesByInstitutionAndAcademicPeriodAndInstitutionClass(Query $query, array $options)
