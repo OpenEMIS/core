@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, OnInit } from '@angular/core';
 import { ITableApi, ITableColumn, ITableConfig, KdAlertEvent } from 'openemis-styleguide-lib';
 import { timer } from 'rxjs';
 import { TABLE_COLUMN_LIST } from './scanned-student.config';
@@ -13,7 +13,7 @@ import { SharedService } from 'src/app/shared/shared.service';
   templateUrl: './scanned-student.component.html',
   styleUrls: ['./scanned-student.component.css']
 })
-export class ScannedStudentComponent implements OnInit {
+export class ScannedStudentComponent implements OnInit, AfterViewChecked {
   public displayLoading: boolean = false;
   public counter: number;
   themeArray = DEFAULT_TEMPLATE_THEME;
@@ -99,7 +99,8 @@ export class ScannedStudentComponent implements OnInit {
   constructor(private Rest: ApiService,
     public router: Router,
     public _shared: SharedService,
-    private _kdAlertEvent: KdAlertEvent) { }
+    private _kdAlertEvent: KdAlertEvent,
+    private elementRef: ElementRef) { }
 
   ngOnInit(): void {
     this.counter = 0;
@@ -115,6 +116,17 @@ export class ScannedStudentComponent implements OnInit {
       ];
     });
     this.loginData();
+  }
+
+  // POCOR-9851: the date filter has no label option, so show a tooltip on the calendar button
+  ngAfterViewChecked(): void {
+    const tooltips = { date_from: 'Start Date', date_to: 'End Date' };
+    Object.keys(tooltips).forEach((key: string): void => {
+      const datepicker = this.elementRef.nativeElement.querySelector(`kd-datepicker#${key}`);
+      if (datepicker && datepicker.getAttribute('data-tooltip') !== tooltips[key]) {
+        datepicker.setAttribute('data-tooltip', tooltips[key]);
+      }
+    });
   }
 
 
