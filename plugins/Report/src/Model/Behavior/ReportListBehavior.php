@@ -21,6 +21,7 @@ use Cake\Controller\Component\SessionComponent;
 
 class ReportListBehavior extends Behavior {
 	public $ReportProgress;
+	private $reportListPageOptions = null; //POCOR-9841
 
 	public function initialize(array $config): void {
 
@@ -103,15 +104,17 @@ class ReportListBehavior extends Behavior {
 			$this->_table->controller->set('UsersCheck', $user);
 			$this->_table->controller->set('AccessCheck', $check);
 			/*POCOR-6208 ENDS*/
+			if ($this->reportListPageOptions !== null) { 
+				$config['pageOptions'] = $this->reportListPageOptions;
+			}
 			$this->_table->controller->set('ControllerAction', $config);
 			$this->_table->ControllerAction->renderView('/Reports/index');
 		}
 	}
 
 	public function indexBeforeAction(EventInterface $event, ArrayObject $settings) {
-		//print_r($this->ReportProgress); die;
-		//print_r($this->_table->getAlias());die;
 		$query = $settings['query'];
+		
 		$settings['pagination'] = false;
 		$fields = $this->_table->ControllerAction->getFields($this->ReportProgress);
 		$fields['current_records']['visible'] = false;
@@ -182,7 +185,49 @@ class ReportListBehavior extends Behavior {
 		}
 		//POCOR-6621 End
 
+		$this->paginateReportList($query); //POCOR-9841
+
 		return $query;
+	}
+
+	/**
+	 * POCOR-9841: paginates the report list query. The page size defaults to the first.
+	 * Paginating runs the query with limit/offset applied and sets the paging params the pagination
+	 */
+	private function paginateReportList(Query $query): void
+	{
+		$controller = $this->_table->controller;
+		$request = $controller->getRequest();
+		$session = $request->getSession();
+		$sessionKey = $this->_table->getRegistryAlias() . '.search.limit'; // same key ControllerActionHelper::getPageOptions() reads
+
+		$pageOptions = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions')
+			->find()
+			->select(['value'])
+			->where(['option_type' => 'list_page'])
+			->all()
+			->extract('value')
+			->toList();
+		if (empty($pageOptions)) {
+			$pageOptions = [10, 20, 30, 40, 50,100,150];
+		}
+
+		$limitIndex = 0; 
+		if ($session->check($sessionKey)) {
+			$limitIndex = (int)$session->read($sessionKey);
+		}
+		if ($request->is(['post', 'put']) && isset($request->getData('Search')['limit'])) {
+			$limitIndex = (int)$request->getData('Search')['limit'];
+			$session->write($sessionKey, $limitIndex);
+		}
+		if (!isset($pageOptions[$limitIndex])) {
+			$limitIndex = 0;
+		}
+
+		$this->reportListPageOptions = $pageOptions;
+		$controller->setRequest($request->withData('Search', array_merge((array)$request->getData('Search'), ['limit' => $limitIndex])));
+
+		$controller->Paginator->paginate($query, ['limit' => (int)$pageOptions[$limitIndex]]);
 	}
 
 	public function onUpdateFieldFormat(EventInterface $event, array $attr, $action, ServerRequest $request)
