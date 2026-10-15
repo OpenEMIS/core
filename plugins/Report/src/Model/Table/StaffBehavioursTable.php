@@ -33,7 +33,8 @@ class StaffBehavioursTable extends AppTable  {
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']); //POCOR-6670
         $this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
         $this->addBehavior('Report.AreaList');//POCOR-7794
-      
+        $this->addBehavior('Report.InstitutionSecurity'); //POCOR-9823 restrict export to the user's accessible institutions
+
     }
     public function implementedEvents(): array
     {
