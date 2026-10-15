@@ -118,6 +118,8 @@ class ReportsController extends AppController
         $alias = $table->getAlias();
         if ($alias == 'InstitutionInfrastructures') {
             $header = __('Reports') . ' - ' . __('Infrastructures');
+        } elseif ($alias == 'CustomReportSetups') { //POCOR-9812
+            $header = __('Reports') . ' - ' . __('Custom');
         } else {
             $header = __('Reports') . ' - ' . __($alias);
         }
@@ -414,6 +416,12 @@ class ReportsController extends AppController
     public function Profiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Profiles']);
+    }
+
+    //POCOR-9812: Reports > Custom > Add - create a custom report definition (separate permission from Process)
+    public function CustomReportSetups()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.CustomReportSetups']);
     }
 
     // View report

@@ -2764,6 +2764,7 @@ class NavigationComponent extends Component
                 'title' => 'Custom',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
+                'selected' => ['Reports.CustomReportSetups'], //POCOR-9812: Reports > Custom > Add
             ],
             'Reports.Directory' => [
                 'title' => 'Directory',
