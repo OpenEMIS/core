@@ -53,6 +53,13 @@ class AuditDeletedRecordsTable extends AppTable
         $startDateObj = $this->parseDate($startDate);
         $endDateObj   = $this->parseDate($endDate) ?? FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'));
 
+        //POCOR-9860: an unparseable start date must fail the report, not silently
+        //drop the date filter below - that would export every row for the selected
+        //reference_table instead of the requested range.
+        if (!$startDateObj) {
+            throw new \InvalidArgumentException('Invalid report start date: ' . $startDate);
+        }
+
         // Base select
         $query
             ->select([
@@ -189,20 +196,15 @@ class AuditDeletedRecordsTable extends AppTable
     }
 
 
+    /**
+     * POCOR-9860: delegates to AppTable::parseReportDate(), which honours the
+     * installation's configured `date_format`. The previous implementation
+     * hard-coded 'd-m-Y H:i:s' and threw InvalidArgumentException on every site
+     * configured otherwise (e.g. BS-MOE uses 'F d, Y'), failing the report.
+     */
     private function parseDate(?string $date): ?FrozenDate
     {
-        if (empty($date)) {
-            return null;
-        }
-
-        // with time first
-        $dt = FrozenDate::createFromFormat('d-m-Y H:i:s', $date);
-        if ($dt) {
-            return $dt;
-        }
-
-        // without time
-        return FrozenDate::createFromFormat('d-m-Y', $date);
+        return $this->parseReportDate($date);
     }
 
 }

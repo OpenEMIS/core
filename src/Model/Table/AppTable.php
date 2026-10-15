@@ -20,6 +20,7 @@ use Cake\Database\Schema\TableSchema;
 use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
+use Cake\I18n\FrozenDate; //POCOR-9860
 use App\Utility\ApplicationTimezone; //POCOR-9565
 
 class AppTable extends Table
@@ -205,6 +206,76 @@ class AppTable extends Table
             $value = $dateObject->format($format);
         }
         return $value;
+    }
+
+    /**
+     * POCOR-9860: parse a report date param (report_start_date / report_end_date).
+     *
+     * The datepicker submits in the installation's configured `date_format`
+     * ConfigItem ('F d, Y', 'd-m-Y', 'd/m/Y', ...), and AuditsTable appends
+     * ' 00:00:00' / ' 23:59:59'. Report tables used to parse these with a
+     * hard-coded 'd-m-Y H:i:s'; Chronos' createFromFormat() THROWS on a mismatch
+     * rather than returning false, so any site not configured for 'd-m-Y' failed
+     * the whole report with status = Error.
+     *
+     * The configured format is tried first because a bare guess is ambiguous:
+     * PHP reads '01/10/2026' as m/d/Y (10 Jan), but a 'd/m/Y' site means 1 Oct.
+     * This mirrors ControllerAction\Model\Traits\PickerTrait::convertForDatePicker().
+     *
+     * @param string|null $date Raw date param.
+     * @return \Cake\I18n\FrozenDate|null Null when empty or unparseable.
+     */
+    public function parseReportDate(?string $date)
+    {
+        if (empty($date)) {
+            return null;
+        }
+
+        // bootstrap-datepicker cannot emit ordinals; strip any legacy "31st" input.
+        $normalized = trim(preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $date));
+
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItem->value('date_format') ?: 'd-m-Y';
+        $editableFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        $formats = [
+            // ' H:i:s' is deliberately hard-coded and must NOT come from the
+            // time_format ConfigItem. AuditsTable::checkForDateFields() builds
+            // this suffix as a literal - it concatenates ' 00:00:00' / ' 23:59:59'
+            // and never consults time_format - so the parser has to mirror the
+            // producer. Driving it from time_format would fail every site set to
+            // 'h:i A' or 'H:i', which is the same class of bug as POCOR-9860.
+            $editableFormat . ' H:i:s',
+            // Date only, for report forms that store the date without a suffix.
+            $editableFormat,
+            // Legacy fallbacks, in case the param was stored under a previous setting.
+            'd-m-Y H:i:s', 'd-m-Y',
+            'd/m/Y H:i:s', 'd/m/Y',
+            'Y-m-d H:i:s', 'Y-m-d',
+        ];
+
+        foreach ($formats as $format) {
+            // '!' resets unspecified fields to the epoch instead of "now", so a
+            // format without a day cannot silently inherit today's date.
+            $dateObject = \DateTime::createFromFormat('!' . $format, $normalized);
+            $errors = \DateTime::getLastErrors();
+
+            // createFromFormat() does NOT return false for out-of-range values -
+            // it overflows ('99-99-9999' becomes year 10007). Reject anything
+            // that produced a warning or error so a bad param yields null rather
+            // than a bogus date or an exception from a second parse.
+            if ($dateObject === false
+                || ($errors && (!empty($errors['error_count']) || !empty($errors['warning_count'])))
+            ) {
+                continue;
+            }
+
+            return FrozenDate::createFromTimestamp($dateObject->getTimestamp());
+        }
+
+        Log::write('error', __METHOD__ . ' could not parse report date: ' . $date);
+
+        return null;
     }
 
     // Event: 'ControllerAction.Model.onFormatTime'

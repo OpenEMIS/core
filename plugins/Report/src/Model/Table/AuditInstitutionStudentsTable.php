@@ -13,7 +13,6 @@ use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
-use Cake\I18n\FrozenTime;
 use Cake\I18n\FrozenDate;
 
 /**
@@ -56,20 +55,29 @@ class AuditInstitutionStudentsTable extends AppTable
         $startDate   = $requestData->report_start_date ?? null;
         $endDate     = $requestData->report_end_date ?? null;
         //Apply  start_date and end_date filters
+        //POCOR-9860: parse via AppTable::parseReportDate() so the installation's
+        //configured `date_format` is honoured. The previous hard-coded
+        //'d-m-Y H:i:s' threw InvalidArgumentException on sites set to anything
+        //else (e.g. BS-MOE uses 'F d, Y'), failing the report with status Error.
+        $where = [];
         if (!empty($startDate)) {
-            $startDateObj = FrozenTime::createFromFormat('d-m-Y H:i:s', $startDate);
+            $startDateObj = $this->parseReportDate($startDate);
 
             // If endDate is empty, default to end of current year
-            if (empty($endDate)) {
-                $endDateObj = FrozenTime::createFromFormat('d-m-Y H:i:s', '31-12-' . date('Y') . ' 23:59:59');
-            } else {
-                $endDateObj = FrozenTime::createFromFormat('d-m-Y H:i:s', $endDate);
+            $endDateObj = $this->parseReportDate($endDate)
+                ?? FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'));
+
+            //POCOR-9860: an unparseable start date must fail the report, not
+            //silently leave $where empty and export the whole table.
+            if (!$startDateObj) {
+                throw new \InvalidArgumentException('Invalid report start date: ' . $startDate);
             }
 
             if ($startDateObj && $endDateObj) {
+                //parseReportDate() returns a date, so re-apply the day boundaries
                 $where[] = [
-                    $this->aliasField('start_date') . ' <=' => $endDateObj->format('Y-m-d H:i:s'),
-                    $this->aliasField('end_date') . ' >=' => $startDateObj->format('Y-m-d H:i:s')
+                    $this->aliasField('start_date') . ' <=' => $endDateObj->format('Y-m-d') . ' 23:59:59',
+                    $this->aliasField('end_date') . ' >=' => $startDateObj->format('Y-m-d') . ' 00:00:00'
                 ];
             }
         }
