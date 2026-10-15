@@ -29,6 +29,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use JWTAuth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class DirectoryRepository extends Controller
 {
@@ -1125,7 +1126,564 @@ class DirectoryRepository extends Controller
     }
     //For POCOR-8194 End...
 
+    /**
+     * POCOR-9822
+     * @param array $params openemis_no and/or identity_number (+ identity_type_id, nationality_id),
+     *                      date_of_birth)
+     */
+    public function internalSearch($params)
+    {
+        $openemisNo = $params['openemis_no'] ?? null;
+        $identityNumber = $params['identity_number'] ?? null;
+        $dateOfBirth = $params['date_of_birth'] ?? null;
+        $identityTypeId = $params['identity_type_id'] ?? null;
+        $nationalityId = $params['nationality_id'] ?? null;
+        $genderId = $params['gender_id'] ?? null;
+
+        if (!empty($identityNumber)) {
+            $users = $this->runInternalSearchQuery(
+                $openemisNo, $identityNumber, $dateOfBirth, $identityTypeId, $nationalityId, $genderId,
+                /* viaUserIdentities */ false
+            );
+
+            if (empty($users)) {
+                $users = $this->runInternalSearchQuery(
+                    $openemisNo, $identityNumber, $dateOfBirth, $identityTypeId, $nationalityId, $genderId,
+                    /* viaUserIdentities */ true
+                );
+            }
+        } else {
+            $users = $this->runInternalSearchQuery(
+                $openemisNo, $identityNumber, $dateOfBirth, $identityTypeId, $nationalityId, $genderId,
+                /* viaUserIdentities */ true
+            );
+        }
+
+        $result = [];
+        foreach ($users as $user) {
+            $result[] = $this->buildInternalSearchResult((array)$user);
+        }
+
+        return ['data' => $result, 'total' => count($result)];
+    }
+
+    private function runInternalSearchQuery(
+        $openemisNo,
+        $identityNumber,
+        $dateOfBirth,
+        $identityTypeId,
+        $nationalityId,
+        $genderId,
+        bool $viaUserIdentities
+    ): array {
+        $query = DB::table('security_users')
+            ->leftJoin('genders', 'genders.id', '=', 'security_users.gender_id')
+            ->leftJoin('user_nationalities', 'user_nationalities.security_user_id', '=', 'security_users.id')
+            ->leftJoin('nationalities', function ($join) {
+                $join->on('nationalities.id', '=', 'user_nationalities.nationality_id')
+                    ->where('user_nationalities.preferred', '=', 1);
+            })
+            ->leftJoin('area_administratives as address_areas', 'address_areas.id', '=', 'security_users.address_area_id')
+            ->leftJoin('area_administratives as birth_areas', 'birth_areas.id', '=', 'security_users.birthplace_area_id')
+            ->where('security_users.super_admin', '<>', 1);
+
+        if (!empty($openemisNo)) {
+            $query->where('security_users.openemis_no', $openemisNo);
+        }
+
+        if (!empty($identityNumber) && $viaUserIdentities) {
+            $query->join('user_identities', function ($join) use ($identityNumber, $identityTypeId, $nationalityId) {
+                $join->on('user_identities.security_user_id', '=', 'security_users.id')
+                    ->where('user_identities.number', '=', $identityNumber);
+                if (!empty($identityTypeId)) {
+                    $join->where('user_identities.identity_type_id', '=', $identityTypeId);
+                }
+                if (!empty($nationalityId)) {
+                    $join->where(function ($q) use ($nationalityId) {
+                        $q->where('user_identities.nationality_id', '=', $nationalityId)
+                            ->orWhereNull('user_identities.nationality_id');
+                    });
+                }
+            });
+        } else {
+            if (!empty($identityNumber)) {
+                $query->where('security_users.identity_number', $identityNumber);
+                if (!empty($identityTypeId)) {
+                    $query->where('security_users.identity_type_id', $identityTypeId);
+                }
+                if (!empty($nationalityId)) {
+                    $query->where('security_users.nationality_id', $nationalityId);
+                }
+            }
+            $query->leftJoin('user_identities', 'user_identities.security_user_id', '=', 'security_users.id');
+        }
+        $query->leftJoin('identity_types', 'identity_types.id', '=', 'user_identities.identity_type_id');
+        $query->leftJoin('identity_types as primary_identity_types', 'primary_identity_types.id', '=', 'security_users.identity_type_id');
+
+        if (!empty($dateOfBirth)) {
+            $query->where('security_users.date_of_birth', date('Y-m-d', strtotime($dateOfBirth)));
+        }
+
+        if (!empty($genderId)) {
+            $query->where('security_users.gender_id', $genderId);
+        }
+
+        return $query->select([
+                'security_users.id', 'security_users.username', 'security_users.openemis_no',
+                'security_users.first_name', 'security_users.middle_name', 'security_users.third_name',
+                'security_users.last_name', 'security_users.email', 'security_users.mobile_number',
+                'security_users.address', 'security_users.postal_code', 'security_users.photo_name',
+                'security_users.photo_content', 'security_users.address_area_id', 'security_users.birthplace_area_id',
+                'security_users.gender_id', 'security_users.date_of_birth', 'security_users.nationality_id',
+                'security_users.is_student', 'security_users.is_staff', 'security_users.is_guardian',
+                'genders.name as gender_name',
+                DB::raw('COALESCE(identity_types.id, primary_identity_types.id) as main_identity_type_id'),
+                DB::raw('COALESCE(identity_types.name, primary_identity_types.name) as main_identity_type_name'),
+                DB::raw('COALESCE(user_identities.number, security_users.identity_number) as main_identity_number'),
+                'nationalities.id as main_nationality_id',
+                'nationalities.name as main_nationality_name',
+                'address_areas.name as area_name',
+                'address_areas.code as area_code',
+                'birth_areas.name as birth_area_name',
+                'birth_areas.code as birth_area_code',
+            ])
+            ->groupBy('security_users.id')
+            ->get()
+            ->all();
+    }
+
+    private function buildInternalSearchResult(array $user): array
+    {
+        $firstName = $user['first_name'] ?? '';
+        $middleName = $user['middle_name'] ?? '';
+        $thirdName = $user['third_name'] ?? '';
+        $lastName = $user['last_name'] ?? '';
+
+        $nationalityId = !empty($user['main_nationality_id'])
+            ? (int)$user['main_nationality_id']
+            : (!empty($user['nationality_id']) ? (int)$user['nationality_id'] : null);
+        $nationalityName = $user['main_nationality_name'] ?? null;
+        if (empty($nationalityName) && $nationalityId) {
+            $nationalityName = DB::table('nationalities')->where('id', $nationalityId)->value('name');
+        }
+
+        $contactData = $this->getInternalSearchContactData($user['id']);
+        $genderName = $user['gender_name'] ?? null;
+
+        $result = [
+            'id' => $user['id'],
+            'username' => $user['username'],
+            'openemis_no' => $user['openemis_no'],
+            'first_name' => $firstName,
+            'middle_name' => $middleName,
+            'third_name' => $thirdName,
+            'last_name' => $lastName,
+            'name' => implode(' ', array_filter([$firstName, $middleName, $thirdName, $lastName])),
+            'date_of_birth' => !empty($user['date_of_birth']) ? date('Y-m-d', strtotime($user['date_of_birth'])) : null,
+            'gender_id' => $user['gender_id'],
+            'gender' => $genderName ?: null,
+            'gender_name' => $genderName ?: null,
+            'nationality' => $nationalityName ?: null,
+            'nationality_id' => $nationalityId,
+            'identity_type' => $user['main_identity_type_name'] ?: null,
+            'identity_type_id' => !empty($user['main_identity_type_id']) ? (int)$user['main_identity_type_id'] : null,
+            'identity_number' => $user['main_identity_number'] ?: null,
+            'contact_data' => $contactData,
+            'contact_type_id' => $contactData['contact_type_id'] ?? null,
+            'contact_type_name' => $contactData['contact_type_name'] ?? null,
+            'contact_value' => $contactData['contact_value'] ?? null,
+            'address_area_id' => $user['address_area_id'],
+            'area_name' => $user['area_name'],
+            'area_code' => $user['area_code'],
+            'birthplace_area_id' => $user['birthplace_area_id'],
+            'birth_area_name' => $user['birth_area_name'],
+            'birth_area_code' => $user['birth_area_code'],
+            'address' => $user['address'],
+            'postal_code' => $user['postal_code'],
+            'email' => $user['email'],
+            'mobile_number' => $user['mobile_number'],
+        ];
+
+        return $result;
+    }
+
+    private function getInternalSearchContactData(int $userId): array
+    {
+        $contact = DB::table('user_contacts')
+            ->join('contact_types', 'contact_types.id', '=', 'user_contacts.contact_type_id')
+            ->join('contact_options', 'contact_options.id', '=', 'contact_types.contact_option_id')
+            ->where('user_contacts.security_user_id', $userId)
+            ->where('user_contacts.preferred', 1)
+            ->select(
+                'user_contacts.value as contact_value',
+                'user_contacts.contact_type_id',
+                'contact_types.name as contact_type_name',
+                'contact_options.name as contact_option_name'
+            )
+            ->first();
+
+        return $contact ? (array)$contact : [
+            'contact_value' => null,
+            'contact_type_id' => null,
+            'contact_type' => null,
+        ];
+    }
+
+    /**
+     *  POCOR-9822
+     * @param array $params identity_number, nationality_id,identity_type_id, date_of_birth
+     * @return array
+     */
+    public function externalSearch($params)
+    {
+
+        $identityNumber = $params['identity_number'] ?? null;
+        $dateOfBirth = !empty($params['date_of_birth']) ? date('Y-m-d', strtotime($params['date_of_birth'])) : null;
+        $nationalityId = $params['nationality_id'] ?? null;
+        $identityTypeId = $params['identity_type_id'] ?? null;
+
+        $getSearchType = $this->getExternalSearchType($nationalityId, $identityTypeId);
+
+       
+        $noData = ['data' => [], 'total' => 0];
+
+        if (empty($getSearchType)) {
+            Log::warning(
+                'External search: no External Data Source - Identity is enabled for this nationality/identity type',
+                ['nationality_id' => $nationalityId, 'identity_type_id' => $identityTypeId]
+            );
+            return $noData;
+        }
+
+        $attributes = DB::table('external_data_source_attributes')
+            ->where('external_data_source_type', $getSearchType)
+            ->pluck('value', 'attribute_field')
+            ->all();
+
+        try {
+            if ($getSearchType === 'UNHCR') {
+                $response = $this->getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth);
+            } elseif ($getSearchType === 'Seychelles Civil Status') {
+                $response = $this->getSeychellesData($attributes, $noData, $identityNumber, $dateOfBirth);
+            } elseif ($getSearchType === 'OpenEMIS Core') {
+                $response = $this->getOECoreData($attributes, $noData, $identityNumber);
+            } else {
+                Log::warning('Unsupported external search source requested', ['search_type' => $getSearchType]);
+                $response = $noData;
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to perform directory external search',
+                ['search_type' => $getSearchType, 'message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return ['error' => $e->getMessage()];
+        }
+
+        return $response;
+    }
+
+    /**
+     * POCOR-9822
+     */
+    private function getExternalSearchType($nationalityId, $identityTypeId): ?string
+    {
+        if (!$nationalityId || !$identityTypeId) {
+            return null;
+        }
+
+        $names = DB::table('config_items')
+            ->select('config_items.name')
+            ->where('config_items.type', 'External Data Source - Identity')
+            ->where('config_items.value', 1)
+            ->where('config_items.name', '!=', 'OpenEMIS Core')
+            ->join('nationalities', function ($join) use ($nationalityId, $identityTypeId) {
+                $join->on('nationalities.external_validation', '=', 'config_items.id')
+                    ->where('nationalities.id', '=', $nationalityId)
+                    ->where('nationalities.identity_type_id', '=', $identityTypeId);
+            })
+            ->pluck('config_items.name')
+            ->all();
+
+        $openEmisdataSource = DB::table('config_items')
+            ->where('type', 'External Data Source - Identity')
+            ->where('value', 1)
+            ->where('name', 'OpenEMIS Core')
+            ->first();
+
+        if ($openEmisdataSource) {
+            $match = DB::table('external_data_source_attributes')
+                ->where('external_data_source_type', 'OpenEMIS Core')
+                ->where('attribute_field', 'identity_type_id')
+                ->where('value', $identityTypeId)
+                ->first();
+
+            if ($match) {
+                $names[] = $openEmisdataSource->name;
+            }
+        }
+
+        if (empty($names)) {
+            Log::warning('getExternalSearchType: no nationalities row maps this nationality_id/identity_type_id to an enabled External Data Source - Identity', [
+                'nationality_id' => $nationalityId,
+                'identity_type_id' => $identityTypeId,
+                'nationality_row' => (array) (DB::table('nationalities')->where('id', $nationalityId)->first() ?? []),
+            ]);
+            return null;
+        }
+        return end($names);
+    }
+
+    private function getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth): array
+    {
+        $applicationId = $attributes['application_id'] ?? '';
+        $apiKey = $attributes['secret_code'] ?? '';
+        $url = $attributes['url'] ?? '';
+        $tokenUri = $url . 'login';
+        $userDataUri = $url . 'validate/identity-number';
+
+        $responseData = $noData;
+
+        $tokenResponse = Http::withHeaders([
+            'Authorization' => 'Basic ' . $applicationId,
+            'Content-Type' => 'application/json',
+        ])->post($tokenUri, ['api_key' => $apiKey]);
+
+        $token = $tokenResponse->successful() ? $tokenResponse->json('data.token') : null;
+
+        if (!$token) {
+            Log::warning('UNHCR external search: token request failed', [
+                'token_uri' => $tokenUri,
+                'status' => $tokenResponse->status(),
+                'body' => $tokenResponse->body(),
+            ]);
+            return $responseData;
+        }
+
+        $userResponse = Http::withHeaders([
+            'token' => $token,
+            'Content-Type' => 'application/json',
+        ])->post($userDataUri, [
+            'identity_number' => $identityNumber,
+            'date_of_birth' => $dateOfBirth,
+        ]);
+
+        if ($userResponse->successful() && $userResponse->json('result') !== null) {
+            $answer = [];
+            if ($userResponse->json('result')) {
+                $answer['identity_number'] = $identityNumber;
+            }
+            $responseData = ['data' => [$answer]];
+        } else {
+            Log::warning('UNHCR external search: identity validation request failed or returned no result', [
+                'user_data_uri' => $userDataUri,
+                'status' => $userResponse->status(),
+                'body' => $userResponse->body(),
+            ]);
+        }
+
+        return $responseData;
+    }
+
+    private function getSeychellesData(array $attributes, array $noData, string $identityNumber, ?string $dateOfBirth = null): array
+    {
+        $responseData = $noData;
+
+        $clientId = $attributes['client_id'] ?? '';
+        $secret = $attributes['client_secret'] ?? '';
+        $tokenUri = rtrim($attributes['token_uri'] ?? '', '/');
+        $apiUrl = rtrim($attributes['api_url'] ?? '', '/');
+        $grantType = $attributes['grant_type'] ?? '';
+        $scopes = $attributes['scopes'] ?? '';
+
+        // POCOR-9590: normalize payload keys to lowercase, default to the well-known
+        // Seychelles field names when a mapping is not configured.
+        $mapFirst = strtolower(trim($attributes['first_name_mapping'] ?? 'givennames'));
+        $mapLast = strtolower(trim($attributes['last_name_mapping'] ?? 'presentsurname'));
+        $mapFull = strtolower(trim($attributes['full_name_mapping'] ?? 'fullname'));
+        $mapDob = strtolower(trim($attributes['date_of_birth_mapping'] ?? 'dob'));
+        $mapGender = strtolower(trim($attributes['gender_mapping'] ?? 'sex'));
+        $mapNationality = strtolower(trim($attributes['nationality_mapping'] ?? 'nationality'));
+
+        $tokenResponse = Http::asForm()->post($tokenUri, [
+            'grant_type' => $grantType,
+            'client_id' => $clientId,
+            'client_secret' => $secret,
+            'scope' => $scopes,
+        ]);
+
+        // POCOR-9822: some IdentityServer/OAuth clients are registered as client_secret_basic
+        // rather than client_secret_post — an 'invalid_client' response on the body-post attempt
+        if ($tokenResponse->status() === 400 && ($tokenResponse->json('error') === 'invalid_client')) {
+            Log::info('Seychelles external search: body-post client auth was rejected, retrying with Basic auth', [
+                'token_uri' => $tokenUri,
+            ]);
+            $tokenResponse = Http::asForm()
+                ->withBasicAuth($clientId, $secret)
+                ->post($tokenUri, [
+                    'grant_type' => $grantType,
+                    'scope' => $scopes,
+                ]);
+        }
+
+        if (!$tokenResponse->successful() || empty($tokenResponse->json('access_token'))) {
+            Log::warning('Seychelles external search: token request failed', [
+                'token_uri' => $tokenUri,
+                'status' => $tokenResponse->status(),
+                'body' => $tokenResponse->body(),
+            ]);
+            return $responseData;
+        }
+
+        $accessToken = $tokenResponse->json('access_token');
+
+        $userResponse = Http::withHeaders([
+            'Authorization' => "Bearer {$accessToken}",
+            'Accept' => 'application/json',
+        ])->get($apiUrl . '/' . $identityNumber);
+
+        $payload = $userResponse->json() ?? [];
+        $record = $payload['record'] ?? $payload;
+
+        if (!$userResponse->successful() || empty($record)) {
+            Log::warning('Seychelles external search: record lookup failed or returned no record', [
+                'api_url' => $apiUrl . '/' . $identityNumber,
+                'status' => $userResponse->status(),
+                'body' => $userResponse->body(),
+            ]);
+            return $responseData;
+        }
+
+        $raw = [];
+        foreach ($record as $key => $value) {
+            $raw[strtolower((string) $key)] = $value;
+        }
+
+        $mapped = [
+            'identity_number' => $identityNumber,
+            'first_name' => $raw[$mapFirst] ?? '',
+            'last_name' => $raw[$mapLast] ?? '',
+            'full_name' => $raw[$mapFull] ?? '',
+            'date_of_birth' => isset($raw[$mapDob]) ? substr((string) $raw[$mapDob], 0, 10) : '',
+            'gender' => $raw[$mapGender] ?? '',
+            'nationality' => $raw[$mapNationality] ?? '',
+        ];
+
+        if (empty($mapped['full_name'])) {
+            $mapped['full_name'] = trim(($mapped['first_name'] ?? '') . ' ' . ($mapped['last_name'] ?? ''));
+        }
+
+        $mapped['gender_id'] = $this->matchGenderId($mapped['gender']);
+        $mapped['nationality_id'] = $this->matchOrCreateNationalityId($mapped['nationality']);
+
+        if (isset($raw['postaladdress1'])) {
+            $mapped['address'] = $raw['postaladdress1'];
+        }
+        if (isset($raw['district'])) {
+            $mapped['district'] = $raw['district'];
+        }
+
+        return ['data' => [$mapped], 'total' => 1];
+    }
+
+    private function getOECoreData(array $attributes, array $noData, string $identityNumber): array
+    {
+        $username = $attributes['username'] ?? '';
+        $password = $attributes['password'] ?? '';
+        $apiKey = $attributes['api_key'] ?? '';
+        $url = rtrim($attributes['api_url'] ?? '', '/');
+        $tokenUri = $url . '/login';
+        $userDataEndpoint = $url . '/security-users';
+
+        $responseData = $noData;
+
+        $tokenResponse = Http::post($tokenUri, [
+            'username' => $username,
+            'password' => $password,
+            'api_key' => $apiKey,
+        ]);
+
+        $token = $tokenResponse->successful() ? $tokenResponse->json('data.token') : null;
+
+        if (!$token) {
+            Log::warning('OpenEMIS Core external search: token request failed', [
+                'token_uri' => $tokenUri,
+                'status' => $tokenResponse->status(),
+                'body' => $tokenResponse->body(),
+            ]);
+            return $responseData;
+        }
+
+        $userResponse = Http::withHeaders([
+            'authorization' => 'Bearer ' . $token,
+        ])->get($userDataEndpoint, ['openemis_no' => $identityNumber]);
+
+        $decodedData = $userResponse->json('data') ?? [];
+        if (isset($decodedData['data'])) {
+            $decodedData = $decodedData['data'];
+        }
+
+        if ($userResponse->successful()) {
+            $responseData = ['data' => [], 'total' => 0];
+            if (!empty($decodedData)) {
+                foreach ($decodedData as &$answer) {
+                    $answer['identity_number'] = $answer['openemis_no'] ?? null;
+                    unset($answer['openemis_no']);
+                }
+                unset($answer);
+                $responseData = ['data' => $decodedData, 'total' => count($decodedData)];
+            }
+        } else {
+            Log::warning('OpenEMIS Core external search: security-users lookup failed', [
+                'user_data_endpoint' => $userDataEndpoint,
+                'status' => $userResponse->status(),
+                'body' => $userResponse->body(),
+            ]);
+        }
+
+        return $responseData;
+    }
+
+    private function matchGenderId(string $genderName): ?int
+    {
+        if (!$genderName) {
+            return null;
+        }
+        $genderName = strtolower(trim($genderName));
+
+        $gender = DB::table('genders')
+            ->select('id', 'name')
+            ->get()
+            ->first(fn ($g) => strtolower($g->name) === $genderName);
+
+        return $gender->id ?? null;
+    }
+
+    private function matchOrCreateNationalityId(?string $nationalityName): ?int
+    {
+        $nationalityName = trim((string) $nationalityName);
+        if ($nationalityName === '') {
+            return null;
+        }
+
+        $existing = DB::table('nationalities')
+            ->whereRaw('LOWER(name) = ?', [strtolower($nationalityName)])
+            ->first();
+
+        if ($existing) {
+            return (int) $existing->id;
+        }
+
+        return DB::table('nationalities')->insertGetId([
+            'name' => $nationalityName,
+            'visible' => 1,
+            'editable' => 1,
+            'created_user_id' => JWTAuth::user()->id,
+            'created' => now(),
+        ]);
+    }
+
 }
+
 
 
 
