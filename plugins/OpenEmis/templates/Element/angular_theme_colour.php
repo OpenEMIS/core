@@ -41,16 +41,24 @@ app-root .kdx-datepicker .btn-input:hover {
     border-color: #<?= h($secondaryColour) ?> !important;
     color: #FFF !important;
 }
+/* POCOR-9858: page header toolbar buttons (back / info / download). The styleguide's
+   .kdx-toolbar .btn {background-color:#f9f9f9 !important} is more specific than app-root .btn,
+   so the buttons stayed light grey while the icon was forced white above (invisible).
+   Match the other OpenEMIS toolbar buttons: product colour with a white icon. */
 /* POCOR-9851: toolbar.scss forces a grey background on page header toolbar buttons (e.g. Export) */
+app-root .kdx-toolbar .btn,
 app-root .kdx-toolbar .kdx-toolbar-left .btn,
 app-root .kdx-toolbar .kdx-toolbar-left .btn:first-child {
     background-color: #<?= h($productColour) ?> !important;
     border-color: #<?= h($productColour) ?> !important;
     color: #FFF !important;
 }
+app-root .kdx-toolbar .btn:hover,
+app-root .kdx-toolbar .btn:focus,
 app-root .kdx-toolbar .kdx-toolbar-left .btn:hover,
 app-root .kdx-toolbar .kdx-toolbar-left .btn:focus {
     background-color: #<?= h($secondaryColour) ?> !important;
     border-color: #<?= h($secondaryColour) ?> !important;
+    color: #FFF !important;
 }
 </style>
