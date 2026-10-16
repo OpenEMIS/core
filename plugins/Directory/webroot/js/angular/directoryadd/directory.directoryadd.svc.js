@@ -76,6 +76,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         createCustomFieldsArray: createCustomFieldsArray,
         snapshotUserData: snapshotUserData,
         restoreUserData: restoreUserData,
+        clearSelectionState: clearSelectionState,
         getAddressAreaId: getAddressAreaId,
         getAddressArea: getAddressArea,
         getBirthplaceAreaId: getBirthplaceAreaId,
@@ -1751,8 +1752,26 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         if (_userDataSnapshot === null) {
             return false;
         }
-        scope.selectedUserData = angular.copy(_userDataSnapshot);
+        //POCOR-9867: copy INTO the existing object. Both wizards hold extra references to
+        //selectedUserData (students: selectedStudentData and a const userData; staff:
+        //selectedStaffData and a const userData). Assigning a new object leaves those aliases
+        //pointing at the old one, and validateDetails() reads selectedStudentData - so the form
+        //would silently refuse to advance after a Back.
+        if (!scope.selectedUserData) {
+            scope.selectedUserData = {};
+        }
+        angular.copy(_userDataSnapshot, scope.selectedUserData);
         _userDataSnapshot = null;
         return true;
+    }
+
+    //POCOR-9867: one place for the per-selection flags, so the two controllers cannot drift.
+    //$extra carries the controller-specific record/id fields.
+    function clearSelectionState(scope, extra) {
+        angular.forEach(extra || {}, function (value, key) { scope[key] = value; });
+        scope.canSkipIdentity = false;
+        scope.canSkipNationality = false;
+        scope.staffStatus = null;
+        scope.disableFields = {username: false, password: false};
     }
 }

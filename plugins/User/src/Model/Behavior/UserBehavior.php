@@ -998,6 +998,15 @@ class UserBehavior extends Behavior
 
     public function getUniqueOpenemisId($options = [])
     {
+        //POCOR-9867: this fallback builds an id from time+random, reserves nothing and checks nothing,
+        //so two callers can mint the same number - and because the values are very large they also
+        //become the MAX() seed for the sequential generator, pushing every later id past them.
+        //User.Users owns the reserving implementation; use it whenever it is reachable.
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
+        if ($Users !== $this->_table && method_exists($Users, 'getUniqueOpenemisId')) {
+            return $Users->getUniqueOpenemisId($options);
+        }
+
         $prefix = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('openemis_id_prefix');
         $prefix = explode(",", $prefix);
         $prefix = ($prefix[1] > 0) ? $prefix[0] : '';

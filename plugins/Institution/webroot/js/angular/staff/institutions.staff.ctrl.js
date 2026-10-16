@@ -374,7 +374,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             institution_id: userCtrl.institutionId,
             is_same_school: userCtrl.staffData && userCtrl.staffData.is_same_school ? userCtrl.staffData.is_same_school : 0,
             is_diff_school: userCtrl.staffData && userCtrl.staffData.is_diff_school ? userCtrl.staffData.is_diff_school : 0,
-            staff_id: userCtrl.staffData && userCtrl.staffData.id ? userCtrl.staffData.id : null,
+            //POCOR-9867: only an Internal Search hit is a LOCAL user id. getUserData() also fills
+            //staffData from the External Search grid, whose row ids belong to the external source
+            //and collide with unrelated local accounts.
+            staff_id: userCtrl.isInternalSearchSelected && userCtrl.staffData && userCtrl.staffData.id ? userCtrl.staffData.id : null,
             previous_institution_id: userCtrl.staffData && userCtrl.staffData.current_enrol_institution_id ? userCtrl.staffData.current_enrol_institution_id : null,
             comment: userCtrl.selectedUserData.comment,
             custom: [],
@@ -701,19 +704,28 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         directorySvc.goToExternalSearch(userCtrl);
     }
 
+    //POCOR-9867: undo a search selection - restore what the operator had typed and clear the
+    //per-selection flags. The date is re-formatted because the snapshot was taken after
+    //validateDetails() normalised it to yyyy-MM-dd for the search query.
+    function undoSelection() {
+        directorySvc.restoreUserData(userCtrl);
+        directorySvc.clearSelectionState(userCtrl, {staffData: null, selectedUser: null});
+        if (userCtrl.selectedUserData.date_of_birth) {
+            userSvc.formatDate(userCtrl.selectedUserData.date_of_birth).then(function (d) {
+                userCtrl.selectedUserData.date_of_birth = d;
+            });
+        }
+    }
+
     function goToPrevStep() {
         if (userCtrl.isInternalSearchSelected) {
             userCtrl.isInternalSearchSelected = false;
-            directorySvc.restoreUserData(userCtrl); //POCOR-9867: undo setUserData()
-            userCtrl.staffData = null;
-            userCtrl.selectedUser = null;
-            userCtrl.canSkipIdentity = false;
-            userCtrl.canSkipNationality = false;
-            userCtrl.disableFields = {username: false, password: false};
+            undoSelection();
             userCtrl.step = 'user_details';
             userCtrl.internalGridOptions = null;
             // userCtrl.goToInternalSearch();
         } else if (userCtrl.isExternalSearchSelected) {
+            undoSelection(); //POCOR-9867: an external selection overwrites selectedUserData too
             userCtrl.step = 'external_search';
             userCtrl.externalGridOptions = null;
             userCtrl.goToExternalSearch();

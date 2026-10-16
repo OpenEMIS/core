@@ -689,7 +689,9 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             guardian_relation_id: userCtrl.selectedUserData.relation_type_id,
             student_openemis_no: userCtrl.studentOpenEmisId,
             openemis_no: userCtrl.selectedUserData.openemis_no,
-            user_id: userCtrl.selectedUserData.user_id, //POCOR-9867: names the record selected in Internal/External Search
+            //POCOR-9867: names the record selected in INTERNAL search only - external row ids are
+            //the source's, not local user ids.
+            user_id: userCtrl.isInternalSearchSelected ? userCtrl.selectedUserData.user_id : null,
             first_name: userCtrl.selectedUserData.first_name,
             middle_name: userCtrl.selectedUserData.middle_name,
             third_name: userCtrl.selectedUserData.third_name,

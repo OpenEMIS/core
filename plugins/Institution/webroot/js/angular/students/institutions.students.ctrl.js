@@ -947,19 +947,28 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         directorySvc.goToExternalSearch(userCtrl);
     }
 
+    //POCOR-9867: undo a search selection - restore what the operator had typed and clear the
+    //per-selection flags. The date is re-formatted because the snapshot was taken after
+    //validateDetails() normalised it to yyyy-MM-dd for the search query.
+    function undoSelection() {
+        directorySvc.restoreUserData(userCtrl);
+        directorySvc.clearSelectionState(userCtrl, {userData: {}, selectedUserID: null});
+        if (userCtrl.selectedUserData.date_of_birth) {
+            userSvc.formatDate(userCtrl.selectedUserData.date_of_birth).then(function (d) {
+                userCtrl.selectedUserData.date_of_birth = d;
+            });
+        }
+    }
+
     function goToPrevStep() {
         if (userCtrl.isInternalSearchSelected) {
             userCtrl.isInternalSearchSelected = false;
-            directorySvc.restoreUserData(userCtrl); //POCOR-9867: undo setUserData()
-            userCtrl.userData = {};
-            userCtrl.selectedUserID = null;
-            userCtrl.canSkipIdentity = false;
-            userCtrl.canSkipNationality = false;
-            userCtrl.disableFields = {username: false, password: false};
+            undoSelection();
             userCtrl.step = 'user_details';
             userCtrl.internalGridOptions = null;
             // StudentController.goToInternalSearch();
         } else if (userCtrl.isExternalSearchSelected) {
+            undoSelection(); //POCOR-9867: an external selection overwrites selectedUserData too
             userCtrl.step = 'external_search';
             userCtrl.externalGridOptions = null;
             userCtrl.goToExternalSearch();
@@ -1453,7 +1462,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             photo_name: userCtrl.selectedUserData.photo_name,
             sync_status: userCtrl.isExternalSearchSelected ? 1 : 0, //POCOR-9590: external search → Synced, manual add → Local
             is_diff_school: userCtrl.userData && userCtrl.userData.is_diff_school ? userCtrl.userData.is_diff_school : 0,
-            student_id: userCtrl.userData && userCtrl.userData.id ? userCtrl.userData.id : null,
+            //POCOR-9867: only an Internal Search hit is a LOCAL user id (see the staff wizard).
+            student_id: userCtrl.isInternalSearchSelected && userCtrl.userData && userCtrl.userData.id ? userCtrl.userData.id : null,
             previous_institution_id: previousInstitutionId,
             previous_academic_period_id: userCtrl.userData && userCtrl.userData.current_enrol_academic_period_id ? userCtrl.userData.current_enrol_academic_period_id : null,
             previous_education_grade_id: userCtrl.userData && userCtrl.userData.current_enrol_education_grade_id ? userCtrl.userData.current_enrol_education_grade_id : null,

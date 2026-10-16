@@ -803,8 +803,9 @@ class UsersTable extends AppTable
      */
     protected function isDuplicateKeyException(\PDOException $exception): bool
     {
-        return $exception->getCode() === '23000'
-            || (isset($exception->errorInfo[1]) && (int)$exception->errorInfo[1] === 1062);
+        //SQLSTATE 23000 is every integrity violation (foreign key, NOT NULL, ...), so it is too
+        //broad to mean 'someone else holds this number'. Only the driver's 1062 does.
+        return isset($exception->errorInfo[1]) && (int)$exception->errorInfo[1] === 1062;
     }
 
     /**
