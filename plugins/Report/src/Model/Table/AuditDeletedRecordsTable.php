@@ -171,6 +171,34 @@ class AuditDeletedRecordsTable extends AppTable
         }
     }
 
+    /**
+     * POCOR-9860: `deleted_records`.`deleted_date` is an INT(8) holding Ymd
+     * (e.g. 20261016), not a date column, so without this handler the report
+     * printed the raw integer while the neighbouring Created column was
+     * formatted - the mismatch QA rejected.
+     *
+     * Formatted with formatDate() so both columns follow the installation's
+     * configured date_format. Falls back to the raw value rather than throwing:
+     * this runs per row, and one malformed value must not fail the whole report.
+     */
+    public function onExcelGetDeletedDate(EventInterface $event, Entity $entity)
+    {
+        if (empty($entity->deleted_date)) {
+            return '';
+        }
+
+        $dateObject = \DateTime::createFromFormat('!Ymd', (string)$entity->deleted_date);
+        $errors = \DateTime::getLastErrors();
+
+        if ($dateObject === false
+            || ($errors && (!empty($errors['error_count']) || !empty($errors['warning_count'])))
+        ) {
+            return (string)$entity->deleted_date;
+        }
+
+        return $this->formatDate(new FrozenDate($dateObject->format('Y-m-d')));
+    }
+
     public function onExcelGetSecurityRole(EventInterface $event, Entity $entity)
     {
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
