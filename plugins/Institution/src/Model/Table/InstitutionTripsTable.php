@@ -51,31 +51,6 @@ class InstitutionTripsTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Section');
     }
 
-    // POCOR-9854: InstitutionTripsController is driven by the third-party "Page"
-    // framework (vendor/korditpteltd/ikpge-cakephp-page), whose PageComponent::
-    // autoContains() only auto-eager-loads manyToOne (belongsTo) associations - it
-    // skips hasMany ones entirely. InstitutionTripPassengers is a hasMany, so it was
-    // never being loaded onto the fetched entity, meaning $entity->has(
-    // 'institution_trip_passengers') was always false and the Passengers
-    // section/list always rendered empty regardless of actual data. Forcing the
-    // contain here guarantees it loads no matter which Page-framework code path
-    // triggers the fetch (view/edit), without needing to patch vendor code.
-    //
-    // The index listing builds its own query with a narrowed select() that doesn't
-    // include `id` - without it, CakePHP's eager loader can't match child
-    // InstitutionTripPassengers rows back to their parent trip and throws
-    // "Unable to load InstitutionTripPassengers association ... foreign key ...
-    // is selected". select() appends rather than replaces, so re-adding `id` here
-    // is always safe even when a query already selects it or selects nothing
-    // explicit at all.
-    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
-    {
-        if (!empty($query->clause('select'))) {
-            $query->select($this->aliasField('id'));
-        }
-        $query->contain(['InstitutionTripPassengers']);
-    }
-
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
@@ -335,11 +310,11 @@ class InstitutionTripsTable extends ControllerActionTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                if($row->repeat == 1){
-                    $row['trip_repeat'] = 'Yes';
-                }else{
-                    $row['trip_repeat'] = 'No';
-                }
+                // POCOR-9854: $row->repeat no longer exists - the column was
+                // renamed to trip_repeat (read into a temp var before
+                // overwriting $row['trip_repeat'] with the display string).
+                $repeat = $row->trip_repeat;
+                $row['trip_repeat'] = $repeat == 1 ? 'Yes' : 'No';
 
                 $dayOptions = $this->getDays();
                 $list = [];
@@ -419,11 +394,11 @@ class InstitutionTripsTable extends ControllerActionTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                if($row->repeat == 1){
-                    $row['trip_repeat'] = 'Yes';
-                }else{
-                    $row['trip_repeat'] = 'No';
-                }
+                // POCOR-9854: $row->repeat no longer exists - the column was
+                // renamed to trip_repeat (read into a temp var before
+                // overwriting $row['trip_repeat'] with the display string).
+                $repeat = $row->trip_repeat;
+                $row['trip_repeat'] = $repeat == 1 ? 'Yes' : 'No';
 
                 $dayOptions = $this->getDays();
                 $list = [];
@@ -526,29 +501,57 @@ class InstitutionTripsTable extends ControllerActionTable
         // the student has since graduated/promoted) - merge their labels in too,
         // otherwise the chosenSelect widget has nothing to render their tag from.
         if ($this->action == 'edit' && $entity->has('institution_trip_passengers') && !empty($entity->institution_trip_passengers)) {
+            // POCOR-9854: batched lookup (same pattern as setupPassengersView()) -
+            // one query for all passengers instead of one Students->find() per
+            // passenger, which was an N+1 on every Edit page load.
             $Students = TableRegistry::getTableLocator()->get('Institution.Students');
+            $conditions = [];
+            foreach ($entity->institution_trip_passengers as $passenger) {
+                $conditions[] = [
+                    'Students.student_id' => $passenger->student_id,
+                    'Students.education_grade_id' => $passenger->education_grade_id,
+                    'Students.academic_period_id' => $passenger->academic_period_id,
+                    'Students.institution_id' => $passenger->institution_id
+                ];
+            }
+
+            $matchedStudents = $Students
+                ->find()
+                ->contain(['Users'])
+                ->where(['OR' => $conditions])
+                ->toArray();
+
+            $studentsByCompositeKey = [];
+            foreach ($matchedStudents as $student) {
+                $compositeKey = implode('|', [
+                    $student->student_id,
+                    $student->education_grade_id,
+                    $student->academic_period_id,
+                    $student->institution_id
+                ]);
+                $studentsByCompositeKey[$compositeKey] = $student;
+            }
+
             $existingOptions = [];
             foreach ($entity->institution_trip_passengers as $passenger) {
-                $student = $Students
-                    ->find()
-                    ->contain(['Users'])
-                    ->where([
-                        'Students.student_id' => $passenger->student_id,
-                        'Students.education_grade_id' => $passenger->education_grade_id,
-                        'Students.academic_period_id' => $passenger->academic_period_id,
-                        'Students.institution_id' => $passenger->institution_id
-                    ])
-                    ->first();
+                $compositeKey = implode('|', [
+                    $passenger->student_id,
+                    $passenger->education_grade_id,
+                    $passenger->academic_period_id,
+                    $passenger->institution_id
+                ]);
 
-                if (!empty($student)) {
-                    $encodedKeys = $this->paramsEncode([
-                        'student_id' => $passenger->student_id,
-                        'education_grade_id' => $passenger->education_grade_id,
-                        'academic_period_id' => $passenger->academic_period_id,
-                        'institution_id' => $passenger->institution_id
-                    ]);
-                    $existingOptions[$encodedKeys] = $student->user->name_with_id;
+                if (!isset($studentsByCompositeKey[$compositeKey])) {
+                    continue;
                 }
+
+                $encodedKeys = $this->paramsEncode([
+                    'student_id' => $passenger->student_id,
+                    'education_grade_id' => $passenger->education_grade_id,
+                    'academic_period_id' => $passenger->academic_period_id,
+                    'institution_id' => $passenger->institution_id
+                ]);
+                $existingOptions[$encodedKeys] = $studentsByCompositeKey[$compositeKey]->user->name_with_id;
             }
 
             $this->fields['assigned_students']['options'] = $existingOptions + ($this->fields['assigned_students']['options'] ?? []);
