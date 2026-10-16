@@ -50,8 +50,22 @@ class AuditDeletedRecordsTable extends AppTable
         $endDate        = $requestData->report_end_date ?? null;
 
         // Convert dates
-        $startDateObj = $this->parseDate($startDate);
-        $endDateObj   = $this->parseDate($endDate) ?? FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'));
+        //POCOR-9860: an unusable date must fail the report, never be quietly
+        //ignored or substituted - either would widen the range beyond what the
+        //user asked for. Only a genuinely EMPTY end date defaults (to year end);
+        //an end date that is present but unparseable is an error, same as the
+        //start date.
+        $startDateObj = $this->parseReportDate($startDate);
+        if (!$startDateObj) {
+            throw new \InvalidArgumentException('Invalid report start date: ' . $startDate);
+        }
+
+        $endDateObj = empty($endDate)
+            ? FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'))
+            : $this->parseReportDate($endDate);
+        if (!$endDateObj) {
+            throw new \InvalidArgumentException('Invalid report end date: ' . $endDate);
+        }
 
         // Base select
         $query
@@ -157,6 +171,34 @@ class AuditDeletedRecordsTable extends AppTable
         }
     }
 
+    /**
+     * POCOR-9860: `deleted_records`.`deleted_date` is an INT(8) holding Ymd
+     * (e.g. 20261016), not a date column, so without this handler the report
+     * printed the raw integer while the neighbouring Created column was
+     * formatted - the mismatch QA rejected.
+     *
+     * Formatted with formatDate() so both columns follow the installation's
+     * configured date_format. Falls back to the raw value rather than throwing:
+     * this runs per row, and one malformed value must not fail the whole report.
+     */
+    public function onExcelGetDeletedDate(EventInterface $event, Entity $entity)
+    {
+        if (empty($entity->deleted_date)) {
+            return '';
+        }
+
+        $dateObject = \DateTime::createFromFormat('!Ymd', (string)$entity->deleted_date);
+        $errors = \DateTime::getLastErrors();
+
+        if ($dateObject === false
+            || ($errors && (!empty($errors['error_count']) || !empty($errors['warning_count'])))
+        ) {
+            return (string)$entity->deleted_date;
+        }
+
+        return $this->formatDate(new FrozenDate($dateObject->format('Y-m-d')));
+    }
+
     public function onExcelGetSecurityRole(EventInterface $event, Entity $entity)
     {
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
@@ -189,17 +231,5 @@ class AuditDeletedRecordsTable extends AppTable
     }
 
 
-    private function parseDate(?string $date): ?FrozenDate
-    {
-        if (empty($date)) {
-            return null;
-        }
-        $timestamp = strtotime($date);
-        if ($timestamp === false) {
-            return null;
-        }
-
-        return FrozenDate::createFromTimestamp($timestamp);
-    }
 
 }
