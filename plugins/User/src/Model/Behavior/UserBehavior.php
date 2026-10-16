@@ -853,7 +853,7 @@ class UserBehavior extends Behavior
         }
     }
 
-    public function indexBeforePaginate(EventInterface $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         $this->indexBeforeQuery($event, $query, $options);
     }

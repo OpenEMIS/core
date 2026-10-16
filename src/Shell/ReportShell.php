@@ -67,7 +67,7 @@ class ReportShell extends Shell
                 echo "$date: Start Processing $name\n";
                 echo "$date: Process ID: $id; Table Report.CustomReports\n";
                 try {
-                    $table->renderExcelTemplate($excelParams);
+                    $table->generateExcelReport($excelParams); //POCOR-9812: template if the report has one, else a plain workbook
                 } catch (\Exception $e) {
                     $this->printErrorAndSetProcessFault($e, $id);
                     throw $e;
