@@ -7119,13 +7119,23 @@ class InstitutionsController extends AppController
         }
         //POCOR-9385: end — student creation restriction check
 
+        //POCOR-9867: the POCOR-9766 gate below existed only on the Staff flow. Without it, pressing
+        //Back and re-entering an identity that already belongs to someone else created a SECOND
+        //account for that person - and handleIdentities() then silently dropped the identity row
+        //(it skips creation when the number is already registered), so the duplicate was not even
+        //findable by identity afterwards. Stop before the security_users row is created, as Staff does.
+        $selectedUserId = $this->selectedUserIdFromRequest($requestData, 'student_id'); //POCOR-9867
+        $identityConflict = $this->identityOwnedByAnotherUser($requestData, $selectedUserId);
+        if ($identityConflict instanceof Response) {
+            return $identityConflict;
+        }
         $studentData = $this->extractSecurityUserData($requestData, $userId, true);
         if ($requestData['is_diff_school'] == 1) {
             $userRecordId = $requestData['student_id'];
             $result = $this->handleStudentTransfer($requestData, $userRecordId, $userId);
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         }
-        $securityUserResult = $this->saveSecurityUser($studentData, $this->selectedUserIdFromRequest($requestData, 'student_id')); //POCOR-9867
+        $securityUserResult = $this->saveSecurityUser($studentData, $selectedUserId); //POCOR-9867
         if ($securityUserResult instanceof \Cake\ORM\Entity || $securityUserResult instanceof EntityInterface) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
@@ -7172,7 +7182,8 @@ class InstitutionsController extends AppController
             return $identityValidationError;
         }
         //POCOR-9766: start - stop BEFORE creating the security_users row when the identity number already belongs to another user (each failed retry used to leave a half-created duplicate user behind)
-        $identityConflict = $this->identityOwnedByAnotherUser($requestData, (int)($requestData['staff_id'] ?? 0) ?: null);
+        $selectedUserId = $this->selectedUserIdFromRequest($requestData, 'staff_id'); //POCOR-9867
+        $identityConflict = $this->identityOwnedByAnotherUser($requestData, $selectedUserId);
         if ($identityConflict instanceof Response) {
             return $identityConflict;
         }
@@ -7186,7 +7197,7 @@ class InstitutionsController extends AppController
             $result = $this->handleStaffTransfer($requestData, $userRecordId, $userId);
             return $this->sendJsonResponse(['message' => 'success', 'staff' => $result], 200);
         }
-        $securityUserResult = $this->saveSecurityUser($staffData, $this->selectedUserIdFromRequest($requestData, 'staff_id')); //POCOR-9867
+        $securityUserResult = $this->saveSecurityUser($staffData, $selectedUserId); //POCOR-9867
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
@@ -7268,7 +7279,17 @@ class InstitutionsController extends AppController
      *
      */
     /**
-     * Save or update a Security User by openemis_no.
+     * Create a Security User, or update the one the caller explicitly selected.
+     *
+     * POCOR-9867: create-vs-update is NOT inferred from the submitted openemis_no any more.
+     *  - $selectedExistingUserId names the record the operator picked in Internal Search; that row
+     *    is updated only if the submitted OpenEMIS ID is its own (the id is client-supplied, so it
+     *    cannot be used on its own to retarget a different account).
+     *  - an id with no matching local user is not a local selection (External Search posts the
+     *    external source's row id) and falls through to the create path.
+     *  - with no selected record this is an Add: a matching OpenEMIS ID is a collision (409), never
+     *    an invitation to overwrite. created/created_user_id are never rewritten by an update.
+     *
      * Returns the saved Entity on success, or a JSON Response on failure.
      *
      * @return \Cake\Datasource\EntityInterface|\Cake\Http\Response
@@ -7304,8 +7325,7 @@ class InstitutionsController extends AppController
             }
         }
 
-        if (!empty($selectedExistingUserId) && $target) {
-
+        if ($target) {
             //The submitted id is client-supplied, so it alone is not trusted to pick the row: the
             //OpenEMIS ID must be that same user's own. A request cannot retarget a different account.
             if ($submittedOpenemisNo !== (string)$target->openemis_no) {
@@ -8705,12 +8725,22 @@ class InstitutionsController extends AppController
         }
 
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
+        //POCOR-9867: the POCOR-9766 gate below existed only on the Staff flow. Without it, pressing
+        //Back and re-entering an identity that already belongs to someone else created a SECOND
+        //account for that person - and handleIdentities() then silently dropped the identity row
+        //(it skips creation when the number is already registered), so the duplicate was not even
+        //findable by identity afterwards. Stop before the security_users row is created, as Staff does.
+        $selectedUserId = $this->selectedUserIdFromRequest($requestData); //POCOR-9867
+        $identityConflict = $this->identityOwnedByAnotherUser($requestData, $selectedUserId);
+        if ($identityConflict instanceof Response) {
+            return $identityConflict;
+        }
         $userData = $this->extractSecurityUserData($requestData, $userId, false, false, true);
         $studentOpenemisNo = (isset($requestData['student_openemis_no'])) ? $requestData['student_openemis_no'] : null;
         $guardianRelationId = (isset($requestData['guardian_relation_id'])) ? $requestData['guardian_relation_id'] : null;
 //        Log::debug(print_r($userData, true));
         //POCOR-9867: the Guardian/Other wizards post the selected record as user_id
-        $securityUserResult = $this->saveSecurityUser($userData, $this->selectedUserIdFromRequest($requestData)); //POCOR-9867
+        $securityUserResult = $this->saveSecurityUser($userData, $selectedUserId); //POCOR-9867
 //        Log::debug(print_r($securityUserResult, true));
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
@@ -8763,12 +8793,22 @@ class InstitutionsController extends AppController
         }
 
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
+        //POCOR-9867: the POCOR-9766 gate below existed only on the Staff flow. Without it, pressing
+        //Back and re-entering an identity that already belongs to someone else created a SECOND
+        //account for that person - and handleIdentities() then silently dropped the identity row
+        //(it skips creation when the number is already registered), so the duplicate was not even
+        //findable by identity afterwards. Stop before the security_users row is created, as Staff does.
+        $selectedUserId = $this->selectedUserIdFromRequest($requestData); //POCOR-9867
+        $identityConflict = $this->identityOwnedByAnotherUser($requestData, $selectedUserId);
+        if ($identityConflict instanceof Response) {
+            return $identityConflict;
+        }
         $userData = $this->extractSecurityUserData($requestData, $userId, false, false, true);
         $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData)) ? $requestData['student_openemis_no'] : null;
         $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData)) ? $requestData['guardian_relation_id'] : null;
 //        Log::debug(print_r($userData, true));
         //POCOR-9867: the Guardian/Other wizards post the selected record as user_id
-        $securityUserResult = $this->saveSecurityUser($userData, $this->selectedUserIdFromRequest($requestData)); //POCOR-9867
+        $securityUserResult = $this->saveSecurityUser($userData, $selectedUserId); //POCOR-9867
 //        Log::debug(print_r($securityUserResult, true));
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;

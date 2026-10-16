@@ -1739,8 +1739,12 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     //currentlyAllocatedTo), so snapshot the whole object instead and restore it verbatim.
     var _userDataSnapshot = null;
 
+    //Called when the wizard enters Internal Search, i.e. before any selection can have overwritten
+    //selectedUserData. Overwriting an earlier snapshot is correct here: re-entering the step means
+    //the operator has typed a fresh set of details.
     function snapshotUserData(scope) {
         _userDataSnapshot = angular.copy(scope.selectedUserData || {});
+        return true;
     }
 
     function restoreUserData(scope) {

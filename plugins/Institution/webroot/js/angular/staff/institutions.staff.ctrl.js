@@ -797,6 +797,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 }
             }
             if (hasError) return;
+            //POCOR-9867: capture the operator's typed details here, where they are known-current.
+            //Doing it in the grid's row-select handler is unreliable - ag-grid fires onRowSelected
+            //during datasource load too, so the snapshot could latch onto an empty object.
+            directorySvc.snapshotUserData(userCtrl);
             userCtrl.step = 'internal_search';
             userCtrl.internalGridOptions = null;
             userCtrl.goToInternalSearch();
@@ -1033,7 +1037,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     userCtrl.selectUserFromInternalSearch = function (id) {
-        directorySvc.snapshotUserData(userCtrl); //POCOR-9867: so Back can undo setUserData()
         userCtrl.selectedUser = id;
         userCtrl.isInternalSearchSelected = true;
         userCtrl.isExternalSearchSelected = false;
@@ -1052,7 +1055,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     userCtrl.selectUserFromExternalSearch = function (id) {
-        directorySvc.snapshotUserData(userCtrl); //POCOR-9867: so Back can undo setUserData()
         userCtrl.selectedUser = id;
         userCtrl.isInternalSearchSelected = false;
         userCtrl.isExternalSearchSelected = true;
