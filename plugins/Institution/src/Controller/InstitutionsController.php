@@ -8691,7 +8691,11 @@ class InstitutionsController extends AppController
         $studentOpenemisNo = (isset($requestData['student_openemis_no'])) ? $requestData['student_openemis_no'] : null;
         $guardianRelationId = (isset($requestData['guardian_relation_id'])) ? $requestData['guardian_relation_id'] : null;
 //        Log::debug(print_r($userData, true));
-        $securityUserResult = $this->saveSecurityUser($userData, (int)($requestData['guardian_id'] ?? 0) ?: null); //POCOR-9867
+        //POCOR-9867: the Guardian/Other wizards post no selected-user id (verified in
+        //directory.directoryaddguardian.ctrl.js / directory.directoryadd.ctrl.js), so pass null and let
+        //isSameSecurityUser() fall back to the name+DOB match. Safe here because both Directory wizards
+        //already reset selectedUserData on Back, so a stale openemis_no cannot leak into this save.
+        $securityUserResult = $this->saveSecurityUser($userData, null);
 //        Log::debug(print_r($securityUserResult, true));
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
@@ -8748,7 +8752,11 @@ class InstitutionsController extends AppController
         $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData)) ? $requestData['student_openemis_no'] : null;
         $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData)) ? $requestData['guardian_relation_id'] : null;
 //        Log::debug(print_r($userData, true));
-        $securityUserResult = $this->saveSecurityUser($userData, (int)($requestData['guardian_id'] ?? 0) ?: null); //POCOR-9867
+        //POCOR-9867: the Guardian/Other wizards post no selected-user id (verified in
+        //directory.directoryaddguardian.ctrl.js / directory.directoryadd.ctrl.js), so pass null and let
+        //isSameSecurityUser() fall back to the name+DOB match. Safe here because both Directory wizards
+        //already reset selectedUserData on Back, so a stale openemis_no cannot leak into this save.
+        $securityUserResult = $this->saveSecurityUser($userData, null);
 //        Log::debug(print_r($securityUserResult, true));
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
