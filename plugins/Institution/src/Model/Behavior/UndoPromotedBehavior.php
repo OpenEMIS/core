@@ -55,8 +55,11 @@ class UndoPromotedBehavior extends UndoBehavior {
 				])
 				->all();
 
+			// POCOR-9848: keep every CURRENT institution per student -- a student can hold more than
+			// one CURRENT row, and keeping only the last one let a row through as selectable here
+			// that Next / Confirm then rejected.
 			foreach ($currentRecords as $record) {
-				$currentInstitutionByStudent[$record->student_id] = $record->institution_id;
+				$currentInstitutionByStudent[$record->student_id][] = $record->institution_id;
 			}
 		}
 
@@ -65,8 +68,13 @@ class UndoPromotedBehavior extends UndoBehavior {
 				continue;
 			}
 
-			if (isset($currentInstitutionByStudent[$obj->student_id]) && $currentInstitutionByStudent[$obj->student_id] != $obj->institution_id) {
-				$obj->info_message = $alreadyEnrolledMessage;
+			if (isset($currentInstitutionByStudent[$obj->student_id])) {
+				foreach ($currentInstitutionByStudent[$obj->student_id] as $currentInstitutionId) {
+					if ($currentInstitutionId != $obj->institution_id) {
+						$obj->info_message = $alreadyEnrolledMessage;
+						break;
+					}
+				}
 			}
 
 			$list[$key] = $obj;
@@ -75,6 +83,23 @@ class UndoPromotedBehavior extends UndoBehavior {
 		return $list;
 	}
 	// POCOR-9816 end
+
+	// POCOR-9848: single rule shared by the list screen, Next (addBeforeSave) and Confirm
+	// (processSavePromotedStudents) -- a student is enrolled elsewhere if ANY of their CURRENT
+	// records is at an institution other than the one they were promoted from. These used to
+	// disagree (last row wins vs. an unordered first()), which bounced Next back to the add page.
+	public function getCurrentEnrolmentElsewhere($studentId, $institutionId)
+	{
+		$institutionStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+
+		return $institutionStudent->find()
+			->where([
+				$institutionStudent->aliasField('student_id') => $studentId,
+				$institutionStudent->aliasField('student_status_id') => $this->statuses['CURRENT'],
+				$institutionStudent->aliasField('institution_id <>') => $institutionId
+			])
+			->first();
+	}
 
 	public function processSavePromotedStudents(EventInterface $event, Entity $entity, ArrayObject $data) 
 	{
@@ -88,33 +113,26 @@ class UndoPromotedBehavior extends UndoBehavior {
 		$selectedStatus = $entity->student_status_id;
 
 		$institutionStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
-		$institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
 		$StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
 
 		if (isset($entity->students)) {
 			foreach ($entity->students as $key => $obj) {
 				$studentId = $obj['id'];
 				if ($studentId != 0) {
-					$studentIds[$studentId] = $studentId;
-					$currentId = $StudentStatuses->getIdByCode('CURRENT');
 					$promoteId = $StudentStatuses->getIdByCode('PROMOTED');
 					//POCOR-6992 start
-					$studentEnrollRecord = $institutionStudent->find()->where(['student_status_id'=>$currentId, 'student_id'=>$studentId])->first();
-					$enrolledInstitutionId = '';
-					if(!empty($studentEnrollRecord)){
-						$enrolledInstitutionId = $studentEnrollRecord->institution_id;
-						$getInstitutions = $institution->find()->where(['id'=>$enrolledInstitutionId])->first();
-						$institutionCode = $getInstitutions->code;
-						$institutionName = $getInstitutions->name;
-					}
-
 					$studentPromoteRecord = $institutionStudent->find()->where(['student_status_id'=>$promoteId, 'student_id'=>$studentId,'academic_period_id'=>$entity->academic_period_id])->first();
-					$promoteInstitutionId = $studentPromoteRecord->institution_id;
-					if($promoteInstitutionId != $enrolledInstitutionId && !empty($enrolledInstitutionId)){
-						$message = __('There is an existing enrolment. Please contact ')."$institutionCode" .' - '. $institutionName;
-			            return false; //POCOR-6992 end
-
+					// POCOR-9848: same rule as the list screen and Next -- any CURRENT record at another
+					// institution blocks this student. Skip just that student rather than return false,
+					// which aborted the batch after earlier students had already been reverted.
+					$enrolledElsewhere = null;
+					if (!empty($studentPromoteRecord)) {
+						$enrolledElsewhere = $this->getCurrentEnrolmentElsewhere($studentId, $studentPromoteRecord->institution_id);
+					}
+					if (!empty($enrolledElsewhere)) {
+						continue; //POCOR-6992 end
 					}else{ // add if else condition in POCOR-6992
+						$studentIds[$studentId] = $studentId;
 	                    $prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['PROMOTED']);
 	                    $whereId = '';
 	                    $whereConditions = '';
