@@ -74,6 +74,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         getStudentCustomFields: getStudentCustomFields,
         getStaffCustomFields: getStaffCustomFields,
         createCustomFieldsArray: createCustomFieldsArray,
+        snapshotUserData: snapshotUserData,
+        restoreUserData: restoreUserData,
+        clearSelectionState: clearSelectionState,
         getAddressAreaId: getAddressAreaId,
         getAddressArea: getAddressArea,
         getBirthplaceAreaId: getBirthplaceAreaId,
@@ -1727,5 +1730,48 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         if (isExternalSearch && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
 
         return false;
+    }
+
+    //POCOR-9867: setUserData() overwrites the wizard's single shared selectedUserData with the record
+    //the operator clicked in Internal/External Search - openemis_no, username, email, identity number,
+    //nationality, demographics, areas, photo. Backing out of that selection must put back exactly what
+    //was there before. A hand-maintained list of keys to delete cannot stay in step with setUserData
+    //(it already drifted: it deleted currentlyAssignedTo while the students wizard sets
+    //currentlyAllocatedTo), so snapshot the whole object instead and restore it verbatim.
+    var _userDataSnapshot = null;
+
+    //Called when the wizard enters Internal Search, i.e. before any selection can have overwritten
+    //selectedUserData. Overwriting an earlier snapshot is correct here: re-entering the step means
+    //the operator has typed a fresh set of details.
+    function snapshotUserData(scope) {
+        _userDataSnapshot = angular.copy(scope.selectedUserData || {});
+        return true;
+    }
+
+    function restoreUserData(scope) {
+        if (_userDataSnapshot === null) {
+            return false;
+        }
+        //POCOR-9867: copy INTO the existing object. Both wizards hold extra references to
+        //selectedUserData (students: selectedStudentData and a const userData; staff:
+        //selectedStaffData and a const userData). Assigning a new object leaves those aliases
+        //pointing at the old one, and validateDetails() reads selectedStudentData - so the form
+        //would silently refuse to advance after a Back.
+        if (!scope.selectedUserData) {
+            scope.selectedUserData = {};
+        }
+        angular.copy(_userDataSnapshot, scope.selectedUserData);
+        _userDataSnapshot = null;
+        return true;
+    }
+
+    //POCOR-9867: one place for the per-selection flags, so the two controllers cannot drift.
+    //$extra carries the controller-specific record/id fields.
+    function clearSelectionState(scope, extra) {
+        angular.forEach(extra || {}, function (value, key) { scope[key] = value; });
+        scope.canSkipIdentity = false;
+        scope.canSkipNationality = false;
+        scope.staffStatus = null;
+        scope.disableFields = {username: false, password: false};
     }
 }

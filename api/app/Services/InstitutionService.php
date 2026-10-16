@@ -2739,4 +2739,21 @@ class InstitutionService extends Controller
     }
     //For POCOR-8197 End...
 
+    // POCOR-9822 
+    public function checkExternalSearchConfiguration($params)
+    {
+        try {
+            $identityTypeId = (int) ($params['identity_type_id'] ?? 0);
+            $nationalityId = (int) ($params['nationality_id'] ?? 0);
+
+            return $this->institutionRepository->checkExternalSearchConfiguration($nationalityId, $identityTypeId);
+        } catch (Exception $e) {
+            Log::error(
+                'Failed to check external search configuration',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return [['value' => 'None', 'showExternalSearch' => false]];
+        }
+    }
+
 }

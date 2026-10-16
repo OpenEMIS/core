@@ -61,13 +61,34 @@ class AuditInstitutionStaffTable extends AppTable
         $startDate   = $requestData->report_start_date ?? null;
         $endDate     = $requestData->report_end_date ?? null;
         //Apply  start_date and end_date filters
-        $startDateObj = $this->parseDate($startDate);
-        $endDateObj   = $this->parseDate($endDate) ??FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'));
+        //POCOR-9860: parse via AppTable::parseReportDate() so the installation's
+        //configured `date_format` is honoured - strtotime() reads '01/10/2026' as
+        //the US m/d/Y, silently producing the wrong range on a d/m/Y site.
+        //
+        //This also covers what POCOR-9822 guarded against: a null date used to
+        //reach ->format() as an uncatchable PHP \Error, leaving the report stuck
+        //on Pending. Throwing here is caught by ReportShell and marks the process
+        //as Error with a message, so the failure is visible rather than silent.
+        //Start Date is mandatory on this form (AuditsTable::validationDefault
+        //chains notEmptyString for every audit feature), so a missing one is a
+        //real fault, not a "no lower bound" request. Only a genuinely EMPTY end
+        //date defaults to year end; an unparseable one is an error.
+        $startDateObj = $this->parseReportDate($startDate);
+        if (!$startDateObj) {
+            throw new \InvalidArgumentException('Invalid report start date: ' . $startDate);
+        }
+
+        $endDateObj = empty($endDate)
+            ? FrozenDate::createFromFormat('d-m-Y', '31-12-' . date('Y'))
+            : $this->parseReportDate($endDate);
+        if (!$endDateObj) {
+            throw new \InvalidArgumentException('Invalid report end date: ' . $endDate);
+        }
 
         $query->where(function (QueryExpression $exp) use ($startDateObj, $endDateObj) {
-        return $exp
-            ->gte($this->aliasField('start_date'), $startDateObj->format('Y-m-d'))
-            ->lte($this->aliasField('start_date'), $endDateObj->format('Y-m-d'));
+            return $exp
+                ->gte($this->aliasField('start_date'), $startDateObj->format('Y-m-d'))
+                ->lte($this->aliasField('start_date'), $endDateObj->format('Y-m-d'));
         });
         //Select only required fields
         $query
@@ -285,20 +306,5 @@ class AuditInstitutionStaffTable extends AppTable
     }
 
 
-    private function parseDate(?string $date): ?FrozenDate
-    {
-        if (empty($date)) {
-            return null;
-        }
-
-        // with time first
-        $dt = FrozenDate::createFromFormat('d-m-Y H:i:s', $date);
-        if ($dt) {
-            return $dt;
-        }
-
-        // without time
-        return FrozenDate::createFromFormat('d-m-Y', $date);
-    }
 
 }
