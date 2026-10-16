@@ -7125,7 +7125,7 @@ class InstitutionsController extends AppController
             $result = $this->handleStudentTransfer($requestData, $userRecordId, $userId);
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         }
-        $securityUserResult = $this->saveSecurityUser($studentData, (int)($requestData['student_id'] ?? 0) ?: null); //POCOR-9867
+        $securityUserResult = $this->saveSecurityUser($studentData, $this->selectedUserIdFromRequest($requestData, 'student_id')); //POCOR-9867
         if ($securityUserResult instanceof \Cake\ORM\Entity || $securityUserResult instanceof EntityInterface) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
@@ -7186,7 +7186,7 @@ class InstitutionsController extends AppController
             $result = $this->handleStaffTransfer($requestData, $userRecordId, $userId);
             return $this->sendJsonResponse(['message' => 'success', 'staff' => $result], 200);
         }
-        $securityUserResult = $this->saveSecurityUser($staffData, (int)($requestData['staff_id'] ?? 0) ?: null); //POCOR-9867
+        $securityUserResult = $this->saveSecurityUser($staffData, $this->selectedUserIdFromRequest($requestData, 'staff_id')); //POCOR-9867
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
@@ -7282,10 +7282,66 @@ class InstitutionsController extends AppController
         if($userData['email'] == ''){
             unset($userData['email']);
         }
-        // Find existing by openemis_no
-        $existing = $securityUsers->find()
-            ->where(['openemis_no' => $userData['openemis_no'] ?? null])
-            ->first();
+        //POCOR-9867: resolve create-vs-update EXPLICITLY instead of inferring it from a
+        //browser-supplied openemis_no. An Add inserts; only a caller that names the record it
+        //selected may update, and only that record. This removes the path by which one person's
+        //details could ever land on another person's row.
+        $submittedOpenemisNo = isset($userData['openemis_no']) ? (string)$userData['openemis_no'] : '';
+        $target = null;
+
+        if (!empty($selectedExistingUserId)) {
+            $target = $securityUsers->find()
+                ->where([$securityUsers->aliasField($securityUsers->getPrimaryKey()) => $selectedExistingUserId])
+                ->first();
+
+            //POCOR-9867: the posted id is not always a LOCAL user id. getUserData() fills staffData /
+            //userData from the External Search grid too, so an external selection posts that source's
+            //row id. If no local user has this id it is simply not a local selection - fall through to
+            //the create path (where the OpenEMIS ID collision check still applies) rather than refusing,
+            //otherwise External Search add breaks for every tenant with an external data source.
+            if (!$target) {
+                $selectedExistingUserId = null;
+            }
+        }
+
+        if (!empty($selectedExistingUserId) && $target) {
+
+            //The submitted id is client-supplied, so it alone is not trusted to pick the row: the
+            //OpenEMIS ID must be that same user's own. A request cannot retarget a different account.
+            if ($submittedOpenemisNo !== (string)$target->openemis_no) {
+                Log::error(sprintf(
+                    'POCOR-9867: refused update - selected user id=%s owns openemis_no=%s but the request submitted %s',
+                    $target->id,
+                    (string)$target->openemis_no,
+                    $submittedOpenemisNo
+                ));
+
+                return $this->sendJsonResponse([
+                    'message' => __('The selected record does not match the submitted OpenEMIS ID. Please start the Add process again.')
+                ], 409);
+            }
+        } elseif ($submittedOpenemisNo !== '') {
+            //Create path: a matching OpenEMIS ID is a collision, never an invitation to overwrite.
+            $collision = $securityUsers->find()
+                ->where(['openemis_no' => $submittedOpenemisNo])
+                ->first();
+
+            if ($collision) {
+                Log::error(sprintf(
+                    'POCOR-9867: refused create - openemis_no=%s already belongs to security_user id=%s (%s %s); submitted as (%s %s)',
+                    $submittedOpenemisNo,
+                    $collision->id,
+                    (string)$collision->first_name,
+                    (string)$collision->last_name,
+                    (string)($userData['first_name'] ?? ''),
+                    (string)($userData['last_name'] ?? '')
+                ));
+
+                return $this->sendJsonResponse([
+                    'message' => __('This OpenEMIS ID already belongs to another account. Please start the Add process again, or use the Internal Search step to select the existing person.')
+                ], 409);
+            }
+        }
 
         // POCOR-9793 start: security_users.mobile_number carries a genuine UNIQUE
         // index (unique_mobile) because it doubles as an account identifier for
@@ -7309,8 +7365,8 @@ class InstitutionsController extends AppController
         $isStaffAccount = !empty($userData['is_staff']);
         if (!$isStaffAccount && !empty($userData['mobile_number'])) {
             $mobileConditions = ['mobile_number' => $userData['mobile_number']];
-            if ($existing) {
-                $mobileConditions[$securityUsers->aliasField($securityUsers->getPrimaryKey()) . ' !='] = $existing->id;
+            if ($target) {
+                $mobileConditions[$securityUsers->aliasField($securityUsers->getPrimaryKey()) . ' !='] = $target->id;
             }
             $mobileTakenByAnotherAccount = $securityUsers->exists($mobileConditions);
             if ($mobileTakenByAnotherAccount) {
@@ -7319,31 +7375,12 @@ class InstitutionsController extends AppController
         }
         // POCOR-9793 end
 
-        if ($existing) {
-            //POCOR-9867: an Add must never silently become an overwrite of a DIFFERENT person.
-            //A duplicate openemis_no reaches here two ways: the generator issued it twice, or the
-            //Add wizard leaked it from an abandoned Internal Search selection. Either way, only
-            //update when this really is the same account.
-            if (!$this->isSameSecurityUser($existing, $userData, $selectedExistingUserId)) {
-                Log::error(sprintf(
-                    'POCOR-9867: refused to overwrite security_user id=%s (%s %s) with a different person (%s %s) submitted under openemis_no=%s',
-                    $existing->id,
-                    (string)$existing->first_name,
-                    (string)$existing->last_name,
-                    (string)($userData['first_name'] ?? ''),
-                    (string)($userData['last_name'] ?? ''),
-                    (string)($userData['openemis_no'] ?? '')
-                ));
-
-                return $this->sendJsonResponse([
-                    'message' => __('This OpenEMIS ID already belongs to another account. Please start the Add process again, or use the Internal Search step to select the existing person.')
-                ], 409);
-            }
+        if ($target) {
             // Prevent accidental username/password overwrite during update
-            $userData['id'] = $existing->id;
+            $userData['id'] = $target->id;
             //POCOR-9867: an update must not rewrite created/created_user_id
             unset($userData['username'], $userData['password'], $userData['created'], $userData['created_user_id']);
-            $entity = $securityUsers->patchEntity($existing, $userData);
+            $entity = $securityUsers->patchEntity($target, $userData);
         } else {
             // POCOR-9181 [START]
             try {
@@ -7409,40 +7446,21 @@ class InstitutionsController extends AppController
     }
 
     /**
-     * POCOR-9867: is the row matched on openemis_no really the account being saved?
-     * True when the wizard explicitly identified it (staff_id/student_id/guardian_id), or when the
-     * submitted name + DOB still match the stored row (an idempotent retry / double submit).
+     * POCOR-9867: the id of the record the wizard says the operator selected, or null for a plain Add.
+     * Each wizard names it differently; Directory posts user_id for every user type.
+     * The value is client-supplied, so saveSecurityUser() still requires the submitted OpenEMIS ID to
+     * belong to that same user before it will update anything.
      */
-    private function isSameSecurityUser($existing, array $userData, ?int $selectedExistingUserId): bool
+    private function selectedUserIdFromRequest(array $requestData, ?string $primaryKey = null): ?int
     {
-        if (!empty($selectedExistingUserId) && (int)$existing->id === (int)$selectedExistingUserId) {
-            return true;
-        }
-
-        $norm = static function ($value): string {
-            return mb_strtolower(trim((string)$value));
-        };
-
-        foreach (['first_name', 'last_name'] as $field) {
-            if (!array_key_exists($field, $userData)) {
-                return false;
-            }
-            if ($norm($userData[$field]) !== $norm($existing->{$field})) {
-                return false;
+        foreach (array_filter([$primaryKey, 'user_id']) as $key) {
+            $value = (int)($requestData[$key] ?? 0);
+            if ($value > 0) {
+                return $value;
             }
         }
 
-        // date_of_birth is the tiebreaker for genuine namesakes.
-        $submittedDob = !empty($userData['date_of_birth']) ? substr((string)$userData['date_of_birth'], 0, 10) : null;
-        $existingDob = $existing->date_of_birth instanceof \DateTimeInterface
-            ? $existing->date_of_birth->format('Y-m-d')
-            : (!empty($existing->date_of_birth) ? substr((string)$existing->date_of_birth, 0, 10) : null);
-
-        if ($submittedDob !== null && $existingDob !== null && $submittedDob !== $existingDob) {
-            return false;
-        }
-
-        return true;
+        return null;
     }
 
     /**
@@ -8691,11 +8709,8 @@ class InstitutionsController extends AppController
         $studentOpenemisNo = (isset($requestData['student_openemis_no'])) ? $requestData['student_openemis_no'] : null;
         $guardianRelationId = (isset($requestData['guardian_relation_id'])) ? $requestData['guardian_relation_id'] : null;
 //        Log::debug(print_r($userData, true));
-        //POCOR-9867: the Guardian/Other wizards post no selected-user id (verified in
-        //directory.directoryaddguardian.ctrl.js / directory.directoryadd.ctrl.js), so pass null and let
-        //isSameSecurityUser() fall back to the name+DOB match. Safe here because both Directory wizards
-        //already reset selectedUserData on Back, so a stale openemis_no cannot leak into this save.
-        $securityUserResult = $this->saveSecurityUser($userData, null);
+        //POCOR-9867: the Guardian/Other wizards post the selected record as user_id
+        $securityUserResult = $this->saveSecurityUser($userData, $this->selectedUserIdFromRequest($requestData)); //POCOR-9867
 //        Log::debug(print_r($securityUserResult, true));
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
@@ -8752,11 +8767,8 @@ class InstitutionsController extends AppController
         $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData)) ? $requestData['student_openemis_no'] : null;
         $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData)) ? $requestData['guardian_relation_id'] : null;
 //        Log::debug(print_r($userData, true));
-        //POCOR-9867: the Guardian/Other wizards post no selected-user id (verified in
-        //directory.directoryaddguardian.ctrl.js / directory.directoryadd.ctrl.js), so pass null and let
-        //isSameSecurityUser() fall back to the name+DOB match. Safe here because both Directory wizards
-        //already reset selectedUserData on Back, so a stale openemis_no cannot leak into this save.
-        $securityUserResult = $this->saveSecurityUser($userData, null);
+        //POCOR-9867: the Guardian/Other wizards post the selected record as user_id
+        $securityUserResult = $this->saveSecurityUser($userData, $this->selectedUserIdFromRequest($requestData)); //POCOR-9867
 //        Log::debug(print_r($securityUserResult, true));
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;

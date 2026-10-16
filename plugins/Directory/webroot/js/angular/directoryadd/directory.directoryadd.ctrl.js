@@ -1157,6 +1157,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
         let param = {
             user_type: scope.selectedUserData.user_type_id,
             openemis_no: scope.selectedUserData.openemis_no,
+            user_id: scope.selectedUserData.user_id, //POCOR-9867: names the record selected in Internal/External Search
             first_name: scope.selectedUserData.first_name,
             middle_name: scope.selectedUserData.middle_name,
             third_name: scope.selectedUserData.third_name,

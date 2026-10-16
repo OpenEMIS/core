@@ -701,24 +701,15 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         directorySvc.goToExternalSearch(userCtrl);
     }
 
-    //POCOR-9867: clicking an Internal Search row copies that person's openemis_no/username/email
-    //into the shared selectedUserData (setUserData). Backing out must clear them, or they are still
-    //posted on Save and the server overwrites that person's account.
-    function clearSelectedExistingUser() {
-        userCtrl.staffData = null;
-        userCtrl.selectedUser = null;
-        var leaked = ['openemis_no', 'username', 'password', 'email', 'mobile_number',
-                      'user_id', 'userId', 'contact_type_id', 'contact_value',
-                      'photo_name', 'photo_base_64', 'is_same_school', 'is_diff_school',
-                      'currentlyAssignedTo', 'requestedBy'];
-        leaked.forEach(function (key) { delete userCtrl.selectedUserData[key]; });
-        userCtrl.disableFields = {username: false, password: false};
-    }
-
     function goToPrevStep() {
         if (userCtrl.isInternalSearchSelected) {
             userCtrl.isInternalSearchSelected = false;
-            clearSelectedExistingUser(); //POCOR-9867
+            directorySvc.restoreUserData(userCtrl); //POCOR-9867: undo setUserData()
+            userCtrl.staffData = null;
+            userCtrl.selectedUser = null;
+            userCtrl.canSkipIdentity = false;
+            userCtrl.canSkipNationality = false;
+            userCtrl.disableFields = {username: false, password: false};
             userCtrl.step = 'user_details';
             userCtrl.internalGridOptions = null;
             // userCtrl.goToInternalSearch();
@@ -1042,6 +1033,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     userCtrl.selectUserFromInternalSearch = function (id) {
+        directorySvc.snapshotUserData(userCtrl); //POCOR-9867: so Back can undo setUserData()
         userCtrl.selectedUser = id;
         userCtrl.isInternalSearchSelected = true;
         userCtrl.isExternalSearchSelected = false;
@@ -1060,6 +1052,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     userCtrl.selectUserFromExternalSearch = function (id) {
+        directorySvc.snapshotUserData(userCtrl); //POCOR-9867: so Back can undo setUserData()
         userCtrl.selectedUser = id;
         userCtrl.isInternalSearchSelected = false;
         userCtrl.isExternalSearchSelected = true;

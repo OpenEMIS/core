@@ -74,6 +74,8 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         getStudentCustomFields: getStudentCustomFields,
         getStaffCustomFields: getStaffCustomFields,
         createCustomFieldsArray: createCustomFieldsArray,
+        snapshotUserData: snapshotUserData,
+        restoreUserData: restoreUserData,
         getAddressAreaId: getAddressAreaId,
         getAddressArea: getAddressArea,
         getBirthplaceAreaId: getBirthplaceAreaId,
@@ -1727,5 +1729,26 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         if (isExternalSearch && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
 
         return false;
+    }
+
+    //POCOR-9867: setUserData() overwrites the wizard's single shared selectedUserData with the record
+    //the operator clicked in Internal/External Search - openemis_no, username, email, identity number,
+    //nationality, demographics, areas, photo. Backing out of that selection must put back exactly what
+    //was there before. A hand-maintained list of keys to delete cannot stay in step with setUserData
+    //(it already drifted: it deleted currentlyAssignedTo while the students wizard sets
+    //currentlyAllocatedTo), so snapshot the whole object instead and restore it verbatim.
+    var _userDataSnapshot = null;
+
+    function snapshotUserData(scope) {
+        _userDataSnapshot = angular.copy(scope.selectedUserData || {});
+    }
+
+    function restoreUserData(scope) {
+        if (_userDataSnapshot === null) {
+            return false;
+        }
+        scope.selectedUserData = angular.copy(_userDataSnapshot);
+        _userDataSnapshot = null;
+        return true;
     }
 }

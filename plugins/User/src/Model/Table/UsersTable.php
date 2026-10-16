@@ -738,10 +738,19 @@ class UsersTable extends AppTable
         $pattern = $this->getNumericOpenemisRegexp($prefix);
         $maxExpr = $this->getNumericOpenemisCastExpression($usersTableSql, $openemisNoSql, $prefix);
 
-        $selectSql = 'SELECT COALESCE(' . $maxExpr . ', 0) + 1 AS next_openemis_no'
-            . ' FROM ' . $usersTableSql
-            . ' WHERE ' . $usersTableSql . '.' . $openemisNoSql . ' IS NOT NULL'
-            . ' AND ' . $usersTableSql . '.' . $openemisNoSql . ' REGEXP :pattern';
+        //POCOR-9867: seed from BOTH tables. Reservations are never purged, and every allocation -
+        //including abandoned wizards - now writes one, so MAX(reservations) runs permanently ahead of
+        //MAX(security_users). Seeding from users alone made every caller re-walk the whole accumulated
+        //backlog one failed INSERT at a time, and fall out of the loop below once it exceeded 100.
+        $reservedMaxExpr = $this->getNumericOpenemisCastExpression($tempTableSql, $openemisNoSql, $prefix);
+        $selectSql = 'SELECT GREATEST('
+            . ' (SELECT COALESCE(' . $maxExpr . ', 0) FROM ' . $usersTableSql
+            . '  WHERE ' . $usersTableSql . '.' . $openemisNoSql . ' IS NOT NULL'
+            . '  AND ' . $usersTableSql . '.' . $openemisNoSql . ' REGEXP :pattern),'
+            . ' (SELECT COALESCE(' . $reservedMaxExpr . ', 0) FROM ' . $tempTableSql
+            . '  WHERE ' . $tempTableSql . '.' . $openemisNoSql . ' IS NOT NULL'
+            . '  AND ' . $tempTableSql . '.' . $openemisNoSql . ' REGEXP :pattern)'
+            . ') + 1 AS next_openemis_no';
 
         $row = $connection->execute($selectSql, ['pattern' => $pattern])->fetch('assoc');
         $nextSuffix = isset($row['next_openemis_no']) ? (string)$row['next_openemis_no'] : '1';
@@ -763,7 +772,14 @@ class UsersTable extends AppTable
                     );
 
                     return $newOpenemisNo;
-                } catch (\Exception $exception) {
+                } catch (\PDOException $exception) {
+                    //POCOR-9867: ONLY a duplicate key means someone else holds this number. A lock
+                    //timeout, lost connection, strict-mode rejection or missing table must not be
+                    //silently treated as a collision - that burned all 100 attempts and then returned
+                    //an unreserved id, reintroducing the duplicate this method exists to prevent.
+                    if (!$this->isDuplicateKeyException($exception)) {
+                        throw $exception;
+                    }
                     // lost the reservation to a concurrent request - try the next number
                 }
             }
@@ -772,7 +788,23 @@ class UsersTable extends AppTable
             $attempts++;
         }
 
-        return $prefix . $nextSuffix;
+        //POCOR-9867: never hand back a number that was not reserved. Returning one here was how a
+        //duplicate escaped: the caller believes it owns the id and the next caller computes the same one.
+        throw new \RuntimeException(sprintf(
+            'Unable to reserve a unique OpenEMIS ID after %d attempts (prefix "%s", last candidate "%s").',
+            $attempts,
+            $prefix,
+            $prefix . $nextSuffix
+        ));
+    }
+
+    /**
+     * POCOR-9867: true only for a UNIQUE/PRIMARY KEY violation.
+     */
+    protected function isDuplicateKeyException(\PDOException $exception): bool
+    {
+        return $exception->getCode() === '23000'
+            || (isset($exception->errorInfo[1]) && (int)$exception->errorInfo[1] === 1062);
     }
 
     /**
