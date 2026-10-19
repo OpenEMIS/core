@@ -51,8 +51,9 @@ class InstitutionScannedTable extends AppTable
 
         $areaId = $requestData->area_education_id ?? '';
         $filterInstitutionIds = $this->parseInstitutionIds($requestData->institution_id ?? null);
-        $startDate = $this->parseReportDate($requestData->report_start_date ?? null);
-        $endDate = $this->parseReportDate($requestData->report_end_date ?? null);
+        // AppTable::parseReportDate() reads the system date format; Y-m-d strings from here on
+        $startDate = $this->parseReportDate($requestData->report_start_date ?? null)?->format('Y-m-d');
+        $endDate = $this->parseReportDate($requestData->report_end_date ?? null)?->format('Y-m-d');
 
         $conditions = [];
         if ($startDate) {
@@ -137,17 +138,15 @@ class InstitutionScannedTable extends AppTable
     {
         $newFields = [];
 
-        $newFields[] = ['key' => 'openemis_no', 'field' => 'openemis_no', 'type' => 'string', 'label' => __('OpenEMIS ID')];
-        $newFields[] = ['key' => 'name', 'field' => 'name', 'type' => 'string', 'label' => __('Name')];
-        $newFields[] = ['key' => 'user_type', 'field' => 'user_type', 'type' => 'string', 'label' => __('User Type')];
-        $newFields[] = ['key' => 'institution_code', 'field' => 'institution_code', 'type' => 'string', 'label' => __('Institution Code')];
-        $newFields[] = ['key' => 'institution_name', 'field' => 'institution_name', 'type' => 'string', 'label' => __('Institution Name')];
-        $newFields[] = ['key' => 'scan_date', 'field' => 'scan_date', 'type' => 'string', 'label' => __('Date')];
-        $newFields[] = ['key' => 'scan_time', 'field' => 'scan_time', 'type' => 'string', 'label' => __('Time')];
+        $newFields[] = ['key' => 'openemis_no', 'field' => 'openemis_no', 'type' => 'string', 'label' => __('QR Code (OpenEMIS ID)')];
         $newFields[] = ['key' => 'latitude', 'field' => 'latitude', 'type' => 'string', 'label' => __('Latitude')];
         $newFields[] = ['key' => 'longitude', 'field' => 'longitude', 'type' => 'string', 'label' => __('Longitude')];
+        $newFields[] = ['key' => 'scan_date', 'field' => 'scan_date', 'type' => 'string', 'label' => __('Date')];
+        $newFields[] = ['key' => 'scan_time', 'field' => 'scan_time', 'type' => 'string', 'label' => __('Time')];
+        $newFields[] = ['key' => 'institution_code', 'field' => 'institution_code', 'type' => 'string', 'label' => __('Institution Code')];
+        $newFields[] = ['key' => 'user_type', 'field' => 'user_type', 'type' => 'string', 'label' => __('User Type')];
         $newFields[] = ['key' => 'location', 'field' => 'location', 'type' => 'string', 'label' => __('Location')];
-        $newFields[] = ['key' => 'access', 'field' => 'access', 'type' => 'string', 'label' => __('Access')];
+        $newFields[] = ['key' => 'access', 'field' => 'access', 'type' => 'string', 'label' => __('Access Option')];
 
         $fields->exchangeArray($newFields);
     }
@@ -186,25 +185,6 @@ class InstitutionScannedTable extends AppTable
                 GROUP BY s.id, ui.institution_id";
     }
 
-    /**
-     * Report dates are posted in the system's editable date format; returns Y-m-d or null.
-     */
-    private function parseReportDate($date)
-    {
-        if (empty($date)) {
-            return null;
-        }
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
-        // the datepicker cannot emit ordinals, so the posted value has no "S"
-        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
-        $parsedDate = \DateTime::createFromFormat('!' . $editableDateFormat, (string)$date);
-        if ($parsedDate === false) {
-            $timestamp = strtotime((string)$date);
-            return $timestamp ? date('Y-m-d', $timestamp) : null;
-        }
-        return $parsedDate->format('Y-m-d');
-    }
 
     private function parseInstitutionIds($institutionId)
     {

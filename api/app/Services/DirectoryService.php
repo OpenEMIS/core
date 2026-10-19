@@ -201,7 +201,6 @@ class DirectoryService extends Controller
         }
     }
 
-
     public function getStaffType($params)
     {
         try {
@@ -238,5 +237,33 @@ class DirectoryService extends Controller
         }
     }
     //For POCOR-8194 End...
+
+    //POCOR-9822
+    public function internalSearch($params)
+    {
+        try {
+            return $this->directoryRepository->internalSearch($params);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to perform directory internal search',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    //POCOR-9822
+    public function externalSearch($params)
+    {
+        try {
+            return $this->directoryRepository->externalSearch($params);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to perform directory external search',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return ['error' => $e->getMessage()];
+        }
+    }
 
 }
