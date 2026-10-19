@@ -61,4 +61,8 @@ app-root .kdx-toolbar .kdx-toolbar-left .btn:focus {
     border-color: #<?= h($secondaryColour) ?> !important;
     color: #FFF !important;
 }
+.header-navigation .btn-group {
+    flex-direction: row;
+    align-items: stretch;
+}
 </style>

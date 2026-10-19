@@ -1,3 +1,12 @@
+### 5.21.4 - 2026-10-16
+- Bug Fixed: Security > Roles > Permissions : No Permission available for Scanned Component
+- Bug Fixed: Core>Reports>Audits>Add Deleted Records Report : Error seen when generating Deleted Records Report
+- Bug Fixed: Reports > Performances : Error when Generating a Performance Report
+- Bug Fixed: Core>Reports>Staff>Staff Leave: Error seen when generating report. 
+- Bug Fixed: Institutions > Staff > Add :  when a new staff member is being added, when the account is saved the email is retained as the username, however, all the details belonged to someone else and the created and last modified details were another user
+- Bug Fixed: Enable OpenEMIS Admissions User External Search Through Core REST APIs
+- Bug Fixed: Core>Institution>Students : Total Number of student does not match Dashboard
+
 ### 5.21.3 - 2026-10-13
 - Bug Fixed: Reports : Allow selection of All institutions in filter
 - Bug Fixed: Core>Institution>Students>All Status from dropdown: When selecting All statuses from the dropdown, the selection slides back automatically to Enrolled.
