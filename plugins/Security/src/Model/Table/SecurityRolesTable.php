@@ -390,13 +390,44 @@ class SecurityRolesTable extends ControllerActionTable
                 'entity' => $entity
             ]);
 
+            // POCOR-7538 point 1.5: role-level override, replacing the removed
+            // All Classes/All Subjects permission-grid checkboxes.
+            $this->field('access_all_classes', [
+                'entity' => $entity
+            ]);
+            $this->field('access_all_subjects', [
+                'entity' => $entity
+            ]);
+
             $this->setFieldOrder([
-                'name', 'code', 'order', 'visible', 'security_group_id'
+                'name', 'code', 'order', 'visible', 'security_group_id', 'access_all_classes', 'access_all_subjects'
             ]);
         } else {
            $this->setupFields($entity, $extra);
         }
         /*POCOR-5782 ends*/
+    }
+
+    // POCOR-7538: render as Yes/No selects, matching the established
+    // general.yesno pattern used elsewhere (eg WorkflowStepsTable::onUpdateFieldIsEditable).
+    public function onUpdateFieldAccessAllClasses(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'edit') {
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = $this->getSelectOptions('general.yesno');
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldAccessAllSubjects(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'edit') {
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = $this->getSelectOptions('general.yesno');
+        }
+        return $attr;
     }
 
     private function setupFields(Entity $entity, ArrayObject $extra)

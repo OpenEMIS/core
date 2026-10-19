@@ -6,6 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\ResultSet;
+use Cake\ORM\TableRegistry;
 use Cake\Event\EventInterface;
 use Cake\I18n\Date;
 
@@ -158,21 +159,51 @@ class InstitutionSubjectBehavior extends Behavior
     }
 
     // Function to check AllSubjects permission is set
+    // POCOR-7538: now checks the role-level "Access All Subjects" flag (point 1.5)
+    // instead of the removed All Subjects security_function (point 1.4). The flag is
+    // a blanket override, not per view/edit/add/delete/execute, so $action is kept
+    // only for call-site compatibility and is otherwise unused.
     private function checkAllSubjectsPermission($action)
     {
-        $AccessControl = $this->_table->AccessControl;
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
         if ($event->getResult()) {
             $roles = $event->getResult();
         }
-        $allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', $action], $roles);
-        if ($allSubjectsEditPermission) {
-            return true;
-        } else {
+        return $this->hasAccessAllSubjects($roles);
+    }
+
+    // POCOR-7538: shared check for the role-level "Access All Subjects" flag (point 1.5).
+    private function hasAccessAllSubjects($roles)
+    {
+        if (empty($roles)) {
             return false;
         }
+        $SecurityRolesTable = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        return $SecurityRolesTable->find()
+            ->where([
+                $SecurityRolesTable->aliasField('id') . ' IN' => $roles,
+                $SecurityRolesTable->aliasField('access_all_subjects') => 1,
+            ])
+            ->count() > 0;
+    }
+
+    // POCOR-7538: shared check for the role-level "Access All Classes" flag (point 1.5) -
+    // findByAccess() below needs it too, since a homeroom/secondary teacher's class-linked
+    // subjects are also reachable via Classes access, not just Subjects access.
+    private function hasAccessAllClasses($roles)
+    {
+        if (empty($roles)) {
+            return false;
+        }
+        $SecurityRolesTable = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        return $SecurityRolesTable->find()
+            ->where([
+                $SecurityRolesTable->aliasField('id') . ' IN' => $roles,
+                $SecurityRolesTable->aliasField('access_all_classes') => 1,
+            ])
+            ->count() > 0;
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -268,9 +299,12 @@ class InstitutionSubjectBehavior extends Behavior
                 }
             }
 
-            $hasAllSubjectsPermission = $AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles);
+            // POCOR-7538: AllSubjects/AllClasses security_functions removed (point 1.4) -
+            // full access is now the role-level "Access All Subjects"/"Access All Classes"
+            // flags (point 1.5).
+            $hasAllSubjectsPermission = $this->hasAccessAllSubjects($roles);
             $hasMySubjectsPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
-            $hasAllClassesPermission = $AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles);
+            $hasAllClassesPermission = $this->hasAccessAllClasses($roles);
             $hasMyClassesPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
 
             $orConditions = [];

@@ -228,8 +228,11 @@ class InstitutionClassBehavior extends Behavior
                     $roles = $event->getResult();
                 }
             }
-            $currentUrl = $_SERVER['REQUEST_URI']; 
-            if (!$AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
+            $currentUrl = $_SERVER['REQUEST_URI'];
+            // POCOR-7538: AllClasses security_function removed (point 1.4) - full access
+            // is now the role-level "Access All Classes" flag (point 1.5), a blanket
+            // override rather than a per-action ($permission) grant.
+            if (!$this->hasAccessAllClasses($roles)) {
                 if ($AccessControl->check(['Institutions', 'Classes', $permission], $roles)) {
                     if (strpos($currentUrl, 'ReportCardStatusProgress') !== false) { //POCOR-8773
                         $query = $this->_table->find();
@@ -288,21 +291,34 @@ class InstitutionClassBehavior extends Behavior
     }
 
     // Function to check AllClass permission is set
+    // POCOR-7538: now checks the role-level "Access All Classes" flag (point 1.5)
+    // instead of the removed All Classes security_function (point 1.4). The flag is
+    // a blanket override, not per view/edit/add/delete/execute, so $action is kept
+    // only for call-site compatibility and is otherwise unused.
     private function checkAllClassesPermission($action)
     {
-        $AccessControl = $this->_table->AccessControl;
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
         if ($event->getResult()) {
             $roles = $event->getResult();
         }
-        $allClassesPermission = $AccessControl->check(['Institutions', 'AllClasses', $action], $roles);
-        if ($allClassesPermission) {
-            return true;
-        } else {
+        return $this->hasAccessAllClasses($roles);
+    }
+
+    // POCOR-7538: shared check for the role-level "Access All Classes" flag (point 1.5).
+    private function hasAccessAllClasses($roles)
+    {
+        if (empty($roles)) {
             return false;
         }
+        $SecurityRolesTable = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        return $SecurityRolesTable->find()
+            ->where([
+                $SecurityRolesTable->aliasField('id') . ' IN' => $roles,
+                $SecurityRolesTable->aliasField('access_all_classes') => 1,
+            ])
+            ->count() > 0;
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
