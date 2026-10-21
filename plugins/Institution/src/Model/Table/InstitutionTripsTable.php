@@ -496,6 +496,22 @@ class InstitutionTripsTable extends ControllerActionTable
         // $this->fields['days']['multiple'] = true;
         // $this->fields['days']['options'] = $InstitutionBuses;
 
+        // POCOR-9854: Academic Period is read-only - current period on Add, the
+        // trip's own period on Edit. Passenger options must follow that same
+        // period; previously Edit used the current period, so a trip from a past
+        // year listed no students when nobody was enrolled in the current year.
+        if ($this->action == 'edit' && !empty($entity->academic_period_id)) {
+            $academicPeriodId = $entity->academic_period_id;
+        } else {
+            $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        }
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $this->fields['academic_period_id']['type'] = 'readonly';
+        $this->fields['academic_period_id']['value'] = $academicPeriodId;
+        $this->fields['academic_period_id']['attr']['value'] = $academicPeriodOptions[$academicPeriodId] ?? '';
+
+        $this->fields['assigned_students']['options'] = $this->getAssignedStudentOptions($academicPeriodId);
+
         // POCOR-9854: already-saved passengers may no longer be in the "currently
         // enrolled" options list (e.g. the trip is from a past academic period and
         // the student has since graduated/promoted) - merge their labels in too,
@@ -560,11 +576,10 @@ class InstitutionTripsTable extends ControllerActionTable
 
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $this->fields['academic_period_id']['type'] = 'select';
-        $this->fields['academic_period_id']['default'] = $this->AcademicPeriods->getCurrent();
-        $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
-        $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
+        // POCOR-9854: Academic Period is read-only (current period on Add, the
+        // trip's own period on Edit) - value is resolved in addEditAfterAction()
+        // where the entity is available.
+        $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['label' => __('Academic Period')]]);
 
         // POCOR-9854: client-approved reference design groups the main trip
         // details under an "Information" header, separate from the Passengers
@@ -616,8 +631,8 @@ class InstitutionTripsTable extends ControllerActionTable
         // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
         // POCOR-9854: client-confirmed Passengers should show on Add as well as Edit,
-        // listing students currently enrolled in the selected Academic Period
-        // (getSelectedAcademicPeriod() already resolves 'add' to the current period).
+        // listing students enrolled in the trip's Academic Period (options are
+        // populated in addEditAfterAction(), once the trip's period is known).
         // Shown as its own section after Comment, matching the client-approved
         // reference design, with the select itself labelled "Assigned Students".
         if ($this->action == 'edit' || $this->action == 'add') {
@@ -627,7 +642,6 @@ class InstitutionTripsTable extends ControllerActionTable
                 'visible' => ['edit' => true, 'add' => true]
             ]);
 
-            $this->fields['assigned_students']['options'] = $this->getAssignedStudentOptions();
             $this->field('assigned_students', [
                 'type' => 'chosenSelect',
                 'attr' => ['label' => __('Assigned Students'), 'multiple' => true],
@@ -887,10 +901,9 @@ class InstitutionTripsTable extends ControllerActionTable
 
     // POCOR-9854: options for the Passengers multi-select, listing students
     // currently enrolled at this institution for the trip's academic period.
-    private function getAssignedStudentOptions()
+    private function getAssignedStudentOptions($academicPeriodId)
     {
         $institutionId = $this->getInstitutionID();
-        $academicPeriodId = $this->getSelectedAcademicPeriod($this->request);
 
         $Students = TableRegistry::getTableLocator()->get('Institution.Students');
         $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
@@ -1007,6 +1020,11 @@ class InstitutionTripsTable extends ControllerActionTable
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
+        // POCOR-9854: Academic Period is read-only on Edit - keep the trip's original period
+        if (!$entity->isNew() && $entity->isDirty('academic_period_id')) {
+            $entity->academic_period_id = $entity->getOriginal('academic_period_id');
+        }
+
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
