@@ -10,7 +10,7 @@ use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait; // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
@@ -44,10 +44,6 @@ class InstitutionTripsTable extends ControllerActionTable
         ]);
 
         // POCOR-9854: required for the 'information_section'/'passengers_section'
-        // fields in addEditBeforeAction() to actually render - 'type' => 'section'
-        // is not a built-in field type; this behavior is what gives it an
-        // onGetSectionElement() getter and the override/rowClass attributes needed
-        // to display as a section header instead of an empty, invisible field.
         $this->addBehavior('OpenEmis.Section');
     }
 
@@ -310,9 +306,6 @@ class InstitutionTripsTable extends ControllerActionTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                // POCOR-9854: $row->repeat no longer exists - the column was
-                // renamed to trip_repeat (read into a temp var before
-                // overwriting $row['trip_repeat'] with the display string).
                 $repeat = $row->trip_repeat;
                 $row['trip_repeat'] = $repeat == 1 ? 'Yes' : 'No';
 
@@ -394,9 +387,7 @@ class InstitutionTripsTable extends ControllerActionTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                // POCOR-9854: $row->repeat no longer exists - the column was
-                // renamed to trip_repeat (read into a temp var before
-                // overwriting $row['trip_repeat'] with the display string).
+                //POCOR-9854
                 $repeat = $row->trip_repeat;
                 $row['trip_repeat'] = $repeat == 1 ? 'Yes' : 'No';
 
@@ -498,12 +489,14 @@ class InstitutionTripsTable extends ControllerActionTable
 
         // POCOR-9854: Academic Period is read-only - current period on Add, the
         // trip's own period on Edit. Passenger options must follow that same
-        // period; previously Edit used the current period, so a trip from a past
-        // year listed no students when nobody was enrolled in the current year.
         if ($this->action == 'edit' && !empty($entity->academic_period_id)) {
             $academicPeriodId = $entity->academic_period_id;
         } else {
-            $academicPeriodId = $this->AcademicPeriods->getCurrent();
+            if (!empty($this->request->getQuery('period'))) {
+                $academicPeriodId = $this->request->getQuery('period');
+            } else {
+                $academicPeriodId = $this->AcademicPeriods->getCurrent();
+            }
         }
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $this->fields['academic_period_id']['type'] = 'readonly';
@@ -513,20 +506,14 @@ class InstitutionTripsTable extends ControllerActionTable
         $this->fields['assigned_students']['options'] = $this->getAssignedStudentOptions($academicPeriodId);
 
         // POCOR-9854: already-saved passengers may no longer be in the "currently
-        // enrolled" options list (e.g. the trip is from a past academic period and
-        // the student has since graduated/promoted) - merge their labels in too,
-        // otherwise the chosenSelect widget has nothing to render their tag from.
         if ($this->action == 'edit' && $entity->has('institution_trip_passengers') && !empty($entity->institution_trip_passengers)) {
-            // POCOR-9854: batched lookup (same pattern as setupPassengersView()) -
-            // one query for all passengers instead of one Students->find() per
-            // passenger, which was an N+1 on every Edit page load.
             $Students = TableRegistry::getTableLocator()->get('Institution.Students');
             $conditions = [];
             foreach ($entity->institution_trip_passengers as $passenger) {
                 $conditions[] = [
                     'Students.student_id' => $passenger->student_id,
                     'Students.education_grade_id' => $passenger->education_grade_id,
-                    'Students.academic_period_id' => $passenger->academic_period_id,
+                    'Students.academic_period_id' => $academicPeriodId,
                     'Students.institution_id' => $passenger->institution_id
                 ];
             }
@@ -553,7 +540,7 @@ class InstitutionTripsTable extends ControllerActionTable
                 $compositeKey = implode('|', [
                     $passenger->student_id,
                     $passenger->education_grade_id,
-                    $passenger->academic_period_id,
+                    $academicPeriodId,
                     $passenger->institution_id
                 ]);
 
@@ -564,7 +551,7 @@ class InstitutionTripsTable extends ControllerActionTable
                 $encodedKeys = $this->paramsEncode([
                     'student_id' => $passenger->student_id,
                     'education_grade_id' => $passenger->education_grade_id,
-                    'academic_period_id' => $passenger->academic_period_id,
+                    'academic_period_id' => $academicPeriodId,
                     'institution_id' => $passenger->institution_id
                 ]);
                 $existingOptions[$encodedKeys] = $studentsByCompositeKey[$compositeKey]->user->name_with_id;
@@ -580,16 +567,6 @@ class InstitutionTripsTable extends ControllerActionTable
         // trip's own period on Edit) - value is resolved in addEditAfterAction()
         // where the entity is available.
         $this->field('academic_period_id', ['type' => 'readonly', 'attr' => ['label' => __('Academic Period')]]);
-
-        // POCOR-9854: client-approved reference design groups the main trip
-        // details under an "Information" header, separate from the Passengers
-        // section added further below. Final position is pinned explicitly via
-        // setFieldOrder() below rather than relied on via 'before'/'after' -
-        // ControllerActionBehavior::getOrderValue() resolves those relative to
-        // the target field's 'order' value AT THE MOMENT this call runs, which
-        // proved too fragile to position a header reliably (confirmed by direct
-        // introspection: it did not land where intended either before or after
-        // academic_period_id's own field() call).
         $this->field('information_section', [
             'type' => 'section',
             'title' => __('Information'),
@@ -630,11 +607,7 @@ class InstitutionTripsTable extends ControllerActionTable
         ]);
         // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
-        // POCOR-9854: client-confirmed Passengers should show on Add as well as Edit,
-        // listing students enrolled in the trip's Academic Period (options are
-        // populated in addEditAfterAction(), once the trip's period is known).
-        // Shown as its own section after Comment, matching the client-approved
-        // reference design, with the select itself labelled "Assigned Students".
+        // POCOR-9854
         if ($this->action == 'edit' || $this->action == 'add') {
             $this->field('passengers_section', [
                 'type' => 'section',
@@ -649,9 +622,7 @@ class InstitutionTripsTable extends ControllerActionTable
             ]);
         }
 
-        // POCOR-9854: pin the final field order explicitly rather than rely on
-        // per-field 'before'/'after' hints (see comment on information_section
-        // above for why those proved unreliable here).
+        // POCOR-9854
         $this->setFieldOrder([
             'information_section', 'academic_period_id', 'name', 'trip_type_id',
             'institution_transport_provider_id', 'institution_bus_id', 'trip_repeat',
@@ -679,7 +650,8 @@ class InstitutionTripsTable extends ControllerActionTable
                     $encodedKeys = $this->paramsEncode([
                         'student_id' => $passenger->student_id,
                         'education_grade_id' => $passenger->education_grade_id,
-                        'academic_period_id' => $passenger->academic_period_id,
+                        // POCOR-9854: same period as the Edit options in addEditAfterAction()
+                        'academic_period_id' => $row->academic_period_id,
                         'institution_id' => $passenger->institution_id
                     ]);
                     $passengers[$key] = ['id' => $encodedKeys];
@@ -732,17 +704,7 @@ class InstitutionTripsTable extends ControllerActionTable
     }
     // setup fields for view and edit POCOR-6152
 
-    // POCOR-9854: Passengers section on View - read-only, filterable by Education
-    // Grade / Student Status / Gender. Mirrors the filter+table pattern already used
-    // for Institution Classes' Students tab (InstitutionClassesTable::viewAfterAction()),
-    // for visual/behavioural consistency across the app.
-    //
-    // InstitutionTripPassengers only stores a denormalized (student_id,
-    // education_grade_id, academic_period_id, institution_id) snapshot - it has no
-    // direct Gender/StudentStatus/SpecialNeeds association of its own, so the actual
-    // display data is looked up from the live Institution.Students enrollment table
-    // via that composite key, same as getAssignedStudentOptions() and
-    // addEditAfterAction() already do.
+    // POCOR-9854
     private function setupPassengersView(Entity $entity, ArrayObject $extra)
     {
         $extra['selectedGrade'] = -1;
