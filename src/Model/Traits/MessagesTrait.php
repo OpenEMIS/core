@@ -306,6 +306,9 @@ trait MessagesTrait
             'multiGrade' => 'Multi Grade',
             'noShift' => 'There are no shifts configured for the selected academic period'
         ],
+        'InstitutionTrips' => [
+            'passengers' => 'Passengers'
+        ],
         'InstitutionStudentIndexes' => [
             'noClasses' => 'No Classes',
             'noStudents' => 'No Students'
