@@ -26,7 +26,8 @@ app-root .kdx-datepicker .btn,
 app-root .kdx-datepicker .btn-input,
 app-root .kdx-datepicker-wrapper .btn,
 app-root .kdx-datepicker-wrapper .btn-input,
-app-root .dropdown-menu .btn {
+app-root .dropdown-menu .btn,
+app-root .kdx-toolbar .btn { /* POCOR-9840: page toolbar (Export etc.) - Angular paints it #f9f9f9 with a higher-specificity rule, leaving the white icon invisible */
     background-color: #<?= h($productColour) ?> !important;
     border-color: #<?= h($productColour) ?> !important;
     color: #FFF !important;
@@ -36,7 +37,9 @@ app-root .btn:focus,
 app-root .btn-input:hover,
 app-root .btn-input:focus,
 app-root .kdx-datepicker .btn:hover,
-app-root .kdx-datepicker .btn-input:hover {
+app-root .kdx-datepicker .btn-input:hover,
+app-root .kdx-toolbar .btn:hover,
+app-root .kdx-toolbar .btn:focus {
     background-color: #<?= h($secondaryColour) ?> !important;
     border-color: #<?= h($secondaryColour) ?> !important;
     color: #FFF !important;

@@ -80,6 +80,8 @@ class InstitutionsTable extends AppTable
                             'Report.StudentAttendanceSummary',
                             'Report.ClassAttendanceMarkedSummaryReport',
                             'Report.StudentAbsences',
+                            'Report.StudentAttendanceWeeklyReport', //POCOR-9831
+                            'Report.InstitutionScanned', //POCOR-9840
                             'Report.StudentAttendanceReport', //POCOR-9831
                         ]);
                     }
@@ -92,6 +94,14 @@ class InstitutionsTable extends AppTable
                     },
                     'message' => __('Report Start Date should be later than Academic Period Start Date')
                 ],
+                //POCOR-9840: the date can fall on either side of the period, so one message for both
+                'ruleScannedInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'on' => function ($context) {
+                        return ($context['data']['feature'] ?? '') == 'Report.InstitutionScanned';
+                    },
+                    'message' => __('Start Date should be within the selected Academic Period')
+                ],
             ]);
 
         $validator
@@ -103,6 +113,13 @@ class InstitutionsTable extends AppTable
                         return in_array($feature, ['Report.ClassAttendanceNotMarkedRecords', 'Report.InstitutionCases', 'Report.StudentAttendanceSummary', 'Report.StudentAbsences', 'Report.StudentAttendanceReport']); //POCOR-9831
                     },
                     'message' => __('Report End Date should be earlier than Academic Period End Date')
+                ],
+                'ruleScannedInAcademicPeriod' => [ //POCOR-9840
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'on' => function ($context) {
+                        return ($context['data']['feature'] ?? '') == 'Report.InstitutionScanned';
+                    },
+                    'message' => __('End Date should be within the selected Academic Period')
                 ],
                 'ruleForOneMonthDate' => [
                     'rule' => ['forOneMonthDate'],
@@ -126,8 +143,8 @@ class InstitutionsTable extends AppTable
             $validator = $validator
                 ->notEmpty('institution_id');
         }
-        if (in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport', 'Report.StudentAttendances', 'Report.StudentAttendanceReport'])) { //POCOR-8417 //POCOR-9831
-            $validator
+        if (in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport', 'Report.StudentAttendances', 'Report.StudentAttendanceWeeklyReport', 'Report.StudentAttendanceReport', 'Report.InstitutionScanned'])) { //POCOR-8417 //POCOR-9831 //POCOR-9840
+        $validator
                 ->notEmpty('area_level_id', __('This field cannot be left empty'))
                 ->notEmpty('area_education_id', __('This field cannot be left empty'));
 
@@ -418,6 +435,10 @@ class InstitutionsTable extends AppTable
             $options['validate'] = 'StaffLeave';
         } elseif ($data[$this->getAlias()]['feature'] == 'Report.StudentAbsencesPerDays') { //POCOR-7276
             $options['validate'] = 'StudentAbsencesPerDays';
+        } elseif ($data[$this->getAlias()]['feature'] == 'Report.StudentAttendanceWeeklyReport') { //POCOR-9831
+            $options['validate'] = 'studentAttendanceWeeklyReport';
+        } elseif ($data[$this->getAlias()]['feature'] == 'Report.InstitutionScanned') { //POCOR-9840
+            $options['validate'] = 'institutionScanned';
         } elseif ($data[$this->getAlias()]['feature'] == 'Report.StudentAttendanceReport') { //POCOR-9831
             $options['validate'] = 'studentAttendanceReport';
         }
@@ -602,6 +623,15 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'institution_id';
                     // $fieldsOrder[] = 'module';//POCOR-7786
+                    $fieldsOrder[] = 'report_start_date';
+                    $fieldsOrder[] = 'report_end_date';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.InstitutionScanned': //POCOR-9840
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'report_start_date';
                     $fieldsOrder[] = 'report_end_date';
                     $fieldsOrder[] = 'format';
@@ -1137,6 +1167,8 @@ class InstitutionsTable extends AppTable
                     'Report.StudentBehaviours',
                     'Report.TeacherClasses', //POCOR-9064
                     'Report.StudentAttendances', //POCOR-9813
+                    'Report.StudentAttendanceWeeklyReport', //POCOR-9831
+                    'Report.InstitutionScanned', //POCOR-9840
                     'Report.StudentAttendanceReport', //POCOR-9831
 
                 ]
@@ -1156,7 +1188,7 @@ class InstitutionsTable extends AppTable
                 if (empty($data['academic_period_id'])) {
                     //POCOR-9813 / POCOR-9831: preselect current period so the dropdown matches the Start/End Date
                     //defaults on first load (the withData() calls below don't reach the form - ServerRequest is immutable)
-                    if (in_array($feature, ['Report.StudentAttendances', 'Report.StudentAttendanceReport'])) {
+                    if (in_array($feature, ['Report.StudentAttendances', 'Report.StudentAttendanceReport', 'Report.StudentAttendanceWeeklyReport', 'Report.InstitutionScanned'])) { //POCOR-9831 //POCOR-9840   
                         $attr['attr']['value'] = $currentPeriod;
                     }
                     $request = $request->withData('academic_period_id', $currentPeriod);
@@ -1214,6 +1246,7 @@ class InstitutionsTable extends AppTable
                 'Report.TeacherClasses', //POCOR-9064
                 'Report.StudentAttendanceReport', //POCOR-9831
                 'Report.StudentAttendances', //POCOR-9813
+                'Report.InstitutionScanned', //POCOR-9840
             ]))) {
                 $Areas = self::getDynamicTableInstance('Area.AreaLevels');
                 $entity = $attr['entity'];
@@ -1285,6 +1318,8 @@ class InstitutionsTable extends AppTable
                     'Report.InstitutionInfrastructureSummaryReport',
                     'Report.StudentBehaviours', //POCOR-7517
                     'Report.TeacherClasses', //POCOR-9064
+                    'Report.StudentAttendanceWeeklyReport', //POCOR-9831
+                    'Report.InstitutionScanned', //POCOR-9840
                     'Report.StudentAttendances', //POCOR-9813
                     'Report.StudentAttendanceReport', //POCOR-9831
                 ]
@@ -1708,6 +1743,7 @@ class InstitutionsTable extends AppTable
                 'Report.TeacherClasses', //POCOR-9064
                 'Report.StudentAttendanceReport', //POCOR-9831
                 'Report.StudentAttendances', //POCOR-9813
+                'Report.InstitutionScanned', //POCOR-9840
             ];
             if (in_array($feature, $reportModels)) {
                 $institutionList = [];
@@ -1869,7 +1905,7 @@ class InstitutionsTable extends AppTable
                     }
                     //POCOR-9823 "All Institutions" 
                     //already scoped via find('byAccess'), and every export applies the same access check.
-                    if(in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport', 'Report.StudentAttendanceReport', 'Report.StudentAttendances'])) { //POCOR-8417 //POCOR-9831
+                    if (in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport', 'Report.StudentAttendanceReport', 'Report.StudentAttendanceWeeklyReport', 'Report.StudentAttendances', 'Report.InstitutionScanned'])) { //POCOR-8417 //POCOR-9831 //POCOR-9840  
                         $attr['attr']['multiple'] = true;
                         unset($institutionOptions['']);
                         if (is_array($institutionOptions) && array_key_exists('0', $institutionOptions)) {
@@ -1918,7 +1954,7 @@ class InstitutionsTable extends AppTable
         $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
         //POCOR-9831: on first load academic_period_id is not posted yet (the dropdown only displays the
         //            current period), so fall back to it or Start/End Date stay hidden until a reload
-        if (empty($selectedAcademicPeriodId) && ($feature == 'Report.StudentAttendanceReport' || $feature == 'Report.StudentAttendances')) {
+        if (empty($selectedAcademicPeriodId) && in_array($feature, ['Report.StudentAttendanceReport', 'Report.StudentAttendanceWeeklyReport', 'Report.StudentAttendances', 'Report.InstitutionScanned'])) { //POCOR-9831 //POCOR-9840   
             $selectedAcademicPeriodId = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods')->getCurrent();
         }
         [, $editableDateFormat] = $this->getSystemDateFormats();
@@ -1927,6 +1963,10 @@ class InstitutionsTable extends AppTable
             if ($selectedAcademicPeriodId) {
                 $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($selectedAcademicPeriodId);
+                //POCOR-9840: Start Date follows the selected Academic Period
+                if ($feature == 'Report.InstitutionScanned') {
+                    $attr = $this->getScannedReportDateAttr($attr, $selectedPeriod, $requestData['report_start_date'] ?? null, $selectedPeriod->start_date, $editableDateFormat);
+                }
                 if (in_array($feature, [
                     'Report.ClassAttendanceNotMarkedRecords',
                     'Report.InstitutionCases',
@@ -2107,7 +2147,7 @@ class InstitutionsTable extends AppTable
         $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
         //POCOR-9831: on first load academic_period_id is not posted yet (the dropdown only displays the
         //            current period), so fall back to it or Start/End Date stay hidden until a reload
-        if (empty($selectedAcademicPeriodId) && ($feature == 'Report.StudentAttendanceReport'|| $feature == 'Report.StudentAttendances')) {
+        if (empty($selectedAcademicPeriodId) && in_array($feature, ['Report.StudentAttendanceReport', 'Report.StudentAttendanceWeeklyReport', 'Report.StudentAttendances', 'Report.InstitutionScanned'])) { //POCOR-9831 //POCOR-9840   
             $selectedAcademicPeriodId = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods')->getCurrent();
         }
         [, $editableDateFormat] = $this->getSystemDateFormats();
@@ -2116,6 +2156,10 @@ class InstitutionsTable extends AppTable
             if ($selectedAcademicPeriodId) {
                 $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
                 $selectedPeriod = $AcademicPeriods->get($selectedAcademicPeriodId);
+                //POCOR-9840: End Date follows the selected Academic Period
+                if ($feature == 'Report.InstitutionScanned') {
+                    $attr = $this->getScannedReportDateAttr($attr, $selectedPeriod, $requestData['report_end_date'] ?? null, $selectedPeriod->end_date, $editableDateFormat);
+                }
                 if (in_array($feature, [
                     'Report.ClassAttendanceNotMarkedRecords',
                     'Report.InstitutionCases',
@@ -2818,6 +2862,52 @@ class InstitutionsTable extends AppTable
     }
 
     /**
+     * POCOR-9840: Start/End Date of the Scanned report - the picker is limited to the selected
+     * Academic Period and defaults to its start/end date. A chosen date is kept, except on a
+     * reload (e.g. Academic Period changed) where one outside the new period is reset to the
+     * default; on save it is kept as posted so the in-period validation message shows next to it.
+     */
+    private function getScannedReportDateAttr(array $attr, $selectedPeriod, $postedDate, $defaultDate, $editableDateFormat)
+    {
+        $periodStart = \DateTime::createFromFormat('!Y-m-d', $selectedPeriod->start_date->format('Y-m-d'));
+        $periodEnd = \DateTime::createFromFormat('!Y-m-d', $selectedPeriod->end_date->format('Y-m-d'));
+
+        $attr['type'] = 'date';
+        $attr['null'] = false; // marks the label required (*) in the datepicker element
+        $attr['attr']['required'] = true;
+        $attr['date_options']['startDate'] = $periodStart->format($editableDateFormat);
+        $attr['date_options']['endDate'] = $periodEnd->format($editableDateFormat);
+        $attr['value'] = $defaultDate->format($editableDateFormat);
+
+        $isSave = ($this->request->getData('submit') ?? '') == 'save';
+        if (!empty($postedDate)) {
+            $date = \DateTime::createFromFormat('!' . $editableDateFormat, $postedDate);
+            $inPeriod = $date !== false && $date >= $periodStart && $date <= $periodEnd;
+            if ($inPeriod || $isSave) {
+                $attr['value'] = $postedDate;
+            }
+        } elseif ($isSave) {
+            // left empty on save: show it empty next to the "cannot be left empty" message
+            // (unset rather than '' - the date helper would render '' as 1970-01-01)
+            unset($attr['value']);
+        }
+        return $attr;
+    }
+
+    //POCOR-9840
+    public function validationInstitutionScanned(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('report_start_date')
+            ->notEmpty('report_end_date');
+
+        return $validator;
+    }
+
+    /**
+     * POCOR-9831: Institution Class filter for Student Attendance Weekly Report.
      * POCOR-9831: Institution Class filter for Student Attendance Report.
      * Optional - "All Classes" (0) is the default. Specific classes are listed only when
      * exactly one institution is selected, narrowed by the selected Education Grade.
