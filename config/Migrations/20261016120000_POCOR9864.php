@@ -66,6 +66,11 @@ BEGIN
     DECLARE CONTINUE HANDLER FOR NOT FOUND
         SET var_done = TRUE;
 
+    -- Same as the previous procedure (POCOR-7230): an error not handled by an
+    -- inner block (e.g. a failed log UPDATE) must not abort the whole run.
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+        SET var_done = FALSE;
+
     OPEN var_cursor;
 
     read_loop: LOOP
@@ -77,21 +82,32 @@ BEGIN
         END IF;
 
         SET var_error = NULL;
+        SET var_log_id = NULL;
 
-        INSERT INTO report_query_logs (
-            executed_at,
-            frequency,
-            query_sql,
-            status
-        )
-        VALUES (
-            NOW(),
-            var_interval,
-            var_row,
-            'RUNNING'
-        );
+        -- If the log row cannot be written, still run the query, just without
+        -- logging. EXIT (not CONTINUE) so LAST_INSERT_ID() is never read after a
+        -- failed INSERT -- it would still hold the previous query's log id.
+        BEGIN
 
-        SET var_log_id = LAST_INSERT_ID();
+            DECLARE EXIT HANDLER FOR SQLEXCEPTION
+                SET var_log_id = NULL;
+
+            INSERT INTO report_query_logs (
+                executed_at,
+                frequency,
+                query_sql,
+                status
+            )
+            VALUES (
+                NOW(),
+                var_interval,
+                var_row,
+                'RUNNING'
+            );
+
+            SET var_log_id = LAST_INSERT_ID();
+
+        END;
 
         BEGIN
 
