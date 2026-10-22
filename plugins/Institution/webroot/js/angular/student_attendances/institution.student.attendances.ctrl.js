@@ -85,6 +85,12 @@ function InstitutionStudentAttendancesController(
     // whether the option panel is currently shown.
     vm.educationGradeSearch = "";
     vm.educationGradeDropdownOpen = false;
+    // Highlighted row in the open panel (shared by mouse hover and arrow keys, like a native
+    // select), the currently filtered rows, and the placeholder shown while the box is
+    // cleared for typing.
+    vm.educationGradeActiveIndex = -1;
+    vm.educationGradeFiltered = [];
+    vm.educationGradePlaceholder = "";
 
     vm.attendancePeriodOptions = [];
     vm.selectedAttendancePeriod = "";
@@ -529,8 +535,79 @@ function InstitutionStudentAttendancesController(
         if (vm.action === "edit") {
             return;
         }
+        if (vm.educationGradeDropdownOpen) {
+            return;
+        }
+        // Keep the current selection visible as the placeholder while the box is empty,
+        // the way a native select keeps showing its value when opened.
+        vm.educationGradePlaceholder = vm.educationGradeSearch;
         vm.educationGradeSearch = "";
         vm.educationGradeDropdownOpen = true;
+        // Open with the current selection highlighted, like a native select.
+        vm.resetEducationGradeActive(vm.educationGradeListOptions);
+    };
+
+    // Moves the highlight back to the selected grade within the given (filtered) list.
+    vm.resetEducationGradeActive = function (list) {
+        vm.educationGradeActiveIndex = -1;
+        list = list || vm.educationGradeFiltered || [];
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].id == vm.selectedEducationGrade) {
+                vm.educationGradeActiveIndex = i;
+                break;
+            }
+        }
+    };
+
+    // Native-select style keyboard support: Up/Down move the highlight, Enter picks it,
+    // Escape closes the panel.
+    vm.educationGradeKeydown = function (event) {
+        var list = vm.educationGradeFiltered || [];
+        switch (event.keyCode) {
+            case 40: // down
+                event.preventDefault();
+                if (!vm.educationGradeDropdownOpen) {
+                    vm.openEducationGradeDropdown();
+                    return;
+                }
+                if (list.length) {
+                    vm.educationGradeActiveIndex = Math.min(vm.educationGradeActiveIndex + 1, list.length - 1);
+                    vm.scrollEducationGradeActiveIntoView();
+                }
+                break;
+            case 38: // up
+                event.preventDefault();
+                if (list.length) {
+                    vm.educationGradeActiveIndex = Math.max(vm.educationGradeActiveIndex - 1, 0);
+                    vm.scrollEducationGradeActiveIntoView();
+                }
+                break;
+            case 13: // enter
+                event.preventDefault();
+                if (vm.educationGradeDropdownOpen && list[vm.educationGradeActiveIndex]) {
+                    vm.selectEducationGradeOption(list[vm.educationGradeActiveIndex]);
+                    event.target.blur();
+                }
+                break;
+            case 27: // escape
+                event.preventDefault();
+                event.target.blur();
+                break;
+        }
+    };
+
+    vm.educationGradeSearchChanged = function () {
+        vm.educationGradeDropdownOpen = true;
+        vm.educationGradeActiveIndex = -1;
+    };
+
+    vm.scrollEducationGradeActiveIntoView = function () {
+        $timeout(function () {
+            var el = document.querySelector(".education-grade-options li.active");
+            if (el && el.scrollIntoView) {
+                el.scrollIntoView({ block: "nearest" });
+            }
+        });
     };
 
     // Delayed via $timeout so a mousedown-selection on a list item (see

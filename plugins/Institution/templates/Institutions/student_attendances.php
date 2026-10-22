@@ -113,6 +113,129 @@ $panelHeader = $this->fetch('panelHeader');
         color: #999 !important;
     }
 
+    /* POCOR-9856: make the searchable Education Grade input look like the native selects */
+    .splitter-filter .education-grade-select .education-grade-input {
+        display: block;
+        width: 100% !important;
+        height: 30px;
+        margin-bottom: 15px;
+        padding: 5px 25px 5px 10px !important;
+        border: 1px solid #CCC;
+        -webkit-border-radius: 3px;
+        border-radius: 3px;
+        background: #FFF;
+        color: inherit;
+        font: inherit;
+        font-size: 12px;
+        line-height: 18px;
+        box-shadow: none;
+        cursor: pointer;
+        box-sizing: border-box;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    .splitter-filter .education-grade-select .education-grade-input:focus {
+        cursor: text;
+    }
+
+    .splitter-filter .education-grade-select .education-grade-input::placeholder {
+        color: inherit;
+        opacity: 1;
+    }
+
+    .splitter-filter .education-grade-select .education-grade-input[disabled] {
+        background-color: #f2f2f2 !important;
+        border: 1px solid #ccc !important;
+        color: #999 !important;
+        cursor: default;
+    }
+
+    /* Option panel styled after the native macOS/Chrome select popup */
+    .splitter-filter .education-grade-select .education-grade-options {
+        position: absolute;
+        z-index: 1000;
+        top: 31px;
+        left: 0;
+        right: 0;
+        max-height: 240px;
+        overflow-y: auto;
+        margin: 0;
+        padding: 5px 0;
+        list-style: none;
+        background: rgba(248, 248, 248, 0.96);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        backdrop-filter: saturate(180%) blur(20px);
+        border: 1px solid rgba(0, 0, 0, 0.14);
+        -webkit-border-radius: 10px;
+        border-radius: 10px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        font-size: 13px;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .splitter-filter .education-grade-select .education-grade-options li {
+        position: relative;
+        margin: 0 5px;
+        padding: 3px 10px 3px 22px; /* left indent = native checkmark column */
+        -webkit-border-radius: 6px;
+        border-radius: 6px;
+        border: none;
+        line-height: 16px;
+        color: #222;
+        background: transparent;
+        cursor: default;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-user-select: none;
+        user-select: none;
+        opacity: 1;
+        -webkit-transition: none !important;
+        transition: none !important;
+    }
+
+    /* single highlight shared by mouse hover and arrow keys - same blue as the Class dropdown */
+    /* :hover gives an instant highlight (no wait for Angular); .active is the keyboard highlight */
+    .splitter-filter .education-grade-select .education-grade-options li:hover,
+    .splitter-filter .education-grade-select .education-grade-options li.active {
+        background: #579BFA !important;
+        color: #FFF !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    /* while the mouse is in the list, only the row under the mouse is highlighted */
+    .splitter-filter .education-grade-select .education-grade-options:hover li.active:not(:hover) {
+        background: transparent !important;
+        color: #222 !important;
+    }
+
+    .splitter-filter .education-grade-select .education-grade-options li.selected:not(.active):not(:hover) {
+        background: transparent !important;
+        color: #222 !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    .splitter-filter .education-grade-select .education-grade-options li.no-options,
+    .splitter-filter .education-grade-select .education-grade-options li.no-options:hover {
+        color: #999 !important;
+        background: transparent !important;
+    }
+
+    /* native selects show no focus ring when opened with the mouse */
+    .splitter-filter .education-grade-select .education-grade-input:focus,
+    .splitter-filter .education-grade-select .education-grade-input.open {
+        outline: none;
+        border-color: #CCC;
+        box-shadow: none;
+    }
+
     .splitter-filter .split-content-header {
         margin-bottom: 15px;
     }
@@ -346,27 +469,31 @@ $panelHeader = $this->fetch('panelHeader');
                         </select>
                     </div>
                     <h5><?= __('Education Grade') ?>: </h5>
-                    <div class="input-select-wrapper" style="position: relative;">
+                    <!-- POCOR-9856: searchable Education Grade filter, styled to match the native Class/Academic Period selects -->
+                    <div class="input-select-wrapper education-grade-select">
                         <input type="text"
                                name="education_grade_search"
+                               class="education-grade-input"
                                autocomplete="off"
                                ng-model="$ctrl.educationGradeSearch"
                                ng-click="$ctrl.openEducationGradeDropdown()"
                                ng-focus="$ctrl.openEducationGradeDropdown()"
                                ng-blur="$ctrl.closeEducationGradeDropdown()"
+                               ng-keydown="$ctrl.educationGradeKeydown($event)"
+                               ng-change="$ctrl.educationGradeSearchChanged()"
                                ng-disabled="$ctrl.action=='edit'"
-                               placeholder="<?= __('Please select') ?>"
-                               style="width: 100%; box-sizing: border-box;">
-                        <ul ng-if="$ctrl.educationGradeDropdownOpen"
-                            style="position: absolute; z-index: 1000; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: #fff; border: 1px solid #ccc; margin: 2px 0 0; padding: 0; list-style: none; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
-                            <li ng-repeat="education_grade in $ctrl.educationGradeListOptions | filter: $ctrl.educationGradeSearch"
+                               ng-class="{'open': $ctrl.educationGradeDropdownOpen}"
+                               ng-attr-placeholder="{{ $ctrl.educationGradeDropdownOpen && $ctrl.educationGradePlaceholder ? $ctrl.educationGradePlaceholder : '<?= __('Please select') ?>' }}">
+                        <ul ng-if="$ctrl.educationGradeDropdownOpen" class="education-grade-options">
+                            <li ng-repeat="education_grade in ($ctrl.educationGradeFiltered = ($ctrl.educationGradeListOptions | filter: $ctrl.educationGradeSearch))"
                                 ng-mousedown="$ctrl.selectEducationGradeOption(education_grade)"
-                                ng-class="{'selected': education_grade.id == $ctrl.selectedEducationGrade}"
-                                style="padding: 8px 12px; cursor: pointer;">
+                                ng-mouseenter="$ctrl.educationGradeActiveIndex = $index"
+                                ng-mouseleave="$ctrl.resetEducationGradeActive()"
+                                ng-class="{'selected': education_grade.id == $ctrl.selectedEducationGrade, 'active': $index == $ctrl.educationGradeActiveIndex}">
                                 {{ education_grade.name }}
                             </li>
                             <li ng-if="!($ctrl.educationGradeListOptions | filter: $ctrl.educationGradeSearch).length"
-                                style="padding: 8px 12px; color: #999; cursor: default;">
+                                class="no-options">
                                 <?= __('No Options') ?>
                             </li>
                         </ul>
