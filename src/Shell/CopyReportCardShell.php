@@ -47,6 +47,7 @@ class CopyReportCardShell extends Shell
         $ReportCardData = $ReportCardTable->find()->where([$ReportCardTable->aliasField('academic_period_id') => $copyFrom])->toArray();
         $connection = ConnectionManager::get('default');
         $educationGradeList = $this->getEducationGradeMapping($copyTo);//POCOR-9872
+        $periodShift = $this->getPeriodShift($copyFrom, $copyTo);
 
         foreach($ReportCardData as $key=>$ReportCard){
             // POCOR-9871: a report card whose grade has no match in the target period used to insert
@@ -71,15 +72,15 @@ class CopyReportCardShell extends Shell
                 $statement1->execute(array("code" => $ReportCard->code,
                                 "name"=> $ReportCard->name,
                                 "description"=> $ReportCard->description,
-                                "start_date"=>  date("Y-m-d", strtotime($ReportCard->start_date)),
-                                "end_date"=>  date("Y-m-d ", strtotime($ReportCard->end_date)),
-                                "generate_start_date"=> $this->formatDate($ReportCard->generate_start_date, "Y-m-d H:i:s"),
-                                "generate_end_date"=> $this->formatDate($ReportCard->generate_end_date, "Y-m-d H:i:s"),
+                                "start_date"=>  $this->shiftDate($ReportCard->start_date, $periodShift, "Y-m-d"),
+                                "end_date"=>  $this->shiftDate($ReportCard->end_date, $periodShift, "Y-m-d"),
+                                "generate_start_date"=> $this->shiftDate($ReportCard->generate_start_date, $periodShift, "Y-m-d H:i:s"),
+                                "generate_end_date"=> $this->shiftDate($ReportCard->generate_end_date, $periodShift, "Y-m-d H:i:s"),
                                 "principal_comments_required"=> $ReportCard->principal_comments_required,
                                 "homeroom_teacher_comments_required"=> $ReportCard->homeroom_teacher_comments_required,
                                 "teacher_comments_required"=> $ReportCard->teacher_comments_required,
                                 "excel_template_name"=> $ReportCard->excel_template_name,
-                                "excel_template"=>$ReportCard->excel_template,
+                                "excel_template"=>$this->readBlob($ReportCard->excel_template),
                                 "pdf_page_number"=>$ReportCard->pdf_page_number,
                                 "academic_period_id"=>$copyTo,
                                 "education_grade_id"=> $newGradeId,
@@ -195,8 +196,53 @@ class CopyReportCardShell extends Shell
         return $targetGradeId;
     }
 
-    private function formatDate($value, $format)
+    /**
+     * POCOR-9871: copied dates used to keep the source year, so every copied template failed the
+     * "within academic period" validation on edit. Dates are moved by the gap between the two
+     * period start dates (calendar interval, so 08 Sep stays 08 Sep) and kept inside the target period
+     */
+    private function getPeriodShift($copyFrom, $copyTo)
     {
-        return empty($value) ? null : date($format, strtotime((string)$value));
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $from = $AcademicPeriods->get($copyFrom);
+        $to = $AcademicPeriods->get($copyTo);
+        $fromStart = new \DateTime($from->start_date->format('Y-m-d'));
+        $toStart = new \DateTime($to->start_date->format('Y-m-d'));
+
+        return [
+            'interval' => $fromStart->diff($toStart),
+            'min' => $to->start_date->format('Y-m-d'),
+            'max' => $to->end_date->format('Y-m-d')
+        ];
+    }
+
+    private function shiftDate($value, array $periodShift, $format)
+    {
+        if (empty($value)) {
+            return null;
+        }
+        $date = is_object($value) && method_exists($value, 'format')
+            ? new \DateTime($value->format('Y-m-d H:i:s'))
+            : new \DateTime(date('Y-m-d H:i:s', strtotime((string)$value)));
+        $date->add($periodShift['interval']);
+
+        $day = $date->format('Y-m-d');
+        if ($day < $periodShift['min']) {
+            $date->modify($periodShift['min'] . ' ' . $date->format('H:i:s'));
+        } elseif ($day > $periodShift['max']) {
+            $date->modify($periodShift['max'] . ' ' . $date->format('H:i:s'));
+        }
+        return $date->format($format);
+    }
+
+    /**
+     * POCOR-9872
+     */
+    private function readBlob($value)
+    {
+        if (is_resource($value)) {
+            return stream_get_contents($value, -1, 0);
+        }
+        return $value;
     }
 }
