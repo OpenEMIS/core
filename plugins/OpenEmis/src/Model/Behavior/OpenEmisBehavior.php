@@ -292,6 +292,35 @@ class OpenEmisBehavior extends Behavior
         }
     }
 
+    /**
+     * POCOR-9872: on a view page the encoded pass param is the record's own primary key; carrying it
+     * to the index page made every row's View/Edit link reuse that stale id. Keep only the remaining
+     */
+    private function stripRecordKeysFromUrl(array $url)
+    {
+        if (!isset($url[1]) || !is_string($url[1])) {
+            return $url;
+        }
+        $model = $this->table();
+        try {
+            $params = $model->paramsDecode($url[1]);
+        } catch (\Exception $e) {
+            return $url;
+        }
+        if (!is_array($params)) {
+            return $url;
+        }
+        foreach ((array)$model->getPrimaryKey() as $key) {
+            unset($params[$key]);
+        }
+        if (empty($params)) {
+            unset($url[1]);
+        } else {
+            $url[1] = $model->paramsEncode($params);
+        }
+        return $url;
+    }
+
     private function initializeButtons(ArrayObject $extra)
     {
         $model = $this->table();
@@ -371,7 +400,7 @@ class OpenEmisBehavior extends Behavior
                 // POCOR-9819: same fix as add/edit above - back-from-view (eg
                 // reached after an edit-save redirect lands on view first) must
                 // carry pass parameters forward too, not just query-string ones.
-                $toolbarButtons['back']['url'] = $model->url($backAction);
+                $toolbarButtons['back']['url'] = $this->stripRecordKeysFromUrl($model->url($backAction));
             }
             if ($model->actions('edit')) {
                 // echo "<pre>";print_r($model->url($backAction, 'QUERY')['action']);die;

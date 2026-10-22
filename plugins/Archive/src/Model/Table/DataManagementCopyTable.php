@@ -353,10 +353,18 @@ class DataManagementCopyTable extends ControllerActionTable
 
     private function validateReportCards(Entity $entity)
     {
+        // POCOR-9872: block only when nothing is left to copy, so a re-run can fill in report cards
+        // skipped earlier (CopyReportCardShell skips codes that already exist in the target period)
         $ReportCard = TableRegistry::get('ReportCard.ReportCards');
-        $ReportCardData = $ReportCard->find('all')
-            ->where(['academic_period_id ' => $entity->to_academic_period])->toArray();
-        if (!empty($ReportCardData)) {
+        $copiedCodes = $ReportCard->find()
+            ->select(['code'])
+            ->where(['academic_period_id' => $entity->to_academic_period]);
+        $remaining = $ReportCard->find()
+            ->where([
+                'academic_period_id' => $entity->from_academic_period,
+                'code NOT IN' => $copiedCodes
+            ])->count();
+        if ($remaining == 0) {
             $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
             return false;
         }
