@@ -295,7 +295,6 @@ class OpenEmisBehavior extends Behavior
     /**
      * POCOR-9871: on a view page the encoded pass param is the record's own primary key; carrying it
      * to the index page made every row's View/Edit link reuse that stale id. Keep only the remaining
-     * context (eg a parent security_user_id), same as UserTabBehavior::fixViewBackButton()
      */
     private function stripRecordKeysFromUrl(array $url)
     {
