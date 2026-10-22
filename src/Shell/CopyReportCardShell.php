@@ -46,34 +46,18 @@ class CopyReportCardShell extends Shell
         $ReportCardSubjectsTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardSubjects');
         $ReportCardData = $ReportCardTable->find()->where([$ReportCardTable->aliasField('academic_period_id') => $copyFrom])->toArray();
         $connection = ConnectionManager::get('default');
-        try{
-            $statement = $connection->prepare("Select subq1.grade_id as wrong_grade,subq2.grade_id as correct_grade from
-                                    (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
-                                    INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
-                                    INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-                                    INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-                                    INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-                                    INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-                                    where academic_period_id=$copyFrom
-                                    ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq1
-                                    inner join
-                                    (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
-                                    INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
-                                    INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-                                    INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-                                    INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-                                    INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-                                    where academic_period_id=$copyTo
-                                    ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC)subq2
-                                    on subq1.grade_name=subq2.grade_name");
-            $statement->execute();
-            $row = $statement->fetchAll(\PDO::FETCH_ASSOC);
-            $educationGradeList=[];
-            foreach($row as $key=>$value){
-                $educationGradeList[$value['wrong_grade']]=$value['correct_grade'];
+        $educationGradeList = $this->getEducationGradeMapping($copyTo);//POCOR-9872
+
+        foreach($ReportCardData as $key=>$ReportCard){
+            // POCOR-9871: a report card whose grade has no match in the target period used to insert
+            // a NULL education_grade_id, abort the whole copy and leave nothing in the new period
+            $newGradeId = $this->resolveEducationGrade($educationGradeList, $ReportCard->education_grade_id);
+            if (is_null($newGradeId)) {
+                $this->out('Skipped report card "' . $ReportCard->code . '" (id ' . $ReportCard->id . '): education grade ' . $ReportCard->education_grade_id . ' has no matching grade in academic period ' . $copyTo);
+                continue;
             }
-            
-            foreach($ReportCardData as $key=>$ReportCard){
+            try{
+                $connection->begin();
                 //Report Card Copy Start
                 $statement1 = $connection->prepare('INSERT INTO report_cards(code, name, description,start_date, end_date,generate_start_date,
                                         generate_end_date,principal_comments_required,homeroom_teacher_comments_required,teacher_comments_required,
@@ -89,8 +73,8 @@ class CopyReportCardShell extends Shell
                                 "description"=> $ReportCard->description,
                                 "start_date"=>  date("Y-m-d", strtotime($ReportCard->start_date)),
                                 "end_date"=>  date("Y-m-d ", strtotime($ReportCard->end_date)),
-                                "generate_start_date"=> date("Y-m-d H:i:s", strtotime($ReportCard->generate_start_date)),
-                                "generate_end_date"=> date("Y-m-d H:i:s", strtotime($ReportCard->generate_end_date)),
+                                "generate_start_date"=> $this->formatDate($ReportCard->generate_start_date, "Y-m-d H:i:s"),
+                                "generate_end_date"=> $this->formatDate($ReportCard->generate_end_date, "Y-m-d H:i:s"),
                                 "principal_comments_required"=> $ReportCard->principal_comments_required,
                                 "homeroom_teacher_comments_required"=> $ReportCard->homeroom_teacher_comments_required,
                                 "teacher_comments_required"=> $ReportCard->teacher_comments_required,
@@ -98,7 +82,7 @@ class CopyReportCardShell extends Shell
                                 "excel_template"=>$ReportCard->excel_template,
                                 "pdf_page_number"=>$ReportCard->pdf_page_number,
                                 "academic_period_id"=>$copyTo,
-                                "education_grade_id"=> $educationGradeList[$ReportCard->education_grade_id],
+                                "education_grade_id"=> $newGradeId,
                                 "modified_user_id"=>$ReportCard->modified_user_id,
                                 "modified" => date("Y-m-d H:i:s", strtotime($ReportCard->modified)),
                                 "created_user_id"=>$ReportCard->created_user_id,
@@ -137,7 +121,7 @@ class CopyReportCardShell extends Shell
                                 "id" => Text::uuid(),
                                 "report_card_id" => $newReportCardId,
                                 "education_subject_id" => $SubjectData->education_subject_id,
-                                "education_grade_id" => $educationGradeList[$SubjectData->education_grade_id],
+                                "education_grade_id" => $this->resolveEducationGrade($educationGradeList, $SubjectData->education_grade_id) ?? $newGradeId,
                                 "created_user_id" => $SubjectData->created_user_id,
                                 "created" => date("Y-m-d H:i:s", strtotime($SubjectData->created)),
                             ));
@@ -146,11 +130,73 @@ class CopyReportCardShell extends Shell
                     //Report Card Subjects End
                 }
                 //Report Card Copy End
+                $connection->commit();
+                $this->out('Copied report card "' . $ReportCard->code . '" (id ' . $ReportCard->id . ' => ' . $newReportCardId . ')');
+            } catch (\Exception $e) {
+                $connection->rollback();
+                // out() instead of pr()/err(): the copy page only redirects stdout into logs/CopyReportCard_copy.log
+                $this->out('Failed to copy report card "' . $ReportCard->code . '" (id ' . $ReportCard->id . '): ' . $e->getMessage());
             }
-            
-        } catch (\Exception $e) {
-            $error = $e->getMessage();
-            pr($error);
         }
+    }
+
+    /**
+     * POCOR-9872
+     * Maps target grades of the copyTo period by programme + grade name, grade name and grade code
+     */
+    private function getEducationGradeMapping($copyTo)
+    {
+        $connection = ConnectionManager::get('default');
+        $rows = $connection->execute('SELECT education_grades.id grade_id, education_grades.code grade_code, education_grades.name grade_name, education_programmes.name programme_name
+                                    FROM education_grades
+                                    INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                                    INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+                                    INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+                                    INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
+                                    WHERE education_systems.academic_period_id = :copyTo
+                                    ORDER BY education_levels.order ASC, education_cycles.order ASC, education_programmes.order ASC, education_grades.order ASC',
+                                    ['copyTo' => $copyTo])->fetchAll('assoc');
+
+        $mapping = ['programme_grade' => [], 'name' => [], 'code' => [], 'resolved' => []];
+        foreach ($rows as $row) {
+            // keep the first match, same as the previous name-only join
+            $mapping['programme_grade'] += [$row['programme_name'] . '|' . $row['grade_name'] => $row['grade_id']];
+            $mapping['name'] += [$row['grade_name'] => $row['grade_id']];
+            $mapping['code'] += [$row['grade_code'] => $row['grade_id']];
+        }
+        return $mapping;
+    }
+
+    /**
+     * Source grade is looked up by id directly, so report cards pointing to a grade outside
+     * the copyFrom education structure are still matched
+     */
+    private function resolveEducationGrade(array &$mapping, $sourceGradeId)
+    {
+        if (empty($sourceGradeId)) {
+            return null;
+        }
+        if (array_key_exists($sourceGradeId, $mapping['resolved'])) {
+            return $mapping['resolved'][$sourceGradeId];
+        }
+        $source = ConnectionManager::get('default')->execute('SELECT education_grades.code grade_code, education_grades.name grade_name, education_programmes.name programme_name
+                                    FROM education_grades
+                                    INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+                                    WHERE education_grades.id = :id', ['id' => $sourceGradeId])->fetch('assoc');
+
+        $targetGradeId = null;
+        if (!empty($source)) {
+            $targetGradeId = $mapping['programme_grade'][$source['programme_name'] . '|' . $source['grade_name']]
+                ?? $mapping['name'][$source['grade_name']]
+                ?? $mapping['code'][$source['grade_code']]
+                ?? null;
+        }
+        $mapping['resolved'][$sourceGradeId] = $targetGradeId;
+        return $targetGradeId;
+    }
+
+    private function formatDate($value, $format)
+    {
+        return empty($value) ? null : date($format, strtotime((string)$value));
     }
 }
