@@ -159,6 +159,7 @@ class ReportsController extends AppController
                 'Report.InstitutionPositions' => __('Institution Positions'),
                 'Report.InstitutionPositionsSummaries' => __('Institution Positions Summaries'),
                 'Report.InstitutionProgrammes' => __('Programmes'),
+                'Report.InstitutionScanned' => __('Scanned'), //POCOR-9840
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
                 'Report.InstitutionStaff' => __('Staff'),
                 'Report.StaffAttendances' => __('Staff Attendance'),

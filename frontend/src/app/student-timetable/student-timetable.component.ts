@@ -184,6 +184,8 @@ export class StudentTimetableComponent implements OnInit {
     schedule_term_id: any;
     institution_name: any = '';
     timetable_name: string = '';
+    institution_class_name: string = ''; //POCOR-9858: header showed hard-coded "Primary 1-A"
+    reloginDone: boolean = false; //POCOR-9858: re-login at most once per page load on a 401
 
     constructor(
         public dialog: MatDialog,
@@ -246,14 +248,25 @@ export class StudentTimetableComponent implements OnInit {
                 applyThemeFromResponse(response, this.themeArray.btnGroup[0].dropdownContent);
             },
             error: (error: any) => {
-                if (error) {
-                    if (error.error == "Token Expired") {
-                        localStorage.removeItem("loginToken");
-                        this.loginData();
-                    }
+                //POCOR-9858: the API returns 401 {error:"Token Expired"} or {error:"Token Invalid"} (e.g. a token
+                // left in localStorage by another deployment on the same domain) and ApiService turns both into
+                // message "Token has expired". Only "Token Expired" was handled, so an invalid token was never
+                // replaced and the login endpoint was never called.
+                if (this.isTokenError(error) && !this.reloginDone) {
+                    this.reloginDone = true; // re-login once per page load to avoid a loop if login keeps failing
+                    localStorage.removeItem("loginToken");
+                    this.loginData();
                 }
             }
         })
+    }
+
+    //POCOR-9858: true for any authentication failure reported by the API
+    isTokenError(error: any): boolean {
+        return error?.message == "Token has expired"
+            || error?.message == "Token Expired"
+            || error?.error == "Token Expired"
+            || error?.error == "Token Invalid";
     }
 
     loginApi(userName: string, password: string) {
@@ -337,6 +350,7 @@ export class StudentTimetableComponent implements OnInit {
                         this.timetable_name = response?.data?.name;
                         this.academic_period_id = response?.data?.academic_period_id;
                         this.institution_class_id = response?.data?.institution_class_id;
+                        this.institution_class_name = response?.data?.institution_class?.name; //POCOR-9858
                         this.schedule_term_id = response?.data?.institution_schedule_term_id;
                         this.timeSlotById();
                     }
@@ -752,7 +766,10 @@ export class StudentTimetableComponent implements OnInit {
             // this.dialogRef.close(this.addNewLesson[index]);
             console.log(this.addNewLesson[index], "this.addNewLesson[index]");
 
-            this.timetableData[this.indexOfRow].data[this.indexOfDay].subject.push(this.addNewLesson[index]);
+            //POCOR-9858: keep a reference so the lesson can be taken off the grid if the save fails
+            const pendingCell = this.timetableData[this.indexOfRow].data[this.indexOfDay];
+            const pendingLesson = this.addNewLesson[index];
+            pendingCell.subject.push(pendingLesson);
             let obj = {};
             if (this.addNewLesson[index].type == "curriculum") {
                 obj = {
@@ -798,10 +815,33 @@ export class StudentTimetableComponent implements OnInit {
                     }
                 },
                 error: (error: any) => {
+                    //POCOR-9858: the save failed - take the lesson pushed above off the grid
+                    // (getTimeTableLesson() alone does not clear a cell that has no saved lessons)
+                    const pendingIndex = pendingCell.subject.indexOf(pendingLesson);
+                    if (pendingIndex > -1) {
+                        pendingCell.subject.splice(pendingIndex, 1);
+                    }
                     if (error) {
-                        if (error.message == "Token Expired") {
+                        //POCOR-9858: ApiService.handleError reports every 401 (expired or invalid token) as
+                        // 'Token has expired' - drop the stale token and log in again
+                        if (error.message == "Token has expired" || error.message == "Token Expired") {
                             localStorage.removeItem("loginToken");
+                            this.loginData();
+                            this._kdAlertEvent.error({
+                                title: 'Your session was refreshed. Please add the lesson again.',
+                                showCloseButton: true,
+                                tapToDismiss: true,
+                            });
+                            return;
                         }
+                        //POCOR-9858: show why the lesson was not saved (e.g. room already used by another timetable)
+                        let toasterConfig: any = {
+                            title: error?.description || 'Lesson could not be added.',
+                            showCloseButton: true,
+                            tapToDismiss: true,
+                        };
+                        this._kdAlertEvent.error(toasterConfig);
+                        this.getTimeTableLesson();
                     }
                 }
             })

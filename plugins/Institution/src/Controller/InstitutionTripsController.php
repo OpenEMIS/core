@@ -80,7 +80,15 @@ class InstitutionTripsController extends PageController
             1 => __('Yes'),
             0 => __('No')
         ];
-        $page->get('repeat')
+        // POCOR-9854: institution_trips.repeat was renamed to trip_repeat by the
+        // POCOR-8047 migration (2024) - this controller (Page-framework-driven, not
+        // the ControllerAction Table) was never updated to match. Since the Page
+        // framework builds its field list from the live DB schema, every $page->get()/
+        // move() call below referencing the old 'repeat' key hit a missing-key branch
+        // that does pr(...); die; - unconditionally, in beforeFilter(), before every
+        // single action (add/edit/view) - which is why Passengers (and everything
+        // else added later in the page) appeared to silently vanish on all three pages.
+        $page->get('trip_repeat')
             ->setControlType('select')
             ->setOptions($repeatOptions, false);
     }
@@ -124,12 +132,12 @@ class InstitutionTripsController extends PageController
             ->where(['module' => 'InstitutionTrips', 'field_name' => 'Repeat'])
             ->toArray();
         if(isset($result[0]['name'])){
-            $page->get('repeat')->setSortable(false)->setLabel($result[0]['name']);
+            $page->get('trip_repeat')->setSortable(false)->setLabel($result[0]['name']);
         }else{
-            $page->move('repeat')->after('institution_bus_id');
+            $page->move('trip_repeat')->after('institution_bus_id');
         }
-        $page->move('repeat')->after('institution_bus_id');
-        $page->move('days')->after('repeat');
+        $page->move('trip_repeat')->after('institution_bus_id');
+        $page->move('days')->after('trip_repeat');
         $result = $Users
             ->find()
             ->where(['module' => 'InstitutionTrips', 'field_name' => 'Trip Type'])
@@ -146,7 +154,7 @@ class InstitutionTripsController extends PageController
         if(isset($result[0]['name'])){
             $page->get('institution_bus_id')->setSortable(false)->setLabel($result[0]['name']);
         }else{
-            $page->move('repeat')->after('institution_bus_id');
+            $page->move('trip_repeat')->after('institution_bus_id');
         }
         // end reorder fields
     }
@@ -261,8 +269,8 @@ class InstitutionTripsController extends PageController
 
             // reorder fields
             $page->move('academic_period_id')->first();
-            $page->move('repeat')->after('institution_bus_id');
-            $page->move('days')->after('repeat');
+            $page->move('trip_repeat')->after('institution_bus_id');
+            $page->move('days')->after('trip_repeat');
             $page->move('comment')->after('days');
             // end reorder fields
         } else {
@@ -294,7 +302,7 @@ class InstitutionTripsController extends PageController
                     $this->Students->Users->aliasField('last_name'),
                     $this->Students->Users->aliasField('preferred_name')
                 ])
-                ->contain([$this->Students->Users->alias()])
+                ->contain([$this->Students->Users->getAlias()])
                 ->where([
                     $this->Students->aliasField('institution_id') => $institutionId,
                     $this->Students->aliasField('academic_period_id') => $academicPeriodId,
@@ -346,8 +354,8 @@ class InstitutionTripsController extends PageController
 
         $page->move('information')->first();
         $page->move('academic_period_id')->after('information');
-        $page->move('repeat')->after('institution_bus_id');
-        $page->move('days')->after('repeat');
+        $page->move('trip_repeat')->after('institution_bus_id');
+        $page->move('days')->after('trip_repeat');
         $page->move('comment')->after('days');
         $page->move('passengers')->after('comment');
         $page->move('assigned_students')->after('passengers');

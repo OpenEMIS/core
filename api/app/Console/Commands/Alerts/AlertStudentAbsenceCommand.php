@@ -82,7 +82,22 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
         }
 
         // // Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() About to call runFeatureAlert()'); //[TEMP-LOG]
-        $result = $this->runFeatureAlert('StudentAttendance');
+        //POCOR-9862: serialise runs per rule+student — parallel queue workers handling P1/P2 rows of the
+        //same student must not both pass the "already alerted" check before either has queued.
+        $lockName = 'pocor_absence_alert_' . $this->ruleId . '_' . $studentId;
+        //POCOR-9862: on timeout (0) or error (NULL) continue unserialised — a rare duplicate beats a lost alert,
+        //since RunAlertJob does not retry on a non-zero exit code.
+        $acquired = (int) (DB::selectOne('SELECT GET_LOCK(?, 30) AS acquired', [$lockName])->acquired ?? 0);
+        if ($acquired !== 1) {
+            Log::warning('[POCOR-9862] Absence alert lock not acquired, continuing unserialised', ['lock' => $lockName]);
+        }
+        try {
+            $result = $this->runFeatureAlert('StudentAttendance');
+        } finally {
+            if ($acquired === 1) {
+                DB::selectOne('SELECT RELEASE_LOCK(?) AS released', [$lockName]);
+            }
+        }
         // // Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() EXIT - result=' . $result); //[TEMP-LOG]
         return $result;
     }
@@ -250,6 +265,19 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             return [];
         }
 
+        //POCOR-9862: alert once per rule + threshold + student + academic period. Without this every
+        //later absence row (each period, each further day, each edit) re-sent the same rule's alert.
+        //Uses a JSON path, not LIKE: MySQL normalises json columns (adds spaces), so a string match never hits.
+        //Failed (-1) rows don't count, so an alert whose every send failed can fire again; deduped (4) means delivered.
+        $alreadyAlerted = DB::table('alert_queue')
+            ->where('alert_type', $featureKey)
+            ->where('payload->absence_alert_key', $this->getAbsenceAlertKey())
+            ->where('status', '!=', \App\Models\Api5\AlertLogs::STATUS_FAILED)
+            ->exists();
+        if ($alreadyAlerted) {
+            return [];
+        }
+
         // // Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Threshold met, building result'); //[TEMP-LOG]
 
         // Build result from first absence record (all have same student/institution data)
@@ -288,6 +316,32 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
 
         // // Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() EXIT - returning 1 pending item with total_days=' . $totalDays); //[TEMP-LOG]
         return $result;
+    }
+
+    /**
+     * POCOR-9862: Identifies one threshold alert — rule, its threshold (editing the threshold re-arms
+     * the rule), student and academic period.
+     *
+     * @return string
+     */
+    private function getAbsenceAlertKey(): string
+    {
+        return implode(':', [
+            $this->ruleId,
+            (int) ($this->rule->threshold ?? 1),
+            (int) $this->option('student_id'),
+            (int) $this->option('academic_period_id'),
+        ]);
+    }
+
+    /**
+     * POCOR-9862: Tag queued rows so getPendingItems() can detect the alert was already sent.
+     *
+     * @return array
+     */
+    protected function getQueuePayloadExtras(): array
+    {
+        return ['absence_alert_key' => $this->getAbsenceAlertKey()];
     }
 
     /**

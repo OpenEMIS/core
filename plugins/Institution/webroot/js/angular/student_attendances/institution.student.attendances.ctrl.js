@@ -85,6 +85,12 @@ function InstitutionStudentAttendancesController(
     // whether the option panel is currently shown.
     vm.educationGradeSearch = "";
     vm.educationGradeDropdownOpen = false;
+    // Highlighted row in the open panel (shared by mouse hover and arrow keys, like a native
+    // select), the currently filtered rows, and the placeholder shown while the box is
+    // cleared for typing.
+    vm.educationGradeActiveIndex = -1;
+    vm.educationGradeFiltered = [];
+    vm.educationGradePlaceholder = "";
 
     vm.attendancePeriodOptions = [];
     vm.selectedAttendancePeriod = "";
@@ -210,22 +216,25 @@ function InstitutionStudentAttendancesController(
                 }, vm.error)
                 .then(function (dayListOptions) {
                     vm.updateDayList(dayListOptions);
-                    return InstitutionStudentAttendancesSvc.getClassOptions(
+                    // Education Grade is selected first; the Class list is then filtered by that grade
+                    return InstitutionStudentAttendancesSvc.getEducationGradeOptions(
                         vm.institutionId,
                         vm.selectedAcademicPeriod
                     );
                 }, vm.error)
-                .then(function (classListOptions) {
-                    vm.updateClassList(classListOptions);
-                    return InstitutionStudentAttendancesSvc.getEducationGradeOptions(
+                .then(function (educationGradeListOptions) {
+                    vm.updateEducationGradeList(educationGradeListOptions);
+                    return InstitutionStudentAttendancesSvc.getClassOptions(
                         vm.institutionId,
                         vm.selectedAcademicPeriod,
-                        vm.selectedClass
+                        vm.selectedEducationGrade
                     );
                 }, vm.error)
-                .then(function (educationGradeListOptions) {
-                    // console.log("educationGradeListOptions", educationGradeListOptions)
-                    vm.updateEducationGradeList(educationGradeListOptions);
+                .then(function (classListOptions) {
+                    vm.updateClassList(classListOptions);
+                    if (vm.superAdmin == 0) {
+                        vm.updateClassRoles(vm.selectedClass);
+                    }
                     return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(
                         vm.institutionId,
                         vm.selectedAcademicPeriod,
@@ -479,25 +488,43 @@ function InstitutionStudentAttendancesController(
     vm.updateClassList = function (classListOptions) {
         vm.classListOptions = classListOptions;
         if (classListOptions.length > 0) {
-            vm.selectedClass = classListOptions[0].id;
-            if (classListOptions[0].SecurityRoleFunctions) {
-                vm.superAdmin = 0;
-                vm.permissionView =
-                    classListOptions[0].SecurityRoleFunctions._view;
-                vm.permissionEdit =
-                    classListOptions[0].SecurityRoleFunctions._edit;
+            // Keep the current class if it is still in the list (e.g. a multi-grade class
+            // when switching between its grades), otherwise fall back to the first class
+            var selected = classListOptions[0];
+            for (var i = 0; i < classListOptions.length; i++) {
+                if (classListOptions[i].id == vm.selectedClass) {
+                    selected = classListOptions[i];
+                    break;
+                }
             }
+            vm.selectedClass = selected.id;
+            if (selected.SecurityRoleFunctions) {
+                vm.superAdmin = 0;
+                vm.permissionView = selected.SecurityRoleFunctions._view;
+                vm.permissionEdit = selected.SecurityRoleFunctions._edit;
+            }
+        } else {
+            vm.selectedClass = "";
         }
     };
 
     vm.updateEducationGradeList = function (educationGradeListOptions) {
         vm.educationGradeListOptions = educationGradeListOptions;
         if (educationGradeListOptions.length > 0) {
-            vm.selectedEducationGrade = educationGradeListOptions[0].id;
-            vm.educationGradeSearch = educationGradeListOptions[0].name;
+            // Keep the current grade if it is still available, otherwise pick the first one
+            var selectedGrade = educationGradeListOptions[0];
+            for (var i = 0; i < educationGradeListOptions.length; i++) {
+                if (educationGradeListOptions[i].id == vm.selectedEducationGrade) {
+                    selectedGrade = educationGradeListOptions[i];
+                    break;
+                }
+            }
+            vm.selectedEducationGrade = selectedGrade.id;
+            vm.educationGradeSearch = selectedGrade.name;
             vm.gridOptions.context.education_grade_id =
                 vm.selectedEducationGrade;
         } else {
+            vm.selectedEducationGrade = "";
             vm.educationGradeSearch = "";
         }
     };
@@ -508,8 +535,79 @@ function InstitutionStudentAttendancesController(
         if (vm.action === "edit") {
             return;
         }
+        if (vm.educationGradeDropdownOpen) {
+            return;
+        }
+        // Keep the current selection visible as the placeholder while the box is empty,
+        // the way a native select keeps showing its value when opened.
+        vm.educationGradePlaceholder = vm.educationGradeSearch;
         vm.educationGradeSearch = "";
         vm.educationGradeDropdownOpen = true;
+        // Open with the current selection highlighted, like a native select.
+        vm.resetEducationGradeActive(vm.educationGradeListOptions);
+    };
+
+    // Moves the highlight back to the selected grade within the given (filtered) list.
+    vm.resetEducationGradeActive = function (list) {
+        vm.educationGradeActiveIndex = -1;
+        list = list || vm.educationGradeFiltered || [];
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].id == vm.selectedEducationGrade) {
+                vm.educationGradeActiveIndex = i;
+                break;
+            }
+        }
+    };
+
+    // Native-select style keyboard support: Up/Down move the highlight, Enter picks it,
+    // Escape closes the panel.
+    vm.educationGradeKeydown = function (event) {
+        var list = vm.educationGradeFiltered || [];
+        switch (event.keyCode) {
+            case 40: // down
+                event.preventDefault();
+                if (!vm.educationGradeDropdownOpen) {
+                    vm.openEducationGradeDropdown();
+                    return;
+                }
+                if (list.length) {
+                    vm.educationGradeActiveIndex = Math.min(vm.educationGradeActiveIndex + 1, list.length - 1);
+                    vm.scrollEducationGradeActiveIntoView();
+                }
+                break;
+            case 38: // up
+                event.preventDefault();
+                if (list.length) {
+                    vm.educationGradeActiveIndex = Math.max(vm.educationGradeActiveIndex - 1, 0);
+                    vm.scrollEducationGradeActiveIntoView();
+                }
+                break;
+            case 13: // enter
+                event.preventDefault();
+                if (vm.educationGradeDropdownOpen && list[vm.educationGradeActiveIndex]) {
+                    vm.selectEducationGradeOption(list[vm.educationGradeActiveIndex]);
+                    event.target.blur();
+                }
+                break;
+            case 27: // escape
+                event.preventDefault();
+                event.target.blur();
+                break;
+        }
+    };
+
+    vm.educationGradeSearchChanged = function () {
+        vm.educationGradeDropdownOpen = true;
+        vm.educationGradeActiveIndex = -1;
+    };
+
+    vm.scrollEducationGradeActiveIntoView = function () {
+        $timeout(function () {
+            var el = document.querySelector(".education-grade-options li.active");
+            if (el && el.scrollIntoView) {
+                el.scrollIntoView({ block: "nearest" });
+            }
+        });
     };
 
     // Delayed via $timeout so a mousedown-selection on a list item (see
@@ -935,21 +1033,25 @@ function InstitutionStudentAttendancesController(
             }, vm.error)
             .then(function (dayListOptions) {
                 vm.updateDayList(dayListOptions);
-                return InstitutionStudentAttendancesSvc.getClassOptions(
+                // Education Grade is selected first; the Class list is then filtered by that grade
+                return InstitutionStudentAttendancesSvc.getEducationGradeOptions(
                     vm.institutionId,
                     vm.selectedAcademicPeriod
                 );
             }, vm.error)
-            .then(function (classListOptions) {
-                vm.updateClassList(classListOptions);
-                return InstitutionStudentAttendancesSvc.getEducationGradeOptions(
-                    vm.institutionId,
-                    vm.selectedAcademicPeriod,
-                    vm.selectedClass
-                );
-            }, vm.error)
             .then(function (educationGradeListOptions) {
                 vm.updateEducationGradeList(educationGradeListOptions);
+                return InstitutionStudentAttendancesSvc.getClassOptions(
+                    vm.institutionId,
+                    vm.selectedAcademicPeriod,
+                    vm.selectedEducationGrade
+                );
+            }, vm.error)
+            .then(function (classListOptions) {
+                vm.updateClassList(classListOptions);
+                if (vm.superAdmin == 0) {
+                    vm.updateClassRoles(vm.selectedClass);
+                }
                 return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(
                     vm.institutionId,
                     vm.selectedAcademicPeriod,
@@ -1150,21 +1252,13 @@ function InstitutionStudentAttendancesController(
             vm.updateClassRoles(vm.selectedClass);
         }
 
-        InstitutionStudentAttendancesSvc.getEducationGradeOptions(
+        // Education Grade is chosen before Class, so it is kept as-is here
+        InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(
             vm.institutionId,
             vm.selectedAcademicPeriod,
-            vm.selectedClass
+            vm.selectedClass,
+            vm.selectedDay
         )
-            .then(function (educationGradeListOptions) {
-                logStep("getEducationGradeOptions"); // Шаг 1
-                vm.updateEducationGradeList(educationGradeListOptions);
-                return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(
-                    vm.institutionId,
-                    vm.selectedAcademicPeriod,
-                    vm.selectedClass,
-                    vm.selectedDay
-                );
-            }, vm.error)
             .then(function (attendanceType) {
                 logStep("isMarkableSubjectAttendance"); // Шаг 2
                 vm.isMarkableSubjectAttendance = attendanceType;
@@ -1240,97 +1334,27 @@ function InstitutionStudentAttendancesController(
 
     vm.changeEducationGrade = function () {
         UtilsSvc.isAppendLoader(true);
-        if (vm.superAdmin == 0) {
-            vm.updateClassRoles(vm.selectedClass);
-        }
-        InstitutionStudentAttendancesSvc.getEducationGradeOptions(
+        vm.gridOptions.context.education_grade_id = vm.selectedEducationGrade;
+        InstitutionStudentAttendancesSvc.getClassOptions(
             vm.institutionId,
             vm.selectedAcademicPeriod,
-            vm.selectedClass
+            vm.selectedEducationGrade
         )
-            .then(function (educationGradeListOptions) {
-                vm.gridOptions.context.education_grade_id =
-                    vm.selectedEducationGrade;
-                return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(
-                    vm.institutionId,
-                    vm.selectedAcademicPeriod,
-                    vm.selectedClass,
-                    vm.selectedDay
-                );
-            }, vm.error)
-            .then(function (attendanceType) {
-                vm.isMarkableSubjectAttendance = attendanceType;
-                 //POCOR-8874 start
-                // return InstitutionStudentAttendancesSvc.getSubjectOptions(
-                //     vm.institutionId,
-                //     vm.selectedClass,
-                //     vm.selectedAcademicPeriod,
-                //     vm.selectedDay,
-                //     vm.selectedEducationGrade
-                // );
-                // Call isMarkableAttendance separately before continuing
-                return InstitutionStudentAttendancesSvc.isMarkableAttendance(
-                    vm.institutionId,
-                    vm.selectedAcademicPeriod,
-                    vm.selectedClass,
-                    vm.selectedDay
-                );
-                 //POCOR-8874 end
-            }, vm.error)
-             //POCOR-8874 start
-            .then(function (isMarkable) {
-                vm.isMarkableAttendance = isMarkable; // Store the resolved value
-                vm.updateAttendanceByList();
-
-                // Continue with getSubjectOptions
-                return InstitutionStudentAttendancesSvc.getSubjectOptions(
-                    vm.institutionId,
-                    vm.selectedClass,
-                    vm.selectedAcademicPeriod,
-                    vm.selectedDay,
-                    vm.selectedEducationGrade
-                );
-            }, vm.error)
-             //POCOR-8874 end
-            .then(function (subjectListOptions) {
-                vm.updateSubjectList(
-                    subjectListOptions,
-                    vm.isMarkableSubjectAttendance
-                );
-                return InstitutionStudentAttendancesSvc.getPeriodOptions(
-                    vm.selectedClass,
-                    vm.selectedAcademicPeriod,
-                    vm.selectedDay,
-                    vm.selectedEducationGrade,
-                    vm.selectedWeekStartDate,
-                    vm.selectedWeekEndDate
-                ); //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
-            }, vm.error)
-            .then(function (attendancePeriodOptions) {
-                vm.updateAttendancePeriodList(attendancePeriodOptions);
-                return InstitutionStudentAttendancesSvc.getIsMarked(
-                    vm.getIsMarkedParams()
-                );
-            }, vm.error)
-            .then(function (isMarked) {
-                vm.updateIsMarked(isMarked);
-                return InstitutionStudentAttendancesSvc.getClassStudent(
-                    vm.getClassStudentParams()
-                );
-            }, vm.error)
-            .then(function (classStudents) {
-                if (
-                    vm.isMarkableSubjectAttendance == true &&
-                    vm.subjectListOptions.length == 0
-                ) {
-                    classStudents = [];
-                }
-                vm.updateClassStudentList(classStudents);
-            }, vm.error)
-            .finally(function () {
-                vm.setGridData();
-                vm.setColumnDef();
+            .then(function (classListOptions) {
+                vm.updateClassList(classListOptions);
                 UtilsSvc.isAppendLoader(false);
+                if (vm.classListOptions.length == 0) {
+                    // No class runs this grade - nothing to mark
+                    vm.updateClassStudentList([]);
+                    vm.setGridData();
+                    vm.setColumnDef();
+                    return;
+                }
+                // Reload subjects / periods / students for the (possibly new) class
+                vm.changeClass();
+            }, function (error) {
+                UtilsSvc.isAppendLoader(false);
+                return vm.error(error);
             });
     };
 
@@ -1424,9 +1448,7 @@ function InstitutionStudentAttendancesController(
         }
         InstitutionStudentAttendancesSvc.getEducationGradeOptions(
             vm.institutionId,
-            vm.selectedAcademicPeriod,
-            vm.selectedClass,
-            vm.selectedAttendanceBy
+            vm.selectedAcademicPeriod
         )
             .then(function (educationGradeListOptions) {
                 vm.updateEducationGradeList(educationGradeListOptions);

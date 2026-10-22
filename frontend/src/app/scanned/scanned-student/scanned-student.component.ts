@@ -201,7 +201,7 @@ export class ScannedStudentComponent implements OnInit, AfterViewChecked {
   }
 
   getAPIData() {
-    this.Rest.getWithToken('scanned').subscribe({
+    this.Rest.getWithToken(`scanned${this.filterQuery()}`).subscribe({
       next: (response: any) => {
         if (response?.data) {
           let responseData = [];
@@ -237,68 +237,28 @@ export class ScannedStudentComponent implements OnInit, AfterViewChecked {
     } else {
       this.date_to = event.value;
     }
+    this.getAPIData();
+  }
 
-    if (Object.keys(this.date_from?.obj).length != 0 && Object.keys(this.date_to?.obj).length != 0) {
-      if (this.date_from?.text != 'undefined-undefined-undefined' || this.date_to?.text != 'undefined-undefined-undefined') {
-        this.Rest.getWithToken(`scanned?date_from=${this.date_from?.text}&date_to=${this.date_to?.text}`).subscribe({
-          next: (response: any) => {
-            if (response?.data) {
-              let responseData = [];
-              response?.data.forEach((element: any) => {
-                let obj = {
-                  'dateTime': element.datetime,
-                  'openemis_no': element.openemis_no,
-                  'name': element?.security_user?.full_name,
-                  'access': element?.access,
-                  'location': element?.location,
-                  'id': element?.id
-                }
-                responseData.push(obj);
-              });
-              this._row = responseData;
-              this.showTable = true;
-            }
-          },
-          error: (error) => {
-            if (error) {
-              if (error.message == "Token has expired") {
-                localStorage.removeItem("loginToken");
-                this.loginData();
-              }
-            }
-          }
-        })
-      }
-    } else {
-      this.Rest.getWithToken(`scanned`).subscribe({
-        next: (response: any) => {
-          if (response?.data) {
-            let responseData = [];
-            response?.data.forEach((element: any) => {
-              let obj = {
-                'dateTime': element.datetime,
-                'openemis_no': element.openemis_no,
-                'name': element?.security_user?.full_name,
-                'access': element?.access,
-                'location': element?.location,
-                'id': element?.id
-              }
-              responseData.push(obj);
-            });
-            this._row = responseData;
-            this.showTable = true;
-          }
-        },
-        error: (error) => {
-          if (error) {
-            if (error.message == "Token has expired") {
-              localStorage.removeItem("loginToken");
-              this.loginData();
-            }
-          }
-        }
-      })
+  // POCOR-9840: the listing and the export share these filters - current institution plus
+  // whichever of Date From / Date To has been picked
+  filterQuery(): string {
+    const params = [];
+    const institutionId = localStorage.getItem('institution_id');
+    if (institutionId) {
+      params.push(`institution_id=${encodeURIComponent(institutionId)}`);
     }
+    if (this.isDateSelected(this.date_from)) {
+      params.push(`date_from=${encodeURIComponent(this.date_from.text)}`);
+    }
+    if (this.isDateSelected(this.date_to)) {
+      params.push(`date_to=${encodeURIComponent(this.date_to.text)}`);
+    }
+    return params.length ? `?${params.join('&')}` : '';
+  }
+
+  isDateSelected(date: any): boolean {
+    return !!date?.text && Object.keys(date?.obj || {}).length != 0 && date.text != 'undefined-undefined-undefined';
   }
 
   setOpenEmisId(_rowNode: any) {
@@ -307,14 +267,14 @@ export class ScannedStudentComponent implements OnInit, AfterViewChecked {
   }
 
   exportData() {
-    this.Rest.getItemExport(`scanned/data/export`).subscribe({
+    this.Rest.getItemExport(`scanned/data/export${this.filterQuery()}`).subscribe({
       next: (response: any) => {
         let url = window.URL.createObjectURL(response);
         let a = document.createElement('a');
         document.body.appendChild(a);
         a.setAttribute('style', 'display: none');
         a.href = url;
-        a.download = response.filename || 'Scanned file';
+        a.download = response.filename || `InstitutionScanned_${new Date().toISOString().slice(0, 10)}.xlsx`; // POCOR-9840: a Blob has no filename
         a.click();
         window.URL.revokeObjectURL(url);
         a.remove();

@@ -151,14 +151,20 @@ class WithdrawRequestsTable extends ControllerActionTable
             $StudentTransfersTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentTransfers');
             $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
             $conditions = [
-                'student_id' => $entity->student_id,
-                'status_id IN ' => $pendingTransferStatuses,
-                'previous_education_grade_id' => $entity->education_grade_id,
-                'previous_institution_id' => $entity->institution_id,
-                'previous_academic_period_id' => $entity->academic_period_id
+                $StudentTransfersTable->aliasField('student_id') => $entity->student_id,
+                $StudentTransfersTable->aliasField('status_id IN ') => $pendingTransferStatuses,
+                $StudentTransfersTable->aliasField('previous_education_grade_id') => $entity->education_grade_id,
+                $StudentTransfersTable->aliasField('previous_institution_id') => $entity->institution_id,
+                $StudentTransfersTable->aliasField('previous_academic_period_id') => $entity->academic_period_id
             ];
 
+            // POCOR-9844: closed (DONE) transfer requests must not block withdrawal,
+            // e.g. a rejected transfer when the student re-enrols in the same institution/period/grade
+            $doneStatus = $StudentTransfersTable::DONE;
             $count = $StudentTransfersTable->find()
+                ->innerJoinWith($StudentTransfersTable->Statuses->getAlias(), function ($q) use ($doneStatus) {
+                    return $q->where(['category <> ' => $doneStatus]);
+                })
                 ->where($conditions)
                 ->count();
 

@@ -550,10 +550,19 @@ class StudentTransferInTable extends InstitutionStudentTransfersTable
         $newDate = date("Y-m-d", strtotime($startDate));
         $endDate = $entity->end_date;
         $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        // POCOR-9844: only update the enrolled record of this transfer, not earlier records
+        // (e.g. a Transferred record when the student re-enrols in the same institution/period)
+        $enrolled = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->getIdByCode('CURRENT');
         $query = $institutionStudents->query();
         $query->update()
-            ->set(['start_date' => $newDate])
-            ->where(['institution_id' => $institutionId, 'student_id' => $studentId, 'academic_period_id' => $academicPeriodId])
+            ->set(['start_date' => $newDate, 'start_year' => date("Y", strtotime($startDate))])
+            ->where([
+                'institution_id' => $institutionId,
+                'student_id' => $studentId,
+                'academic_period_id' => $academicPeriodId,
+                'education_grade_id' => $entity->education_grade_id,
+                'student_status_id' => $enrolled
+            ])
             ->execute();
 
     }
