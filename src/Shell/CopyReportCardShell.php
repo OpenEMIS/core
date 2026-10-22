@@ -20,24 +20,11 @@ class CopyReportCardShell extends Shell
         $copyFrom = $this->args[0];
         $copyTo = $this->args[1];
 
-        $canCopy = $this->checkIfCanCopy($copyTo);
-        if ($canCopy) {
-            $this->copyProcess($copyFrom, $copyTo);
-        }
+        // POCOR-9871: no "target period must be empty" gate any more - cards skipped on an earlier run
+        // (eg grade missing in the target education structure) must be copyable on a re-run;
+        // copyProcess() skips each card whose code already exists in the target period instead
+        $this->copyProcess($copyFrom, $copyTo);
         $this->out('End Report Card Copy Shell');
-    }
-    private function checkIfCanCopy($copyTo)
-    {
-        $canCopy = false;
-
-        $ReportCard = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
-        $count = $ReportCard->find()->where([$ReportCard->aliasField('academic_period_id') => $copyTo])->count();
-        // can copy if no assessment created in current acedemic period before
-        if ($count == 0) {
-            $canCopy = true;
-        }
-
-        return $canCopy;
     }
     private function copyProcess($copyFrom, $copyTo)
     {
@@ -50,6 +37,14 @@ class CopyReportCardShell extends Shell
         $periodShift = $this->getPeriodShift($copyFrom, $copyTo);
 
         foreach($ReportCardData as $key=>$ReportCard){
+            $alreadyCopied = $ReportCardTable->exists([
+                $ReportCardTable->aliasField('code') => $ReportCard->code,
+                $ReportCardTable->aliasField('academic_period_id') => $copyTo
+            ]);
+            if ($alreadyCopied) {
+                $this->out('Skipped report card "' . $ReportCard->code . '" (id ' . $ReportCard->id . '): code already exists in academic period ' . $copyTo);
+                continue;
+            }
             // POCOR-9871: a report card whose grade has no match in the target period used to insert
             // a NULL education_grade_id, abort the whole copy and leave nothing in the new period
             $newGradeId = $this->resolveEducationGrade($educationGradeList, $ReportCard->education_grade_id);
