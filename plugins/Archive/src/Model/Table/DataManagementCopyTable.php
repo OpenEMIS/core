@@ -353,7 +353,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     private function validateReportCards(Entity $entity)
     {
-        // POCOR-9871: block only when nothing is left to copy, so a re-run can fill in report cards
+        // POCOR-9872: block only when nothing is left to copy, so a re-run can fill in report cards
         // skipped earlier (CopyReportCardShell skips codes that already exist in the target period)
         $ReportCard = TableRegistry::get('ReportCard.ReportCards');
         $copiedCodes = $ReportCard->find()

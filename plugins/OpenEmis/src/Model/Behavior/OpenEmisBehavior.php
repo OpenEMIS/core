@@ -293,7 +293,7 @@ class OpenEmisBehavior extends Behavior
     }
 
     /**
-     * POCOR-9871: on a view page the encoded pass param is the record's own primary key; carrying it
+     * POCOR-9872: on a view page the encoded pass param is the record's own primary key; carrying it
      * to the index page made every row's View/Edit link reuse that stale id. Keep only the remaining
      */
     private function stripRecordKeysFromUrl(array $url)

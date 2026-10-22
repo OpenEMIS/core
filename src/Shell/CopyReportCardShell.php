@@ -20,7 +20,7 @@ class CopyReportCardShell extends Shell
         $copyFrom = $this->args[0];
         $copyTo = $this->args[1];
 
-        // POCOR-9871: no "target period must be empty" gate any more - cards skipped on an earlier run
+        // POCOR-9872: no "target period must be empty" gate any more - cards skipped on an earlier run
         // (eg grade missing in the target education structure) must be copyable on a re-run;
         // copyProcess() skips each card whose code already exists in the target period instead
         $this->copyProcess($copyFrom, $copyTo);
@@ -45,7 +45,7 @@ class CopyReportCardShell extends Shell
                 $this->out('Skipped report card "' . $ReportCard->code . '" (id ' . $ReportCard->id . '): code already exists in academic period ' . $copyTo);
                 continue;
             }
-            // POCOR-9871: a report card whose grade has no match in the target period used to insert
+            // POCOR-9872: a report card whose grade has no match in the target period used to insert
             // a NULL education_grade_id, abort the whole copy and leave nothing in the new period
             $newGradeId = $this->resolveEducationGrade($educationGradeList, $ReportCard->education_grade_id);
             if (is_null($newGradeId)) {
@@ -192,7 +192,7 @@ class CopyReportCardShell extends Shell
     }
 
     /**
-     * POCOR-9871: copied dates used to keep the source year, so every copied template failed the
+     * POCOR-9872: copied dates used to keep the source year, so every copied template failed the
      * "within academic period" validation on edit. Dates are moved by the gap between the two
      * period start dates (calendar interval, so 08 Sep stays 08 Sep) and kept inside the target period
      */
