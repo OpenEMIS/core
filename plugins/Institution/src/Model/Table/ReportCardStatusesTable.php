@@ -477,15 +477,25 @@ class ReportCardStatusesTable extends ControllerActionTable
         if ($selectedReportCard != -1) {
             $reportCardEntity = $this->ReportCards->find()->where(['id' => $selectedReportCard])->first();
             if (!empty($reportCardEntity)) {
-                $classOptions = $Classes->find('list')
+                $classQuery = $Classes->find('list')
                     ->matching('ClassGrades')
                     ->where([
                         $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
                         $Classes->aliasField('institution_id') => $institutionId,
                         'ClassGrades.education_grade_id' => $reportCardEntity->education_grade_id
                     ])
-                    ->order([$Classes->aliasField('name')])
-                    ->toArray();
+                    ->order([$Classes->aliasField('name')]);
+                // POCOR-7538 points 3.4/3.6: "Access All Classes" (role-level flag) shows
+                // every class; otherwise the classes the user is homeroom/secondary teacher of.
+                if (!$this->AccessControl->isAdmin()) {
+                    $userId = $this->Auth->user('id');
+                    $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                    if (!TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllClasses($roles)) {
+                        $classQuery->where(TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')
+                            ->getTeacherClassConditions($userId, $Classes->aliasField('id'), false));
+                    }
+                }
+                $classOptions = $classQuery->toArray();
                 $educationGradeByReportCardId = $reportCardEntity->education_grade_id;//POCOR-7212
             } else {
                 // if selected report card is not valid, do not show any students

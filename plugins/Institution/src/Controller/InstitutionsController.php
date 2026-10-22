@@ -2463,7 +2463,8 @@ class InstitutionsController extends AppController
                 $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
-                if (!$AccessControl->check(['Institutions', 'AllClasses', $action], $roles)) {
+                // POCOR-7538 point 3.6: role-level "Access All Classes" flag
+                if (!TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllClasses($roles)) {
                     if ($AccessControl->check(['Institutions', 'Classes', $action], $roles)) {
                         $ClassTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
@@ -2614,10 +2615,8 @@ class InstitutionsController extends AppController
             ->get('Institution.Institutions')
             ->getInstitutionRoles($userId, $institutionId);
 
-        $canEditAll   = $this->AccessControl->check(
-            ['Institutions', 'AllSubjects', 'edit'],
-            $roles
-        );
+        // POCOR-7538 point 3.7: role-level "Access All Subjects" flag
+        $canEditAll   = TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllSubjects($roles);
         $canEditOwn   = $this->AccessControl->check(
             ['Institutions', 'Subjects', 'edit'],
             $roles

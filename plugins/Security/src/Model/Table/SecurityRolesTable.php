@@ -412,7 +412,7 @@ class SecurityRolesTable extends ControllerActionTable
     // general.yesno pattern used elsewhere (eg WorkflowStepsTable::onUpdateFieldIsEditable).
     public function onUpdateFieldAccessAllClasses(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'edit') {
+        if (in_array($action, ['add', 'edit'])) {
             $attr['type'] = 'select';
             $attr['select'] = false;
             $attr['options'] = $this->getSelectOptions('general.yesno');
@@ -422,12 +422,56 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function onUpdateFieldAccessAllSubjects(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'edit') {
+        if (in_array($action, ['add', 'edit'])) {
             $attr['type'] = 'select';
             $attr['select'] = false;
             $attr['options'] = $this->getSelectOptions('general.yesno');
         }
         return $attr;
+    }
+
+    // POCOR-7538 points 3.6/3.7: single source of truth for the role-level
+    // "Access All Classes"/"Access All Subjects" flags (point 1.5), replacing the
+    // hidden All Classes/All Subjects security_functions everywhere they were checked.
+    public function hasAccessAllClasses($roleIds)
+    {
+        return $this->hasAccessFlag('access_all_classes', $roleIds);
+    }
+
+    public function hasAccessAllSubjects($roleIds)
+    {
+        return $this->hasAccessFlag('access_all_subjects', $roleIds);
+    }
+
+    private function hasAccessFlag($column, $roleIds)
+    {
+        static $cache = [];
+        $roleIds = array_values(array_filter((array)$roleIds));
+        if (empty($roleIds)) {
+            return false;
+        }
+        sort($roleIds);
+        $key = $column . ':' . implode(',', $roleIds);
+        if (!isset($cache[$key])) {
+            $cache[$key] = $this->find()
+                ->where([
+                    $this->aliasField('id') . ' IN' => $roleIds,
+                    $this->aliasField($column) => 1,
+                ])
+                ->count() > 0;
+        }
+        return $cache[$key];
+    }
+
+    // POCOR-7538: show Yes/No on index/view rather than the raw 0/1 column value.
+    public function onGetAccessAllClasses(EventInterface $event, Entity $entity)
+    {
+        return $this->getSelectOptions('general.yesno')[(int)$entity->access_all_classes];
+    }
+
+    public function onGetAccessAllSubjects(EventInterface $event, Entity $entity)
+    {
+        return $this->getSelectOptions('general.yesno')[(int)$entity->access_all_subjects];
     }
 
     private function setupFields(Entity $entity, ArrayObject $extra)

@@ -187,28 +187,18 @@ class StudentCompetenciesTable extends ControllerActionTable
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         if (!$AccessControl->isAdmin())
         {
-            if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles))
+            // POCOR-7538 points 3.4/3.6: "Access All Classes" (role-level flag) shows every
+            // class; otherwise the classes the user is homeroom/secondary teacher of.
+            if (!\Cake\ORM\TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllClasses($roles))
             {
                 $competenctPermission = $AccessControl->check(['Students', 'Competencies', 'index'], $roles); // POCOR-9235
-
+            
                 if (!$competenctPermission)
                 {
                     $query->where(['1 = 0'], [], true);
                 } else
                 {
-                    $query
-                        ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
-                            'InstitutionClasses.id = ' . $ClassGrades->aliasField('institution_class_id')
-                        ])
-                        ->leftJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                            'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
-                        ])
-                        ->where([
-                            'OR' => [
-                                ['InstitutionClasses.staff_id' => $userId],
-                                ['ClassesSecondaryStaff.secondary_staff_id' => $userId]
-                            ]
-                        ]);
+                    $query->where(\Cake\ORM\TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->getTeacherClassConditions($userId, $ClassGrades->aliasField('institution_class_id'), false));
                 }
             }
         }
