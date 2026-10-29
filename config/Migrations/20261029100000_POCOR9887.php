@@ -26,12 +26,19 @@ class POCOR9887 extends AbstractMigration
         }
         $guardianProfileId = $guardianProfile['id'];
 
+        // Guarded per column: a site that was patched by hand may already carry one but not the other.
         $this->execute("
             UPDATE `security_functions`
-            SET `_view` = CONCAT_WS('|', NULLIF(`_view`, ''), 'GuardianProfile.index|GuardianProfile.view'),
-                `_edit` = CONCAT_WS('|', NULLIF(`_edit`, ''), 'GuardianProfile.edit')
+            SET `_view` = CONCAT_WS('|', NULLIF(`_view`, ''), 'GuardianProfile.index|GuardianProfile.view')
             WHERE `id` = $guardianProfileId
               AND (`_view` IS NULL OR `_view` NOT LIKE '%GuardianProfile.view%')
+        ");
+
+        $this->execute("
+            UPDATE `security_functions`
+            SET `_edit` = CONCAT_WS('|', NULLIF(`_edit`, ''), 'GuardianProfile.edit')
+            WHERE `id` = $guardianProfileId
+              AND (`_edit` IS NULL OR `_edit` NOT LIKE '%GuardianProfile.edit%')
         ");
 
         $duplicate = $this->fetchRow("
@@ -53,12 +60,26 @@ class POCOR9887 extends AbstractMigration
                 WHERE `src`.`security_function_id` = $duplicateId
                 ON DUPLICATE KEY UPDATE
                     `_view` = GREATEST(IFNULL(`security_role_functions`.`_view`, 0), IFNULL(VALUES(`_view`), 0)),
-                    `_edit` = GREATEST(IFNULL(`security_role_functions`.`_edit`, 0), IFNULL(VALUES(`_edit`), 0))
+                    `_edit` = GREATEST(IFNULL(`security_role_functions`.`_edit`, 0), IFNULL(VALUES(`_edit`), 0)),
+                    `modified` = NOW(),
+                    `modified_user_id` = 1
             ");
 
             $this->execute("DELETE FROM `security_role_functions` WHERE `security_function_id` = $duplicateId");
             $this->execute("DELETE FROM `security_functions` WHERE `id` = $duplicateId");
         }
+
+        // AccessControlComponent::buildPermissions() caches the permission tree in the session and
+        // only rebuilds it when isChanged() sees a security_role_functions row newer than
+        // Permissions.lastModified. Widening _view/_edit on security_functions alone leaves that
+        // cache stale, so every already-logged-in user would keep missing the View Profile button
+        // until they log out. Touch the grant rows so the rebuild is triggered on their next request.
+        $this->execute("
+            UPDATE `security_role_functions`
+            SET `modified` = NOW(),
+                `modified_user_id` = 1
+            WHERE `security_function_id` = $guardianProfileId
+        ");
     }
 
     // Restore only the rows touched by up(); dropping/renaming security_functions is blocked by the

@@ -20,6 +20,11 @@ class GuardiansTable extends ControllerActionTable
 {
     private $editButtonAction = 'GuardianUser';
 
+    // POCOR-9887: onUpdateActionButtons() fires once per index row, and resolving the institution
+    // roles costs 4 queries each time (Institutions::getInstitutionRoles()). Neither the roles nor
+    // the GuardianProfile permission depend on the row, so both are resolved once per request.
+    private $guardianProfileAccess = null;
+
     public function initialize(array $config): void
     {
         $this->setTable('student_guardians');
@@ -576,12 +581,15 @@ class GuardiansTable extends ControllerActionTable
                 'action' => 'GuardianProfile',
                 'view',
             ];
-            $roles = [];
-            $rolesEvent = $this->controller->dispatchEvent('Controller.Buttons.onUpdateRoles', null, $this);
-            if ($rolesEvent->getResult()) {
-                $roles = $rolesEvent->getResult();
+            if (is_null($this->guardianProfileAccess)) {
+                $roles = [];
+                $rolesEvent = $this->controller->dispatchEvent('Controller.Buttons.onUpdateRoles', null, $this);
+                if ($rolesEvent->getResult()) {
+                    $roles = $rolesEvent->getResult();
+                }
+                $this->guardianProfileAccess = $this->controller->AccessControl->check($profileUrl, $roles);
             }
-            if (isset($buttons['view']) && $this->controller->AccessControl->check($profileUrl, $roles)) {
+            if (isset($buttons['view']) && $this->guardianProfileAccess) {
                 $profileParams = $params;
                 $profileParams['id'] = $entity->_matchingData['Users']->id;
                 $profileUrl[] = $this->paramsEncode($profileParams);
