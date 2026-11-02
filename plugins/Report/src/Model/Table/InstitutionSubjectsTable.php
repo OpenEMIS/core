@@ -46,7 +46,9 @@ class InstitutionSubjectsTable extends AppTable  {
         $Institutions = $this->getDynamicTableInstance('institutions');
         $Areas = $this->getDynamicTableInstance('areas');
         $AreaLevels = $this->getDynamicTableInstance('area_levels');
-        $conditions = $this->buildConditions($academicPeriodId, $institutionId, $requestData->education_subject_id, $areaId);
+        //POCOR-9874: Education Programme filter only for Institution > Statistics > Standard; Reports > Institutions unchanged
+        $educationProgrammeId = ($settings['process']['module'] ?? '') == 'InstitutionStandards' ? ($requestData->education_programme_id ?? null) : null;
+        $conditions = $this->buildConditions($academicPeriodId, $institutionId, $requestData->education_subject_id, $areaId, $educationProgrammeId);
 
         $InstitutionClassSubjects = $this->getDynamicTableInstance('Institution.InstitutionClassSubjects');
         $InstitutionClasses = $this->getDynamicTableInstance('Institution.InstitutionClasses');
@@ -198,7 +200,9 @@ class InstitutionSubjectsTable extends AppTable  {
         $Institutions = $this->getDynamicTableInstance('institutions');
         $Areas = $this->getDynamicTableInstance('areas');
         $AreaLevels = $this->getDynamicTableInstance('area_levels');
-        $conditions = $this->buildConditions($academicPeriodId, $institutionId, $requestData->education_subject_id, $areaId);
+        //POCOR-9874: Education Programme filter only for Institution > Statistics > Standard; Reports > Institutions unchanged
+        $educationProgrammeId = ($settings['process']['module'] ?? '') == 'InstitutionStandards' ? ($requestData->education_programme_id ?? null) : null;
+        $conditions = $this->buildConditions($academicPeriodId, $institutionId, $requestData->education_subject_id, $areaId, $educationProgrammeId);
 
         $InstitutionClassSubjects = $this->getDynamicTableInstance('Institution.InstitutionClassSubjects');
         $InstitutionClasses = $this->getDynamicTableInstance('Institution.InstitutionClasses');
@@ -390,7 +394,7 @@ class InstitutionSubjectsTable extends AppTable  {
         return $filterInstitutionIds;
     }
 
-    private function buildConditions($academicPeriodId, $institutionId, $educationSubjectId, $areaId)
+    private function buildConditions($academicPeriodId, $institutionId, $educationSubjectId, $areaId, $educationProgrammeId = null)
     {
         $conditions = [];
         $filterInstitutionIds = $this->parseFilterInstitutionIds($institutionId);
@@ -410,6 +414,10 @@ class InstitutionSubjectsTable extends AppTable  {
         }
         if (!empty($educationSubjectId)) {
             $conditions[] = $this->aliasField('education_subject_id =') . $educationSubjectId;
+        }
+        //POCOR-9874: Education Programme filter (0/empty = All Programmes)
+        if (!empty($educationProgrammeId)) {
+            $conditions[] = $this->aliasField('education_grade_id') . ' IN (SELECT id FROM education_grades WHERE education_programme_id = ' . (int)$educationProgrammeId . ')';
         }
 
         return $conditions;
