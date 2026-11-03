@@ -1149,6 +1149,10 @@ class InstitutionSubjectStudentsTable extends AppTable
                     $row['mark'] = $mark ? self::getFromArray($mark, 'marks') : null;
 
                     $row['assessment_grading_option_id'] = $mark ? self::getFromArray($mark, 'assessment_grading_option_id') : null;
+                    // POCOR-9759: the weight frozen when this mark was saved - null when
+                    // there's no saved mark yet, so the results grid falls back to the
+                    // live period weight as a preview until something is actually entered.
+                    $row['applied_weight'] = $mark ? self::getFromArray($mark, 'applied_weight') : null;
                 }
                 $row['assessment_period_id'] = $assessment_period_id;
                 $row['marks'] = $row['mark'];

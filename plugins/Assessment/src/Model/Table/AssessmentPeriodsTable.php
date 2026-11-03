@@ -14,9 +14,16 @@ use Cake\I18n\Time;
 use Cake\Utility\Text;
 use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\OptionsTrait;
 
 class AssessmentPeriodsTable extends ControllerActionTable
 {
+    use OptionsTrait;
+
+    // POCOR-9759: set in beforeSave() (where weight dirty-tracking is reliable),
+    // consumed in afterSave() to trigger the opt-in marks recalculation.
+    private $_recalculatePeriodWeight = null;
+
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -66,6 +73,10 @@ class AssessmentPeriodsTable extends ControllerActionTable
                 'rule' => ['range', 0, 2],
                 'last' => true
             ])
+            // POCOR-9759: mandatory, no implicit default - the field must show
+            // "- Select -" until the user explicitly picks Yes/No.
+            ->requirePresence('update_existing_marks')
+            ->notEmptyString('update_existing_marks')
             ->requirePresence('assessment_id')
             ->requirePresence('name')
             ->add('code', [
@@ -175,6 +186,36 @@ class AssessmentPeriodsTable extends ControllerActionTable
     //Start:POCOR-7387
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
+        // POCOR-9759: server-side defense alongside the UI lock in onUpdateFieldWeight()
+        // - reject a weight change on a record whose assessment belongs to a past
+        // academic period, even if the request bypasses the UI (eg a direct POST).
+        // Captured here (not afterSave) because dirty-tracking on `weight` is only
+        // reliable before the entity is persisted; the result is stashed on the table
+        // instance for afterSave() to pick up and trigger the recalculation.
+        $this->_recalculatePeriodWeight = null;
+        if (!$entity->isNew() && $entity->isDirty('weight')) {
+            // POCOR-9759 DEBUG: grep logs/debug.log for "[POCOR-9759]" to see exactly
+            // which branch a weight-change save took, without needing to query the DB.
+            Log::debug(sprintf(
+                '[POCOR-9759] beforeSave period=%s weight %s -> %s, update_existing_marks=%s',
+                $entity->id,
+                $entity->getOriginal('weight'),
+                $entity->weight,
+                var_export($entity->update_existing_marks, true)
+            ));
+            if ($this->isPastAcademicPeriod($entity)) {
+                Log::debug(sprintf('[POCOR-9759] beforeSave period=%s REJECTED - past academic period', $entity->id));
+                $this->Alert->error('Assessments.periodWeightPastPeriod', ['reset' => true]);
+                return false;
+            }
+            if ((int)$entity->update_existing_marks === 1) {
+                $this->_recalculatePeriodWeight = $entity->weight;
+                Log::debug(sprintf('[POCOR-9759] beforeSave period=%s update_existing_marks=Yes - recalculation will run in afterSave', $entity->id));
+            } else {
+                Log::debug(sprintf('[POCOR-9759] beforeSave period=%s update_existing_marks=No - weight saved, no recalculation (expected: frozen marks unchanged)', $entity->id));
+            }
+        }
+
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
         if (preg_match('/\ & \b/', $entity['academic_term'])) {
@@ -360,8 +401,13 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->field('weight', [
             'visible' => ['index' => false]
         ]);
+        $this->field('update_existing_marks', [//POCOR-9759
+            'attr' => [
+                'label' => $this->getMessage('Assessments.updateExistingMarks')
+            ]
+        ]);
         $this->setFieldOrder([
-            'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled'
+            'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'update_existing_marks'
         ]);
 
         // Start POCOR-5188
@@ -465,6 +511,12 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ]);
         $this->field('excluded_security_roles');//POCOR-7400
         $this->field('editable_student_statuses');//POCOR-7400
+        // POCOR-9759: shown before `weight`, matching the Add/Edit field order in setupFields().
+        $this->field('update_existing_marks', [
+            'attr' => [
+                'label' => $this->getMessage('Assessments.updateExistingMarks')
+            ]
+        ]);
         $this->field('weight', [
             'attr' => [
                 'label' => $this->getMessage('Assessments.periodWeight')
@@ -474,7 +526,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
 
         $this->setFieldOrder([
-            'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'excluded_security_roles', 'editable_student_statuses', 'weight', 'education_subjects'
+            'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'excluded_security_roles', 'editable_student_statuses', 'update_existing_marks', 'weight', 'education_subjects'
         ]);
 
         //this is to sort array based on certain value on subarray, in this case based on education order value
@@ -502,6 +554,12 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
         $this->setupFields($entity);
         $this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
+
+        // POCOR-9759
+        $extra['elements']['updateExistingMarksConfirm'] = [
+            'name' => 'Assessment.update_existing_marks_confirm',
+            'order' => 100
+        ];
     }
 
     public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
@@ -817,6 +875,16 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->field('date_enabled');
         $this->field('date_disabled');
 
+        // POCOR-9759: shown before `weight`, mandatory with no implicit default -
+        // see onUpdateFieldUpdateExistingMarks() for the Yes/No options.
+        $this->field('update_existing_marks', [
+            'type' => 'select',
+            'attr' => [
+                'label' => $this->getMessage('Assessments.updateExistingMarks'),
+                'required' => true
+            ]
+        ]);
+
         $this->field('weight', [
             'type' => 'decimal',
             'attr' => [
@@ -825,8 +893,22 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'excluded_security_roles', 'editable_student_statuses', 'weight', 'education_subjects'
+            'academic_period_id', 'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'excluded_security_roles', 'editable_student_statuses', 'update_existing_marks', 'weight', 'education_subjects'
         ]);
+    }
+
+    // POCOR-9759
+    public function onUpdateFieldUpdateExistingMarks(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        // POCOR-9759: deliberately NOT setting 'select' => false here - that suppresses
+        // the framework's automatic "-- Select --" placeholder (see
+        // ControllerActionV4Trait.php ~line 93-99), which is the opposite of what's
+        // needed. Leaving 'select' unset keeps the default (add the blank placeholder
+        // when unselected) while still correctly showing the saved value on edit, since
+        // the actually-selected option is driven by the entity's own value, not by this.
+        $attr['options'] = $this->getSelectOptions('general.yesno');
+
+        return $attr;
     }
 
     public function getTemplateOptions($period, $templateQuerystring)
@@ -957,6 +1039,93 @@ class AssessmentPeriodsTable extends ControllerActionTable
             $ExcludedSecurityRoleResult = $AssessmentPeriodExcludedSecurityRolesTable->save($ExcludedSecurityRoles);
 
         }
+
+        // POCOR-9759: when update_existing_marks = Yes and weight actually changed
+        // (flagged by beforeSave(), since dirty-tracking isn't reliable here), sync the
+        // cached copy of the weight in summary_student_assessments (feeds a separate
+        // profile-report feature, unrelated to the frozen-weight mechanism below).
+        if ($this->_recalculatePeriodWeight !== null) {
+            Log::debug(sprintf('[POCOR-9759] afterSave period=%s RECALCULATION START, new weight=%s', $entity->id, $this->_recalculatePeriodWeight));
+
+            $SummaryStudentAssessments = TableRegistry::getTableLocator()->get('Assessment.SummaryStudentAssessments');
+            $SummaryStudentAssessments->updateAll(
+                ['period_weight' => $this->_recalculatePeriodWeight],
+                ['period_id' => $entity->id]
+            );
+
+            // POCOR-9759: everywhere marks are totalled (Total Marks, PDF/Excel
+            // reports, Report Cards, GPA) now reads the weight frozen on each
+            // assessment_item_results row (applied_weight) instead of this table's
+            // live weight - see 20261028120000_POCOR9759WeightSnapshot.php. "Yes"
+            // means explicitly re-snapshotting that frozen weight for every existing
+            // mark in this period, and refreshing the institution_subject_students
+            // cache that depends on it.
+            $AssessmentItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
+            // Safe as a plain updateAll(): the weight-snapshot triggers only
+            // re-snapshot when `marks` changes, never when only applied_weight is
+            // touched, so they don't fight this explicit update.
+            $appliedWeightRowCount = $AssessmentItemResults->updateAll(
+                ['applied_weight' => $this->_recalculatePeriodWeight],
+                ['assessment_period_id' => $entity->id]
+            );
+            Log::debug(sprintf('[POCOR-9759] afterSave period=%s applied_weight bulk-updated on %d assessment_item_results row(s)', $entity->id, $appliedWeightRowCount));
+
+            $affected = $AssessmentItemResults->find()
+                ->select([
+                    'student_id', 'academic_period_id', 'education_subject_id',
+                    'education_grade_id', 'institution_id', 'institution_classes_id',
+                ])
+                ->where(['assessment_period_id' => $entity->id])
+                ->distinct()
+                ->enableHydration(false)
+                ->toArray();
+
+            Log::debug(sprintf('[POCOR-9759] afterSave period=%s %d distinct student/subject combination(s) to recalculate', $entity->id, count($affected)));
+
+            $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+            $recalculatedCount = 0;
+            $skippedCount = 0;
+            foreach ($affected as $row) {
+                // Mirrors InstitutionSubjectStudentsTable::assessmentResultsAfterSave(),
+                // which does this same getTotalMarks() + total_mark update on every
+                // individual mark save - here it's re-run for every student/subject
+                // this period affects, now that their applied_weight changed.
+                $totalMark = $AssessmentItemResults->getTotalMarks(
+                    $row['student_id'],
+                    $row['academic_period_id'],
+                    $row['education_subject_id'],
+                    $row['education_grade_id'],
+                    $row['institution_classes_id'],
+                    $entity->id,
+                    $row['institution_id']
+                );
+
+                if (!empty($totalMark)) {
+                    $InstitutionSubjectStudents->updateAll(
+                        ['total_mark' => $totalMark],
+                        [
+                            'student_id' => $row['student_id'],
+                            'academic_period_id' => $row['academic_period_id'],
+                            'education_subject_id' => $row['education_subject_id'],
+                            'education_grade_id' => $row['education_grade_id'],
+                            'institution_id' => $row['institution_id'],
+                        ]
+                    );
+                    $recalculatedCount++;
+                } else {
+                    $skippedCount++;
+                }
+            }
+
+            Log::debug(sprintf(
+                '[POCOR-9759] afterSave period=%s RECALCULATION DONE - %d institution_subject_students.total_mark updated, %d skipped (empty total)',
+                $entity->id,
+                $recalculatedCount,
+                $skippedCount
+            ));
+
+            $this->_recalculatePeriodWeight = null;
+        }
     }
 
     public function onGetExcludedSecurityRoles(EventInterface $event, Entity $entity)
@@ -984,14 +1153,43 @@ class AssessmentPeriodsTable extends ControllerActionTable
         return $attr;
     }
 
+    // POCOR-9759: render as Yes/No on View/Index, not the raw 1/0/NULL stored value.
+    public function onGetUpdateExistingMarks(EventInterface $event, Entity $entity)
+    {
+        if (!$entity->has('update_existing_marks') || is_null($entity->update_existing_marks)) {
+            return '';
+        }
+        $options = $this->getSelectOptions('general.yesno');
+
+        return $options[(int)$entity->update_existing_marks] ?? '';
+    }
+
     //POCOR-8266
+    // POCOR-9759: weight is editable on both add and edit, per the agreed requirement -
+    // the unconditional edit-readonly lock this used to apply was the reported bug.
+    // It's only locked now for assessment periods belonging to a past academic period
+    // (mirrored server-side in beforeSave() in case this UI lock is bypassed).
     public function onUpdateFieldWeight(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'edit') {
+        if ($action == 'edit' && isset($attr['entity']) && $this->isPastAcademicPeriod($attr['entity'])) {
             $attr['type'] = 'readonly';
-
-            return $attr;
         }
+
+        return $attr;
+    }
+
+    // POCOR-9759: assessment_periods has no academic_period_id column of its own -
+    // its academic period comes from the parent Assessment record (see
+    // onUpdateFieldAcademicPeriodId() above, which resolves it the same way).
+    private function isPastAcademicPeriod(Entity $entity): bool
+    {
+        if (empty($entity->assessment_id)) {
+            return false;
+        }
+        $assessment = $this->Assessments->get($entity->assessment_id);
+        $currentPeriodId = $this->Assessments->AcademicPeriods->getCurrent();
+
+        return $assessment->academic_period_id != $currentPeriodId;
     }
 
     //POCOR-8554
