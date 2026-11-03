@@ -229,7 +229,8 @@ class ReportListBehavior extends Behavior {
 		$this->reportListPageOptions = $pageOptions;
 		$controller->setRequest($request->withData('Search', array_merge((array)$request->getData('Search'), ['limit' => $limitIndex])));
 
-		$controller->Paginator->paginate($query, ['limit' => (int)$pageOptions[$limitIndex]]);	}
+		$controller->Paginator->paginate($query, ['limit' => (int)$pageOptions[$limitIndex]]);
+	}
 
 	public function onUpdateFieldFormat(EventInterface $event, array $attr, $action, ServerRequest $request)
 	{

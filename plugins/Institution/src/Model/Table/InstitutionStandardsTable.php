@@ -127,6 +127,7 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('teaching_filter', ['type' => 'hidden']);
         $this->ControllerAction->field('type', ['type' => 'hidden']);
         $this->ControllerAction->field('status', ['type' => 'hidden']);
+        $this->ControllerAction->field('status_feature', ['type' => 'hidden']);
         $this->ControllerAction->field('education_level_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_programme_id', ['type' => 'hidden']);
         $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']);
@@ -483,14 +484,26 @@ class InstitutionStandardsTable extends AppTable
             $attr['type'] = 'select';
             $attr['select'] = false;
             $attr['options'] = [-1 => __('All Statuses')] + $statusOptions;
-            // default to All - otherwise the security_users.status column default (1) is preselected
-            $postedStatus = $this->request->getData($this->getAlias())['status'] ?? '';
-            $attr['attr']['value'] = isset($attr['options'][$postedStatus]) ? $postedStatus : -1;
+            // default to All - otherwise the security_users.status column default (1) is preselected.
+            // Keep the posted status only for the feature it was picked for (status ids overlap across features)
+            $postedData = $this->request->getData($this->getAlias());
+            $postedStatus = $postedData['status'] ?? '';
+            $sameFeature = ($postedData['status_feature'] ?? '') === $feature;
+            $attr['attr']['value'] = ($sameFeature && isset($attr['options'][$postedStatus])) ? $postedStatus : -1;
             $attr['attr']['required'] = true;
             return $attr;
         }
         // hidden for other features: post All, so switching to a feature with Status starts on All
         $attr['value'] = -1;
+        return $attr;
+    }
+
+    /**
+     * POCOR-9874: feature the posted Status belongs to, so Status resets to All when the feature changes
+     */
+    public function onUpdateFieldStatusFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        $attr['value'] = $this->getSelectedFeature();
         return $attr;
     }
 
