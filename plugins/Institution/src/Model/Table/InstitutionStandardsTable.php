@@ -1364,6 +1364,7 @@ class InstitutionStandardsTable extends AppTable
                 ->notEmpty('status', $requiredMessage);
         }
         if ($feature == 'Report.StudentAbsences') {
+            $validator->setProvider('custom', $this); // compareDate lives on ValidationBehavior
             $validator
                 ->notEmpty('education_grade_id', $requiredMessage)
                 ->add('report_start_date', 'ruleCompareDate', [
