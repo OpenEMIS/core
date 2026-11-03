@@ -60,6 +60,9 @@ class ReportCardsTable extends AppTable
                 'InstitutionClasses',
                 'StudentBehaviours',
                 'InstitutionStudentAbsences',
+                'ReportCardSchoolDays', //POCOR-9885
+                'StudentAbsencesByPeriod', //POCOR-9885
+                'StudentAbsencesBySubject', //POCOR-9885
                 'CompetencyTemplates',
                 'CompetencyPeriods',
                 'CompetencyItems',
@@ -116,6 +119,9 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentBehaviours'] = 'onExcelTemplateInitialiseStudentBehaviours';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentAbsences'] = 'onExcelTemplateInitialiseInstitutionStudentAbsences';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseReportCardSchoolDays'] = 'onExcelTemplateInitialiseReportCardSchoolDays'; //POCOR-9885
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentAbsencesByPeriod'] = 'onExcelTemplateInitialiseStudentAbsencesByPeriod'; //POCOR-9885
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentAbsencesBySubject'] = 'onExcelTemplateInitialiseStudentAbsencesBySubject'; //POCOR-9885
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyTemplates'] = 'onExcelTemplateInitialiseCompetencyTemplates';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyPeriods'] = 'onExcelTemplateInitialiseCompetencyPeriods';
 
@@ -1591,6 +1597,226 @@ class ReportCardsTable extends AppTable
             return $results;
         }
     }
+
+    //POCOR-9885 starts
+    /**
+     * Total School Days is keyed in on the Academic Period (academic_periods.school_days).
+     * National Holidays and Institution Closed Days are counted within the report card date range.
+     * Only working weekdays (config first_day_of_week / days_per_week) are counted. A date is closed when it
+     * has calendar events whose type does not require attendance and no event that does (same rule as
+     * CalendarEventDatesTable::isSchoolClosed). A date closed nationally is not counted again for the institution.
+     * Placeholders: ${ReportCardSchoolDays.total_school_days}, .national_holidays, .institution_closed_days
+     */
+    public function onExcelTemplateInitialiseReportCardSchoolDays(EventInterface $event, array $params, ArrayObject $extra)
+    {
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])
+            && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
+            $startDate = $extra['report_card_start_date']->format('Y-m-d');
+            $endDate = $extra['report_card_end_date']->format('Y-m-d');
+
+            $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+            $workingDays = $AcademicPeriods->getWorkingDaysOfWeek();
+            $schoolDays = $AcademicPeriods->find()
+                ->select([$AcademicPeriods->aliasField('school_days')])
+                ->where([$AcademicPeriods->aliasField('id') => $params['academic_period_id']])
+                ->extract('school_days')
+                ->first();
+
+            $conn = ConnectionManager::get('default');
+            $events = $conn->execute(
+                "SELECT calendar_event_dates.date, calendar_events.institution_id, calendar_types.is_attendance_required
+                FROM calendar_event_dates
+                INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id
+                INNER JOIN calendar_types ON calendar_types.id = calendar_events.calendar_type_id
+                WHERE calendar_event_dates.date BETWEEN :start_date AND :end_date
+                AND calendar_events.institution_id IN (-1, :institution_id)",
+                ['start_date' => $startDate, 'end_date' => $endDate, 'institution_id' => $params['institution_id']]
+            )->fetchAll('assoc');
+
+            $openDates = $nationalClosedDates = $institutionClosedDates = [];
+            foreach ($events as $row) {
+                $date = date('Y-m-d', strtotime($row['date']));
+                if ($row['is_attendance_required'] == 1) {
+                    $openDates[$date] = true;
+                } elseif ($row['institution_id'] == -1) {
+                    $nationalClosedDates[$date] = true;
+                } else {
+                    $institutionClosedDates[$date] = true;
+                }
+            }
+
+            $results = ['total_school_days' => (int)$schoolDays, 'national_holidays' => 0, 'institution_closed_days' => 0];
+            $current = new \DateTime($startDate);
+            $last = new \DateTime($endDate);
+            while ($current <= $last) {
+                $date = $current->format('Y-m-d');
+                if (in_array($current->format('l'), $workingDays) && !isset($openDates[$date])) {
+                    if (isset($nationalClosedDates[$date])) {
+                        $results['national_holidays']++;
+                    } elseif (isset($institutionClosedDates[$date])) {
+                        $results['institution_closed_days']++;
+                    }
+                }
+                $current->modify('+1 day');
+            }
+            return $results;
+        }
+    }
+
+    /**
+     * One row per attendance period of the report card's grade (student_attendance_per_day_periods, in configured
+     * order) with the number of days the student was Excused / Unexcused / Late in that period.
+     * A grade can use different attendance setups during the academic period (date_enabled - date_disabled), so the
+     * periods of every setup active within the report card date range are listed, each period number once.
+     */
+    public function onExcelTemplateInitialiseStudentAbsencesByPeriod(EventInterface $event, array $params, ArrayObject $extra)
+    {
+        if (isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['student_id'])
+            && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])
+            && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
+            $conn = ConnectionManager::get('default');
+            // listed for every grade, since absences can be marked by both period and subject
+            $setupPeriods = $conn->execute(
+                "SELECT student_attendance_per_day_periods.period AS id, student_attendance_per_day_periods.name
+                FROM student_mark_type_statuses
+                INNER JOIN student_mark_type_status_grades ON student_mark_type_status_grades.student_mark_type_status_id = student_mark_type_statuses.id
+                INNER JOIN student_attendance_per_day_periods ON student_attendance_per_day_periods.student_attendance_mark_type_id = student_mark_type_statuses.student_attendance_mark_type_id
+                WHERE student_mark_type_status_grades.education_grade_id = :education_grade_id
+                AND student_mark_type_statuses.academic_period_id = :academic_period_id
+                AND (student_mark_type_statuses.date_enabled IS NULL OR student_mark_type_statuses.date_enabled <= :end_date)
+                AND (student_mark_type_statuses.date_disabled IS NULL OR student_mark_type_statuses.date_disabled >= :start_date)
+                ORDER BY student_mark_type_statuses.date_enabled, student_attendance_per_day_periods.`order`, student_attendance_per_day_periods.period",
+                [
+                    'education_grade_id' => $extra['report_card_education_grade_id'],
+                    'academic_period_id' => $params['academic_period_id'],
+                    'start_date' => $extra['report_card_start_date']->format('Y-m-d'),
+                    'end_date' => $extra['report_card_end_date']->format('Y-m-d')
+                ]
+            )->fetchAll('assoc');
+
+            // absences are stored by period number, so a period shared by several setups is listed once (first name wins)
+            $periods = [];
+            foreach ($setupPeriods as $period) {
+                if (!isset($periods[$period['id']])) {
+                    $periods[$period['id']] = $period;
+                }
+            }
+            // no attendance configuration = Period 1 (same as StudentAttendanceMarkTypesTable::getAttendancePerDayByClass)
+            if (empty($periods)) {
+                $periods[1] = ['id' => 1, 'name' => __('Period') . ' 1'];
+            }
+
+            $counts = $this->getStudentAbsenceDayCounts($params, $extra, 'period', false);
+            // absences recorded under a period no longer in the setup are still listed, so totals match the General sheet
+            foreach (array_diff(array_keys($counts), array_keys($periods)) as $periodId) {
+                $periods[$periodId] = ['id' => $periodId, 'name' => __('Period') . ' ' . $periodId];
+            }
+            $entity = [];
+            foreach ($periods as $period) {
+                $entity[] = array_merge(['id' => $period['id'], 'name' => $period['name']], $counts[$period['id']] ?? $this->emptyAbsenceDayCounts());
+            }
+            return $entity;
+        }
+    }
+
+    /**
+     * One row per subject the student is enrolled in for the report card's class and grade, with the number of
+     * days the student was Excused / Unexcused / Late in that subject (subject attendance).
+     */
+    public function onExcelTemplateInitialiseStudentAbsencesBySubject(EventInterface $event, array $params, ArrayObject $extra)
+    {
+        if (isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['student_id'])
+            && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])
+            && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
+            $conn = ConnectionManager::get('default');
+            $subjects = $conn->execute(
+                "SELECT institution_subjects.id, institution_subjects.name
+                FROM institution_subject_students
+                INNER JOIN institution_subjects ON institution_subjects.id = institution_subject_students.institution_subject_id
+                INNER JOIN academic_periods ON academic_periods.id = institution_subject_students.academic_period_id
+                WHERE institution_subject_students.student_id = :student_id
+                AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
+                AND institution_subject_students.institution_class_id = :institution_class_id
+                AND institution_subject_students.institution_id = :institution_id
+                AND institution_subject_students.academic_period_id = :academic_period_id
+                AND institution_subject_students.education_grade_id = :education_grade_id
+                GROUP BY institution_subjects.id, institution_subjects.name
+                ORDER BY institution_subjects.name",
+                [
+                    'student_id' => $params['student_id'],
+                    'institution_class_id' => $params['institution_class_id'],
+                    'institution_id' => $params['institution_id'],
+                    'academic_period_id' => $params['academic_period_id'],
+                    'education_grade_id' => $extra['report_card_education_grade_id']
+                ]
+            )->fetchAll('assoc');
+
+            // institution_student_absence_details.subject_id holds institution_subjects.id (0 = period attendance)
+            $counts = $this->getStudentAbsenceDayCounts($params, $extra, 'subject_id', true);
+            $entity = [];
+            foreach ($subjects as $subject) {
+                $entity[] = array_merge(['id' => $subject['id'], 'name' => $subject['name']], $counts[$subject['id']] ?? $this->emptyAbsenceDayCounts());
+            }
+            return $entity;
+        }
+    }
+
+    /**
+     * Distinct absence dates per absence type in the report card range, grouped by $groupField ('period' or 'subject_id').
+     * Same class/grade/period filter as InstitutionStudentAbsences, so the numbers agree with the General sheet totals.
+     * Returns [group value => ['excused' => n, 'unexcused' => n, 'late' => n]].
+     */
+    private function getStudentAbsenceDayCounts(array $params, ArrayObject $extra, string $groupField, bool $isSubject): array
+    {
+        $AbsenceTypes = self::getDynamicTableInstance('Institution.AbsenceTypes');
+        $absenceTypes = $AbsenceTypes->getCodeList();
+
+        $conn = ConnectionManager::get('default');
+        $rows = $conn->execute(
+            "SELECT $groupField AS group_id, absence_type_id, COUNT(DISTINCT date) AS number_of_days
+            FROM institution_student_absence_details
+            WHERE student_id = :student_id
+            AND institution_id = :institution_id
+            AND academic_period_id = :academic_period_id
+            AND institution_class_id = :institution_class_id
+            AND education_grade_id = :education_grade_id
+            AND subject_id " . ($isSubject ? '<> 0' : '= 0') . "
+            AND date BETWEEN :start_date AND :end_date
+            GROUP BY $groupField, absence_type_id",
+            [
+                'student_id' => $params['student_id'],
+                'institution_id' => $params['institution_id'],
+                'academic_period_id' => $params['academic_period_id'],
+                'institution_class_id' => $params['institution_class_id'],
+                'education_grade_id' => $extra['report_card_education_grade_id'],
+                'start_date' => $extra['report_card_start_date']->format('Y-m-d'),
+                'end_date' => $extra['report_card_end_date']->format('Y-m-d')
+            ]
+        )->fetchAll('assoc');
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $code = strtolower($absenceTypes[$row['absence_type_id']] ?? '');
+            if (!in_array($code, ['excused', 'unexcused', 'late'])) {
+                continue;
+            }
+            if (!isset($counts[$row['group_id']])) {
+                $counts[$row['group_id']] = $this->emptyAbsenceDayCounts();
+            }
+            $counts[$row['group_id']][$code] = (int)$row['number_of_days'];
+        }
+        return $counts;
+    }
+
+    /**
+     * Zero counts are '0.0', not 0: ExcelReportBehavior::isEmptyMatchData() treats an all-0 match column as empty and
+     * renders one blank cell. '0.0' is not empty() and Excel stores it as the number 0, so the cells show 0.
+     */
+    private function emptyAbsenceDayCounts(): array
+    {
+        return ['excused' => '0.0', 'unexcused' => '0.0', 'late' => '0.0'];
+    }
+    //POCOR-9885 ends
 
     public function onExcelTemplateInitialiseCompetencyTemplates(EventInterface $event, array $params, ArrayObject $extra)
     {
