@@ -241,46 +241,53 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $buttons['remove'] = [
-            'url' => [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'Classes',
-                '0' => 'remove',
-                '1' => $encodedString,
-                '2' => $this->ControllerAction->paramsEncode(['id' => $entity->id]),
-                '_ext' => '',
-                'academic_period_id' => $academic_period_id,
-                'education_grade_id' => $education_grade_id,
-            ],
-            'type' => 'button',
-            'label' => '<i class="fa fa-trash"></i>' . __('Delete'),
-            'attr' => [
-                'role' => 'menuitem',
-                'tabindex' => -1,
-                'escape' => false,
-            ]
-        ];
+        // POCOR-7538: only rewrite buttons the parent kept - it drops them when the
+        // role lacks the Classes permission for that operation, and re-adding them
+        // unconditionally showed Delete to roles that can't delete (404 on click).
+        if (isset($buttons['remove'])) {
+            $buttons['remove'] = [
+                'url' => [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Classes',
+                    '0' => 'remove',
+                    '1' => $encodedString,
+                    '2' => $this->ControllerAction->paramsEncode(['id' => $entity->id]),
+                    '_ext' => '',
+                    'academic_period_id' => $academic_period_id,
+                    'education_grade_id' => $education_grade_id,
+                ],
+                'type' => 'button',
+                'label' => '<i class="fa fa-trash"></i>' . __('Delete'),
+                'attr' => [
+                    'role' => 'menuitem',
+                    'tabindex' => -1,
+                    'escape' => false,
+                ]
+            ];
+        }
 
-        $buttons['view'] = [
-            'url' => [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'Classes',
-                '0' => 'view',
-                '1' => $encodedString,
-                '_ext' => '',
-                'academic_period_id' => $academic_period_id,
-                'education_grade_id' => $education_grade_id,
-            ],
-            'type' => 'button',
-            'label' => '<i class="fa fa-eye"></i>' . __('View'),
-            'attr' => [
-                'role' => 'menuitem',
-                'tabindex' => -1,
-                'escape' => false,
-            ]
-        ];
+        if (isset($buttons['view'])) {
+            $buttons['view'] = [
+                'url' => [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Classes',
+                    '0' => 'view',
+                    '1' => $encodedString,
+                    '_ext' => '',
+                    'academic_period_id' => $academic_period_id,
+                    'education_grade_id' => $education_grade_id,
+                ],
+                'type' => 'button',
+                'label' => '<i class="fa fa-eye"></i>' . __('View'),
+                'attr' => [
+                    'role' => 'menuitem',
+                    'tabindex' => -1,
+                    'escape' => false,
+                ]
+            ];
+        }
         return $buttons;
     } //POCOR-8323 ends 
 
@@ -2249,68 +2256,17 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         if ($options['user']['super_admin'] == 0) {
-            $query
-                ->select([
-                    'SecurityRoleFunctions._view',
-                    'SecurityRoleFunctions._edit'
-                ]);
-            $allclassesPermission = $this->getRolePermissionAccessForAllClasses($staffId, $institutionId);
-            $mySubjectsPermission = $this->getRolePermissionAccessForMySubjects($staffId, $institutionId);
-            $myClassesPermission = $this->getRolePermissionAccessForMyClasses($staffId, $institutionId);
-            if (!$allclassesPermission) {
-                if ($mySubjectsPermission && !$myClassesPermission) {
-                    $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
-                    $query
-                        ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
-                            [
-                                'InstitutionClassSubjects.institution_class_id = ' . $this->aliasField('id')
-                            ]
-                        ])
-                        ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
-                            [
-                                'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id',
-                                'InstitutionSubjectStaff.staff_id' => $staffId
-                            ]
-                        ]);
-                } else if ($myClassesPermission && !$mySubjectsPermission) {
-                    $query
-                        ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                            [
-                                'InstitutionClassesSecondaryStaff.institution_class_id = ' . $this->aliasField('id')
-                            ]
-                        ])
-                        ->where([
-                            'OR' => [
-                                $this->aliasField('staff_id') => $staffId,
-                                'InstitutionClassesSecondaryStaff.secondary_staff_id' => $staffId
-                            ]
-                        ]);
-                } else if ($myClassesPermission && $mySubjectsPermission) {
-                    $query
-                        ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
-                            [
-                                'InstitutionClassSubjects.institution_class_id = ' . $this->aliasField('id')
-                            ]
-                        ])
-                        ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
-                            [
-                                'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id',
-                                'InstitutionSubjectStaff.staff_id' => $staffId
-                            ]
-                        ])
-                        ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                            [
-                                'InstitutionClassesSecondaryStaff.institution_class_id = ' . $this->aliasField('id')
-                            ]
-                        ])
-                        ->where([
-                            'OR' => [
-                                $this->aliasField('staff_id') => $staffId,
-                                'InstitutionClassesSecondaryStaff.secondary_staff_id' => $staffId,
-                                'InstitutionSubjectStaff.staff_id' => $staffId
-                            ]
-                        ]);
-                }
+            // POCOR-7538 points 3.4-3.6: "Access All Classes" shows every class; otherwise
+            // the classes the user teaches (homeroom, secondary or subject teacher),
+            // whatever their role. Previously this depended on which of My Classes/My
+            // Subjects the role had, so a homeroom teacher never saw the classes they only
+            // teach a subject in.
+            // SecurityRoleFunctions._view/_edit are no longer selected: they came from an
+            // arbitrary permission row matched by InstitutionClassBehavior::beforeFind and
+            // could hide the Mark button from teachers who do have Attendance > Edit. The
+            // page's own Edit permission ($_edit in the template) gates marking instead.
+            if (!$this->getRolePermissionAccessForAllClasses($staffId, $institutionId)) {
+                $query->where($this->getTeacherClassConditions($staffId, $this->aliasField('id')));
             }
         }
 
@@ -2399,32 +2355,65 @@ class InstitutionClassesTable extends ControllerActionTable
         return false;
     }
 
+    // POCOR-7538 point 3.6: now the role-level "Access All Classes" flag instead of
+    // the hidden All Classes security_function.
     public function getRolePermissionAccessForAllClasses($userId, $institutionId)
     {
         $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
-            ->leftJoin(['SecurityFunctions' => 'security_functions'], [
-                [
-                    'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                ]
-            ])
-            ->where([
-                'SecurityFunctions.controller' => 'Institutions',
-                'SecurityRoleFunctions.security_role_id IN' => $roles,
-                'AND' => [
-                    'OR' => [
-                        "SecurityFunctions.`_view` LIKE 'AllClasses.index%'",
-                        "SecurityFunctions.`_view` LIKE 'AllClasses.view%'"
-                    ]
-                ],
-                'SecurityRoleFunctions._view' => 1
-            ])
-            ->toArray();
-        if (!empty($QueryResult)) {
-            return true;
-        }
+        return TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllClasses($roles);
+    }
 
-        return false;
+    // POCOR-7538 points 3.4/3.5: classes a user teaches, regardless of role -
+    // homeroom teacher, secondary staff, or (unless excluded) subject teacher of any
+    // subject in the class. $classIdField is the column holding the class id in the
+    // caller's query.
+    // Plain query-builder subqueries (not ORM finds) so no table behaviours attach to
+    // them and their table names can't clash with the caller's aliases.
+    public function getTeacherClassConditions($userId, $classIdField, $includeSubjectTeachers = true)
+    {
+        $userId = (int)$userId;
+        $connection = $this->getConnection();
+
+        $conditions = [
+            [$classIdField . ' IN' => $connection->newQuery()
+                ->select(['tc_ic.id'])
+                ->from(['tc_ic' => 'institution_classes'])
+                ->where(['tc_ic.staff_id' => $userId])],
+            [$classIdField . ' IN' => $connection->newQuery()
+                ->select(['tc_iss.institution_class_id'])
+                ->from(['tc_iss' => 'institution_classes_secondary_staff'])
+                ->where(['tc_iss.secondary_staff_id' => $userId])],
+        ];
+        if ($includeSubjectTeachers) {
+            $conditions[] = [$classIdField . ' IN' => $connection->newQuery()
+                ->select(['tc_ics.institution_class_id'])
+                ->from(['tc_ics' => 'institution_class_subjects'])
+                ->innerJoin(['tc_isst' => 'institution_subject_staff'], [
+                    'tc_isst.institution_subject_id = tc_ics.institution_subject_id'
+                ])
+                ->where(['tc_isst.staff_id' => $userId])];
+        }
+        return ['OR' => $conditions];
+    }
+
+    // POCOR-7538 points 3.4/3.5: subjects a user can access, regardless of role -
+    // subjects they teach, plus every subject of a class they are homeroom/secondary
+    // teacher of.
+    public function getTeacherSubjectConditions($userId, $subjectIdField)
+    {
+        $userId = (int)$userId;
+        $connection = $this->getConnection();
+
+        return ['OR' => [
+            [$subjectIdField . ' IN' => $connection->newQuery()
+                ->select(['ts_isst.institution_subject_id'])
+                ->from(['ts_isst' => 'institution_subject_staff'])
+                ->where(['ts_isst.staff_id' => $userId])],
+            [$subjectIdField . ' IN' => $connection->newQuery()
+                ->select(['ts_ics.institution_subject_id'])
+                ->from(['ts_ics' => 'institution_class_subjects'])
+                ->where($this->getTeacherClassConditions($userId, 'ts_ics.institution_class_id', false))],
+        ]];
     }
 
     /**

@@ -154,49 +154,22 @@ class InstitutionClassSubjectsTable extends ControllerActionTable
                         if ($options['user']['super_admin'] == 0) { 
                             $allSubjectsPermission = $this->getRolePermissionAccessForAllSubjects($staffId, $institutionId);
                             if (!$allSubjectsPermission) {
-                                $query
-                                ->innerJoin(
-                                [$InstitutionSubjectStaff->getAlias() => $InstitutionSubjectStaff->getTable()],
-                                        [
-                                    $InstitutionSubjectStaff->aliasField('staff_id = ') . $staffId,
-                                    $InstitutionSubjectStaff->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id')
-                                ]
-                                );
+                                // POCOR-7538 points 3.4/3.5: subjects the user teaches, plus every
+                                // subject of a class they are homeroom/secondary teacher of.
+                                $query->where(TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')
+                                    ->getTeacherSubjectConditions($staffId, $InstitutionSubjects->aliasField('id')));
                             }
                         }
                             
         return $query;
     }
 
+    // POCOR-7538 point 3.7: now the role-level "Access All Subjects" flag instead of
+    // the hidden All Subjects security_function.
     public function getRolePermissionAccessForAllSubjects($userId, $institutionId)
     {
-        $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
-        //$userAccessRoles = implode(', ', $roles);    
-        
-        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()              
-                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
-                    [
-                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                    ]
-                ])
-                ->where([
-                    'SecurityFunctions.controller' => 'Institutions',
-                    'SecurityRoleFunctions.security_role_id IN'=> $roles,
-                    'AND' => [ 'OR' => [ 
-                                        "SecurityFunctions.`_view` LIKE '%AllSubjects.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
-                                    ]
-                              ],
-                    'SecurityRoleFunctions._view' => 1,
-                    'SecurityRoleFunctions._edit' => 1
-                ])
-                ->toArray();
-                
-        if(!empty($QueryResult)){
-            return true;
-        }
-          
-        return false;
+        $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+        return TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllSubjects($roles);
     }
 
     
