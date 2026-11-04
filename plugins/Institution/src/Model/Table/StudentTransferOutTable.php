@@ -49,6 +49,15 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $validator->setProvider('custom', $this);
         return $validator
             ->notEmpty(['requested_date', 'workflow_assignee_id'])
+            // POCOR-9846: the receiving Institution must be required here. Its only rule
+            // (rulecompareStudentGenderWithInstitution) was commented out under POCOR-8946, which
+            // took institution_id out of this validator entirely - and ControllerAction's default
+            // validation only adds notBlank for a NOT NULL column whose default is '', not NULL.
+            // So a Save with no Institution selected passed validation and reached the INSERT, where
+            // the insti_stude_trans_fk_ins_id foreign key failed (SQLSTATE 1452) - an uncaught
+            // PDOException that the app shows as a 404 page.
+            ->requirePresence('institution_id', 'create')
+            ->notEmpty('institution_id')
             ->add('requested_date', [
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'previous_academic_period_id', []]
@@ -660,6 +669,22 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        // POCOR-9846: addBeforeAction() unconditionally overwrites $extra['redirect'] with a
+        // hardcoded 'StudentUser' action (used for the back button / its own early-exit
+        // redirects). Patching only the [0]/[1] pass params on top of that (as this method
+        // originally did pre-2018) leaves 'action' => 'StudentUser' in place, so the user
+        // lands on StudentUser/view/{transfer id} - which looks up a PERSON by that id,
+        // showing an unrelated profile or a 404. Build a fresh redirect from url('view')
+        // instead, so 'action' correctly stays this table's own controller action.
+        $extra['redirect'] = $this->url('view');
+        $extra['redirect'][1] = $this->paramsEncode(['id' => $entity->id]);
+        $queryString = $this->getQueryString();
+        $newQueryString = array_merge($queryString, ['id' => $entity->id]);
+        $extra['redirect']['?']['queryString'] = $this->paramsEncode($newQueryString);
+    }
+
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         foreach (['requested_date', 'start_date', 'end_date'] as $field) {
@@ -902,6 +927,10 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                         'endDate' => $endDate->format($editableDateFormat),
                         'todayBtn' => false
                     ];
+                    // POCOR-9846: requested_date is mandatory (notEmpty in validationDefault) but the
+                    // column is nullable, and the datepicker element marks a field required from the
+                    // column's 'null' flag - so it showed no asterisk. Mark it to match the validator.
+                    $attr['null'] = false;
                 } else {
                     $requestedDate = !empty($entity->requested_date) ? $entity->requested_date : (new Date());
                     $attr['type'] = 'readonly';

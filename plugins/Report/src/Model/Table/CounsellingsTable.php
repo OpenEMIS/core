@@ -34,7 +34,7 @@ class CounsellingsTable extends AppTable
         //POCOR-9842 guidance_type_id moved to counselling_guidance_types join table
         $this->belongsToMany('GuidanceTypes', [
             'className' => 'Student.GuidanceTypes',
-            'joinTable' => 'counselling_guidance_types',
+            'through' => 'Student.CounsellingGuidanceTypes', // use AppTable so created_user_id / created are auto-filled
             'foreignKey' => 'counselling_id',
             'targetForeignKey' => 'guidance_type_id',
         ]);

@@ -75,19 +75,15 @@ return [
         'salt' => env('SECURITY_SALT', '3b07b2f17a71b29db58115fbea9e2a03385eb4d224c07b5fba3b0f67cddc082f'),
     ],
 
-     /**
-     * Max upload size for User.Attachments.
+    /**
+     * Max upload sizes for attachments.
      * Accepts the same size string format as ControllerAction.FileUpload (e.g. '10MB').
+     * NOTE: keep a single 'Attachment' key - a duplicate key silently overwrites this array.
+     *  - fileSize:    Counsellings (Student / Institution / Directory)
+     *  - maxFileSize: User.Attachments
      */
     'Attachment' => [
         'fileSize' => env('ATTACHMENT_MAX_FILE_SIZE', '2MB'),
-    ],
-
-    /**
-     * Max upload size for User.Attachments.
-     * Accepts the same size string format as ControllerAction.FileUpload (e.g. '10MB').
-     */
-    'Attachment' => [
         'maxFileSize' => env('ATTACHMENT_MAX_FILE_SIZE', '10MB'),
     ],
 

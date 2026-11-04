@@ -22,7 +22,7 @@ class CounsellingsTable extends AppTable
         // counselling_guidance_types join table (replaces the old single guidance_type_id FK).
         $this->belongsToMany('GuidanceTypes', [
             'className' => 'Student.GuidanceTypes',
-            'joinTable' => 'counselling_guidance_types',
+            'through' => 'Student.CounsellingGuidanceTypes', // use AppTable so created_user_id / created are auto-filled
             'foreignKey' => 'counselling_id',
             'targetForeignKey' => 'guidance_type_id',
             'dependent' => true,

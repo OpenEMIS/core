@@ -219,7 +219,10 @@ class OpenEmisBehavior extends Behavior
         //Log::debug('[TEMP-LOG] OpenEmisBehavior indexAfterAction END');
     }
 
-    public function viewAfterAction(EventInterface $event, Entity|bool $entity, ArrayObject $extra)
+    //POCOR-9863: null added to the union - ViewBehavior initialises $entity to false when the record
+    //does not exist, but leaves it null when a viewBeforeQuery listener legitimately filters the row
+    //out. Same class of fix as editAfterAction (POCOR-4477) and deleteAfterAction (POCOR-9257).
+    public function viewAfterAction(EventInterface $event, Entity|bool|null $entity, ArrayObject $extra)
     {
         if (!$entity) {
             $this->_table->Alert->warning('general.notExists');

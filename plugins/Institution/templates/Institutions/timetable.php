@@ -11,6 +11,7 @@
     localStorage.setItem('institution_id', '<?php echo $institutionDefaultId;?>');
     localStorage.setItem('timetable_id', '<?php echo $timetable_id;?>');
     localStorage.setItem('baseCoreUrl', '<?php echo $baseCoreUrl;?>'); //POCOR-9589: base URL for Angular SPA api/v4/ resolution
+    localStorage.setItem('timetable_back_url', '<?php echo $_back;?>'); //POCOR-9870: back arrow target, history.back() can land on the POSTed add form
 </script>
 <div>
 	<?= $this->element('OpenEmis.breadcrumbs') ?>

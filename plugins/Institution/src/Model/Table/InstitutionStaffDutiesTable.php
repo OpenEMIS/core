@@ -9,6 +9,7 @@ use Cake\ORM\Query;
 use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\RulesChecker;
+use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionStaffDutiesTable extends ControllerActionTable
@@ -44,11 +45,21 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
     }
 
     public function validationDefault(Validator $validator): Validator {
-		$validator = parent::validationDefault($validator);
+        $validator = parent::validationDefault($validator);
 
-		return $validator
-			->add('staff_duties_id', 'not-blank', ['rule' => 'notBlank']);
-	}
+        // POCOR-9897: staff_id had no rule, so a blank Staff reached the insert and failed the
+        // security_users FK (rendered as error404). Validate it like Duty Type, with messages
+        // (the MessagesTrait lookup for these keys does not exist -> "[Message Not Found]").
+        return $validator
+            ->notEmptyString('staff_duties_id', __('Please select a Duty Type'))
+            ->add('staff_duties_id', 'not-blank', ['rule' => 'notBlank', 'message' => __('Please select a Duty Type')])
+            ->requirePresence('staff_id', 'create', __('Please select a Staff'))
+            ->notEmptyString('staff_id', __('Please select a Staff'))
+            // academic_period_id is NOT NULL with the same FK -> 404 risk; the dropdown has no empty
+            // option, so this only guards blank/tampered posts
+            ->requirePresence('academic_period_id', 'create', __('Please select an Academic Period'))
+            ->notEmptyString('academic_period_id', __('Please select an Academic Period'));
+    }
 
     // POCOR-9768: Application Rule (not a Validator rule) so this is enforced on every save() —
     // checkRules() runs unconditionally inside Table::_processSave(), regardless of whether the
@@ -61,16 +72,42 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
             'errorField' => 'status',
             'message' => __('This duty cannot be activated because the staff member no longer has an active assignment at this institution.')
         ]);
+        // POCOR-9878: one record per staff/duty type/institution/period — reactivate the existing one instead.
+        $rules->add($rules->isUnique(
+            ['staff_id', 'staff_duties_id', 'institution_id', 'academic_period_id'],
+            __('This duty has already been assigned to this staff member for the selected academic period.')
+        ));
+        // POCOR-9878
+        $rules->add([$this, 'checkStaffActiveForAssignment'], 'ruleStaffMustBeActiveToAssign', [
+            'errorField' => 'staff_id',
+            'message' => __('This duty cannot be assigned because the staff member no longer has an active assignment at this institution.')
+        ]);
         return $rules;
     }
 
-    // POCOR-9768
+    // POCOR-9768: reactivating an existing duty (same staff) needs the staff still assigned here
     public function checkStaffActiveForActivation(Entity $entity, array $options)
     {
         if ($entity->status != self::STATUS_ACTIVE) {
             return true; // deactivating is always allowed
         }
+        if ($entity->isNew() || $entity->isDirty('staff_id')) {
+            return true; // POCOR-9878: covered by checkStaffActiveForAssignment(), avoid a duplicate error
+        }
+        return $this->isStaffAssigned($entity);
+    }
 
+    // POCOR-9878: a new duty, or one moved to another staff member (even Inactive), needs staff still assigned here
+    public function checkStaffActiveForAssignment(Entity $entity, array $options)
+    {
+        if (!$entity->isNew() && !$entity->isDirty('staff_id')) {
+            return true;
+        }
+        return $this->isStaffAssigned($entity);
+    }
+
+    private function isStaffAssigned(Entity $entity)
+    {
         $staffId = $entity->staff_id;
         $institutionId = $entity->institution_id;
         if (empty($staffId) || empty($institutionId)) {
@@ -112,6 +149,8 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
             return __('Created User');
         }else if ($field == 'status') { // POCOR-9768
             return __('Status');
+        }else if ($field == 'security_role') { // POCOR-9878
+            return __('Security Role');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -132,17 +171,33 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
             'options' => [self::STATUS_ACTIVE => __('Active'), self::STATUS_INACTIVE => __('Inactive')],
             'select' => false
         ]);
+        // POCOR-9878: internal link to the security_group_users grant — show the granted role instead
+        $this->field('security_group_user_id', ['visible' => false]);
     }
 
     public function viewBeforeAction(EventInterface $event)
     {
-
-        $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'status', 'comment','institutions.name']); // POCOR-9768
+        $this->field('security_role'); // POCOR-9878
+        $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'status', 'security_role', 'comment','institutions.name']); // POCOR-9768
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('Institution');
-        $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'status', 'comment','Institution']); // POCOR-9768
+        $this->field('security_role'); // POCOR-9878
+        $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'status', 'security_role', 'comment','Institution']); // POCOR-9768
+    }
+
+    // POCOR-9878: the role actually granted by this duty (blank when the duty type carries no role or the duty is inactive)
+    public function onGetSecurityRole(EventInterface $event, Entity $entity)
+    {
+        if (empty($entity->security_group_user_id)) {
+            return '';
+        }
+        $groupUser = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers')->find()
+            ->contain(['SecurityRoles'])
+            ->where(['SecurityGroupUsers.id' => $entity->security_group_user_id])
+            ->first();
+        return !empty($groupUser->security_role) ? $groupUser->security_role->name : '';
     }
 
     public function onGetStaffId(EventInterface $event, Entity $entity)
@@ -172,11 +227,15 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
 
     public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $staffOption = $this->getStaffList();
-//        print_r($staffOption);die();
+        // POCOR-9878: default to the current period so the staff list below matches what the dropdown shows
+        if ($entity->isNew() && empty($entity->academic_period_id)) {
+            $entity->academic_period_id = $this->AcademicPeriods->getCurrent();
+        }
+        $staffOption = $this->getStaffList($entity);
         $this->field('academic_period_id', [
             'type' => 'select',
-            'entity' => $entity
+            'entity' => $entity,
+            'onChangeReload' => true // POCOR-9878: reload the staff list for the selected period
         ]);
          $this->field('staff_duties_id', [
             'type' => 'select',
@@ -197,13 +256,19 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
     /**
      * Get staff list for drop down
      */
-    public function getStaffList () {
+    public function getStaffList (?Entity $entity = null) {
 
         $institutionId = $this->getInstitutionID();
         $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $StaffStatuses = TableRegistry::getTableLocator()->get('Institution.StaffStatuses');
         $staffOptions = array();
+        // POCOR-9878: only staff currently assigned to this institution (same check as
+        // isStaffAssigned()) whose assignment falls in the selected academic period
         $result = $Staff->find()
-                    ->where([$Staff->aliasField('institution_id')=>$institutionId])
+                    ->where([
+                        $Staff->aliasField('institution_id') => $institutionId,
+                        $Staff->aliasField('staff_status_id') => $StaffStatuses->getIdByCode('ASSIGNED')
+                    ])
                     ->select([
                         'first_name' => 'Users.first_name',
                         'openemis_no' =>'Users.openemis_no',
@@ -214,10 +279,24 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
                     ['Users' => 'security_users'], [
                         'Users.id = '. $Staff->aliasField('staff_id')
                     ]);
+            if (!empty($entity) && !empty($entity->academic_period_id)) {
+                $result->find('academicPeriod', ['academic_period_id' => $entity->academic_period_id]);
+            }
             $result->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
             foreach($result as $val) {
 
                     $staffOptions[$val->id] = $val->openemis_no .' - '.$val->first_name.' '.$val->last_name;
+            }
+
+            // POCOR-9878: on edit, keep the record's own staff (e.g. since ended) so the field isn't blanked
+            if (!empty($entity) && !$entity->isNew() && !empty($entity->staff_id) && !isset($staffOptions[$entity->staff_id])) {
+                $user = $this->Users->find()
+                    ->select(['openemis_no', 'first_name', 'last_name'])
+                    ->where([$this->Users->aliasField('id') => $entity->staff_id])
+                    ->first();
+                if (!empty($user)) {
+                    $staffOptions[$entity->staff_id] = $user->openemis_no .' - '.$user->first_name.' '.$user->last_name;
+                }
             }
 
             return $staffOptions;
@@ -226,20 +305,46 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
     // POCOR-9768: grant/revoke the duty type's linked security role in step with this record's status.
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
+        // POCOR-9878: the existing grant belongs to the old staff/duty type — drop it before re-granting
+        if (!$entity->isNew() && ($entity->isDirty('staff_id') || $entity->isDirty('staff_duties_id'))) {
+            $this->revokeDutyRoleIfUnused($entity);
+        }
         $this->syncDutyRole($entity);
     }
 
+    // POCOR-9878: deleting a duty must not leave its security role behind
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $this->revokeDutyRoleIfUnused($entity);
+    }
+
+    // POCOR-9878: a duty type may carry no security role (or have it removed later) — in that case
+    // there is nothing to grant, but any grant left over from a previous role must still be revoked.
     private function syncDutyRole(Entity $entity)
     {
         $duty = $this->StaffDuties->get($entity->staff_duties_id);
-        if (empty($duty->security_role_id)) {
-            return; // this duty type carries no security role
-        }
 
-        if ($entity->status == self::STATUS_ACTIVE) {
+        if ($entity->status == self::STATUS_ACTIVE && !empty($duty->security_role_id)) {
             $this->grantDutyRole($entity, $duty->security_role_id);
         } else {
             $this->revokeDutyRoleIfUnused($entity);
+        }
+    }
+
+    // POCOR-9878: called when a duty type's security role is changed or removed — drop the grant made
+    // for the old role on every active duty of that type, then grant the new role (if any).
+    public function resyncDutyRoles($staffDutiesId)
+    {
+        $activeDuties = $this->find()
+            ->where([
+                $this->aliasField('staff_duties_id') => $staffDutiesId,
+                $this->aliasField('status') => self::STATUS_ACTIVE
+            ])
+            ->all();
+
+        foreach ($activeDuties as $dutyRecord) {
+            $this->revokeDutyRoleIfUnused($dutyRecord);
+            $this->syncDutyRole($dutyRecord);
         }
     }
 
@@ -302,10 +407,10 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
 
         $groupUserId = $entity->security_group_user_id;
 
+        // POCOR-9878: match on the grant alone — it already belongs to one user/group, and the entity's
+        // staff_id may have just been changed to someone else on edit
         $stillNeededByAnotherDuty = $this->find()
             ->where([
-                $this->aliasField('staff_id') => $entity->staff_id,
-                $this->aliasField('institution_id') => $entity->institution_id,
                 $this->aliasField('status') => self::STATUS_ACTIVE,
                 $this->aliasField('id !=') => $entity->id,
                 $this->aliasField('security_group_user_id') => $groupUserId
@@ -358,7 +463,11 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
 
         foreach ($activeDuties as $dutyRecord) {
             $dutyRecord->status = self::STATUS_INACTIVE;
-            $this->save($dutyRecord);
+            // POCOR-9878: a failed save would leave the duty active with its role — make it visible
+            if (!$this->save($dutyRecord)) {
+                Log::error('InstitutionStaffDuties::deactivateDuties() failed for duty id ' . $dutyRecord->id
+                    . ': ' . json_encode($dutyRecord->getErrors()));
+            }
         }
     }
 

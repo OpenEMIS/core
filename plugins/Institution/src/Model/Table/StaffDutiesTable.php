@@ -6,6 +6,7 @@ use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 
 class StaffDutiesTable extends ControllerActionTable
 {
@@ -26,13 +27,13 @@ class StaffDutiesTable extends ControllerActionTable
 
     // POCOR-9768: optional security role a duty type can carry. Not required for every duty type,
     // so it's deliberately left out of validationDefault (no requirePresence/notEmptyString).
+    // POCOR-9878: keep the default '-- Select --' blank option so an assigned role can be removed again.
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('security_role_id', [
             'type' => 'select',
             'options' => $this->SecurityRoles->getSystemRolesList(),
-            'after' => 'name',
-            'select' => false
+            'after' => 'name'
         ]);
     }
 
@@ -75,6 +76,15 @@ class StaffDutiesTable extends ControllerActionTable
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
+    }
+
+    // POCOR-9878: keep staff who already hold this duty in step with its new (or removed) security role
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        if (!$entity->isNew() && $entity->isDirty('security_role_id')
+            && $entity->getOriginal('security_role_id') != $entity->security_role_id) {
+            TableRegistry::getTableLocator()->get('Institution.InstitutionStaffDuties')->resyncDutyRoles($entity->id);
+        }
     }
 
     public function beforeDelete(EventInterface $event, Entity $entity)

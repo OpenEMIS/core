@@ -554,7 +554,14 @@ export class StudentTimetableComponent implements OnInit {
     }
 
     backToData() {
-        window.history.back();
+        //POCOR-9870: after Start Scheduling the previous history entry is the POSTed add form,
+        // so history.back() shows "Confirm Form Resubmission"; go to the Overview page instead
+        const backUrl = localStorage.getItem("timetable_back_url");
+        if (backUrl) {
+            window.location.href = backUrl;
+        } else {
+            window.history.back();
+        }
     }
 
     overViewData() {

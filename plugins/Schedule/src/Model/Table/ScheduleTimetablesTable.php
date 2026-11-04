@@ -325,6 +325,10 @@ class ScheduleTimetablesTable extends ControllerActionTable
         // POCOR-8985 end
         $this->field('status');
         $this->setFieldOrder(['academic_period_id', 'institution_schedule_term_id', 'name', 'education_grade_id', 'institution_class_id', 'shift', 'institution_schedule_interval_id', 'status']);
+        //POCOR-9870: after a POST reload of this form, browser back from Start Scheduling would ask to resubmit it
+        if ($this->request->is('post')) {
+            $extra['elements']['replaceHistory'] = ['name' => 'Schedule.Timetables/replace_history'];
+        }
     }
 
     /**

@@ -43,7 +43,7 @@ class ReportShell extends Shell
             }
         } catch (RecordNotFoundException $ex) {
             echo 'Record not found (' . $id . ')';
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) { //POCOR-9865: \Exception missed \Error (e.g. TypeError), leaving the report stuck In Progress
             $this->printErrorAndSetProcessFault($e, $id);
         }
     }
@@ -68,7 +68,7 @@ class ReportShell extends Shell
                 echo "$date: Process ID: $id; Table Report.CustomReports\n";
                 try {
                     $table->generateExcelReport($excelParams); //POCOR-9812: template if the report has one, else a plain workbook
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     $this->printErrorAndSetProcessFault($e, $id);
                     throw $e;
                 }
@@ -93,14 +93,14 @@ class ReportShell extends Shell
                 echo "$date: Process ID: $id; Table $feature\n";
                 try {
                     $table->generateXLXS(['download' => false, 'process' => $entity]);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     $this->printErrorAndSetProcessFault($e, $id);
                     throw $e;
                 }
                 echo "$date: End Processing $name\n";
             }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->printErrorAndSetProcessFault($e, $id);
         }
     }
@@ -127,8 +127,8 @@ class ReportShell extends Shell
                 echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
             }
             /*POCOR--6403 Ends*/
-        } catch (Exception $e) {
-            printErrorAndSetProcessFault($e, $id);
+        } catch (\Throwable $e) {
+            $this->printErrorAndSetProcessFault($e, $id);
         }
     }
 

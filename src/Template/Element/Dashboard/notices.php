@@ -3,6 +3,16 @@
  
 <!-- Angular Sanitize (must match version 1.5.8) -->
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-sanitize.js"></script>
+<?php //POCOR-9863: restore bullets/numbering in rich-text notice messages (reset.css removes them) ?>
+<style>
+	#news .notice-message ul,
+	#news .notice-message ol { padding-inline-start: 20px; margin: 0 0 10px 0; }
+	#news .notice-message ul { list-style: disc outside; }
+	#news .notice-message ol { list-style: decimal outside; }
+	#news .notice-message ul ul { list-style-type: circle; }
+	#news .notice-message ul ul ul { list-style-type: square; }
+	#news .notice-message li { display: list-item; }
+</style>
 <h3><?= __('Notices'); ?></h3>
 <div class="row dashboard-container">
 	<div id="news">
