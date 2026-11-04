@@ -18,14 +18,11 @@ use Migrations\AbstractMigration;
  */
 class POCOR9759 extends AbstractMigration
 {
+    const RESULTS_TABLE = 'assessment_item_results';
+    const ARCHIVED_RESULTS_TABLE = 'assessment_item_results_archived';
+
     public function up()
     {
-        // Backup tables
-        $this->execute('CREATE TABLE IF NOT EXISTS `zz_9759_assessment_periods` LIKE `assessment_periods`');
-        $this->execute('INSERT INTO `zz_9759_assessment_periods` SELECT * FROM `assessment_periods`');
-        $this->execute('CREATE TABLE IF NOT EXISTS `zz_9759_assessment_item_results` LIKE `assessment_item_results`');
-        $this->execute('INSERT INTO `zz_9759_assessment_item_results` SELECT * FROM `assessment_item_results`');
-
         // POCOR-9759: records whether changing `weight` should recalculate/overwrite
         // existing students' marks for this assessment period. Nullable with no
         // default so the field starts unselected ("- Select -") on both Add and Edit,
@@ -44,16 +41,20 @@ class POCOR9759 extends AbstractMigration
         // each mark is actually saved, instead of those calculations live-joining to
         // assessment_periods.weight and silently changing every time the period's
         // weight is edited - regardless of "Update Existing Marks".
-        $resultsTable = $this->table('assessment_item_results');
-        if (!$resultsTable->hasColumn('applied_weight')) {
-            // Same type as assessment_periods.weight (decimal(6,5)) so no precision is lost.
-            $resultsTable->addColumn('applied_weight', 'decimal', [
-                'precision' => 6,
-                'scale' => 5,
-                'default' => null,
-                'null' => true,
-                'after' => 'marks',
-            ])->update();
+        $this->addAppliedWeightColumn(self::RESULTS_TABLE);
+
+        // Code review fix: `assessment_item_results_archived` is a copy of this table's
+        // structure that ArchiveService::archive() (src/Service/ArchiveService.php:84)
+        // populates with `INSERT IGNORE INTO $archived SELECT * FROM $live` - a
+        // position-based column match. Without `applied_weight` added here too, in the
+        // same position (`after marks`), archiving breaks on any install that already
+        // has this table ("Column count doesn't match"), and reading archived marks via
+        // getLastMark(['archive' => true]) breaks too, since buildSelectFields() always
+        // selects `all_results.applied_weight` ("Unknown column"). Only touch it if the
+        // archived table actually exists - plenty of installs haven't archived anything
+        // yet and don't have it.
+        if ($this->hasTable(self::ARCHIVED_RESULTS_TABLE)) {
+            $this->addAppliedWeightColumn(self::ARCHIVED_RESULTS_TABLE);
         }
 
         // Backfill: every existing mark's frozen weight starts out equal to whatever
@@ -112,10 +113,37 @@ class POCOR9759 extends AbstractMigration
             $periodsTable->removeColumn('update_existing_marks')->update();
         }
 
-        $this->execute('DROP TABLE IF EXISTS `assessment_item_results`');
-        $this->execute('RENAME TABLE `zz_9759_assessment_item_results` TO `assessment_item_results`');
+        // Code review fix: this used to DROP `assessment_item_results` and RENAME the
+        // deploy-time backup over it, which discards every mark entered or changed
+        // between deploy and rollback. `applied_weight` is an additive, nullable
+        // column - a plain removeColumn() undoes the schema change without touching
+        // any other column's data, so there's no need for a table-swap or a backup at
+        // all (the backup tables and their population have been removed from up()).
+        $resultsTable = $this->table(self::RESULTS_TABLE);
+        if ($resultsTable->hasColumn('applied_weight')) {
+            $resultsTable->removeColumn('applied_weight')->update();
+        }
 
-        // Remove backup table
-        $this->execute('DROP TABLE IF EXISTS `zz_9759_assessment_periods`');
+        if ($this->hasTable(self::ARCHIVED_RESULTS_TABLE)) {
+            $archivedTable = $this->table(self::ARCHIVED_RESULTS_TABLE);
+            if ($archivedTable->hasColumn('applied_weight')) {
+                $archivedTable->removeColumn('applied_weight')->update();
+            }
+        }
+    }
+
+    private function addAppliedWeightColumn($tableName)
+    {
+        $table = $this->table($tableName);
+        if (!$table->hasColumn('applied_weight')) {
+            // Same type as assessment_periods.weight (decimal(6,5)) so no precision is lost.
+            $table->addColumn('applied_weight', 'decimal', [
+                'precision' => 6,
+                'scale' => 5,
+                'default' => null,
+                'null' => true,
+                'after' => 'marks',
+            ])->update();
+        }
     }
 }

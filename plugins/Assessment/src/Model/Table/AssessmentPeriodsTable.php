@@ -1181,15 +1181,29 @@ class AssessmentPeriodsTable extends ControllerActionTable
     // POCOR-9759: assessment_periods has no academic_period_id column of its own -
     // its academic period comes from the parent Assessment record (see
     // onUpdateFieldAcademicPeriodId() above, which resolves it the same way).
+    //
+    // Code review fix: this used to compare academic_period_id against the current
+    // period's id, which locked the weight for ANY period that isn't the current one
+    // - including a future period being set up ahead of time (e.g. next year's
+    // template while this year is still current). It needs to lock only a period
+    // that has actually ended, which should be "ended before the current period
+    // started" rather than "ended before today" - on this dev install the current
+    // period's own end_date (12/31/25) is already behind the system clock, which
+    // would wrongly lock editing for the current period itself if compared to "now".
+    // Comparing to the current period's start_date avoids that: the current period
+    // can never be before its own start, so it's never locked by this check.
     private function isPastAcademicPeriod(Entity $entity): bool
     {
         if (empty($entity->assessment_id)) {
             return false;
         }
         $assessment = $this->Assessments->get($entity->assessment_id);
-        $currentPeriodId = $this->Assessments->AcademicPeriods->getCurrent();
+        $academicPeriod = $this->Assessments->AcademicPeriods->get($assessment->academic_period_id);
+        $currentPeriod = $this->Assessments->AcademicPeriods->get(
+            $this->Assessments->AcademicPeriods->getCurrent()
+        );
 
-        return $assessment->academic_period_id != $currentPeriodId;
+        return $academicPeriod->end_date < $currentPeriod->start_date;
     }
 
     //POCOR-8554
