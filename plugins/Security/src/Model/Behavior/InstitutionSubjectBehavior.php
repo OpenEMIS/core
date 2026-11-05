@@ -6,6 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\ResultSet;
+use Cake\ORM\TableRegistry;
 use Cake\Event\EventInterface;
 use Cake\I18n\Date;
 
@@ -31,71 +32,26 @@ class InstitutionSubjectBehavior extends Behavior
             $user = $options['user'];
             if ($user['super_admin'] == 0) { // if he is not super admin
                 $userId = $user['id'];
-                $today = Date::now();
 
-                $query->innerJoin(['SecurityRoleFunctions' => 'security_role_functions'], [
-                    'SecurityRoleFunctions.security_role_id = SecurityAccess.security_role_id',
-                    'SecurityRoleFunctions.`_view` = 1' // check if the role have view access
-                ])
-                ->innerJoin(['SecurityFunctions' => 'security_functions'], [
-                    'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                    "SecurityFunctions.controller = 'Institutions'" // only restricted to permissions of Institutions
-                ])
-                ->leftJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
-                    'InstitutionClassSubjects.institution_subject_id = InstitutionSubjects.id'
-                ])
-                ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
-                    'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
-                ])
-                ->where([
-                    // basically if AllSubjects permission is granted, the user should see all subjects of that classes
-                    // if MySubjects permission is granted, the user must be a teacher of that subject
-                    'OR' => [
-                        [
-                            'OR' => [ // AllSubjects permissions
-                                "SecurityFunctions.`_view` LIKE '%AllSubjects.index%'",
-                                "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
-                            ]
-                        ], [
-                            'AND' => [
-                                [
-                                    'OR' => [ // MySubjects permissions
-                                        "SecurityFunctions.`_view` LIKE '%Subjects.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Subjects.view%'"
-                                    ]
-                                ],
-                                'InstitutionSubjectStaff.institution_subject_id = InstitutionSubjects.id',
-                                'InstitutionSubjectStaff.staff_id' => $userId,
-                                'OR' => [
-                                    'InstitutionSubjectStaff.end_date IS NULL',
-                                    'InstitutionSubjectStaff.end_date >= ' => $today->format('Y-m-d')
-                                ]
-                            ]
-                        ], [
-                            'AND' => [
-                                [
-                                    'OR' => [
-                                        "SecurityFunctions.`_view` LIKE '%Classes.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%Classes.view%'"
-                                    ]
-                                ], [
-                                    'EXISTS (
-                                        SELECT 1
-                                        FROM institution_class_subjects
-                                        JOIN institution_classes
-                                        ON institution_classes.id = institution_class_subjects.institution_class_id
-                                        JOIN institution_classes_secondary_staff
-                                        ON institution_classes_secondary_staff.institution_class_id = institution_classes.id
-                                        AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes_secondary_staff.secondary_staff_id = ' . $userId . ')
-                                        WHERE institution_class_subjects.institution_subject_id = InstitutionSubjects.id
-                                        LIMIT 1
-                                    )'
-                                ]
-                            ]
+                // POCOR-7538 points 3.4/3.5/3.7: a role this user holds in the institution
+                // (the SecurityAccess join) with "Access All Subjects" sees every subject;
+                // otherwise only subjects they teach plus every subject of a class they are
+                // homeroom/secondary teacher of - whatever their role. Replaces the old
+                // security_functions LIKE matching on My Subjects/My Classes.
+                $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+                $query
+                    ->where([
+                        'OR' => [
+                            'EXISTS (
+                                SELECT 1
+                                FROM security_roles
+                                WHERE security_roles.id = SecurityAccess.security_role_id
+                                AND security_roles.access_all_subjects = 1
+                            )',
+                            $InstitutionClasses->getTeacherSubjectConditions($userId, $this->_table->aliasField('id'))
                         ]
-                    ]
-                ])
-                ->group([$this->_table->aliasField('id')]); // so it doesn't show duplicate subjects
+                    ])
+                    ->group([$this->_table->aliasField('id')]); // so it doesn't show duplicate subjects
             }
         }
     }
@@ -158,21 +114,25 @@ class InstitutionSubjectBehavior extends Behavior
     }
 
     // Function to check AllSubjects permission is set
+    // POCOR-7538: now checks the role-level "Access All Subjects" flag (point 1.5)
+    // instead of the removed All Subjects security_function (point 1.4). The flag is
+    // a blanket override, not per view/edit/add/delete/execute, so $action is kept
+    // only for call-site compatibility and is otherwise unused.
     private function checkAllSubjectsPermission($action)
     {
-        $AccessControl = $this->_table->AccessControl;
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
         if ($event->getResult()) {
             $roles = $event->getResult();
         }
-        $allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', $action], $roles);
-        if ($allSubjectsEditPermission) {
-            return true;
-        } else {
-            return false;
-        }
+        return $this->hasAccessAllSubjects($roles);
+    }
+
+    // POCOR-7538: shared check for the role-level "Access All Subjects" flag (point 1.5).
+    private function hasAccessAllSubjects($roles)
+    {
+        return TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllSubjects($roles);
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -268,64 +228,13 @@ class InstitutionSubjectBehavior extends Behavior
                 }
             }
 
-            $hasAllSubjectsPermission = $AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles);
-            $hasMySubjectsPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
-            $hasAllClassesPermission = $AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles);
-            $hasMyClassesPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
-
-            $orConditions = [];
-
-            if ($hasAllSubjectsPermission) {
-                $orConditions[] = ['1 = 1', [], true];
-            }
-
-            if ($hasMySubjectsPermission) {
-                $orConditions[] = [
-                    'EXISTS (
-                        SELECT 1
-                        FROM institution_subject_staff
-                        WHERE institution_subject_staff.institution_subject_id = ' . $this->_table->aliasField('id') . '
-                        AND institution_subject_staff.staff_id = ' . $userId . '
-                        LIMIT 1
-                    )'
-                ];
-                /*POCOR-6508 starts - Staff should be able to assigned classes subjects*/
-                $orConditions[] = [
-                    'EXISTS (
-                        SELECT 1
-                        FROM institution_classes
-                        JOIN institution_class_subjects
-                        ON institution_classes.id = institution_class_subjects.institution_class_id
-                        WHERE institution_class_subjects.institution_subject_id = ' . $this->_table->aliasField('id') . '
-                        AND institution_classes.staff_id = ' . $userId . '
-                        LIMIT 1
-                    )'
-                ];
-                /*POCOR-6508 ends*/
-            }
-
-            if ($hasMyClassesPermission) {
-                $orConditions[] = [
-                    'EXISTS (
-                        SELECT 1
-                        FROM institution_class_subjects
-                        JOIN institution_classes
-                        ON institution_classes.id = institution_class_subjects.institution_class_id
-                        JOIN institution_classes_secondary_staff
-                        ON institution_classes_secondary_staff.institution_class_id = institution_classes.id
-                        AND (institution_classes.staff_id = ' . $userId . ' OR institution_classes_secondary_staff.secondary_staff_id = ' . $userId . ')
-                        WHERE institution_class_subjects.institution_subject_id = InstitutionSubjects.id
-                        LIMIT 1
-                    )'
-                ];
-            }
-
-            if (!$hasAllSubjectsPermission && !$hasMySubjectsPermission && !$hasMyClassesPermission) {
-                $query->where(['1 = 0', [], true]);
-            } else {
-                $query->where([
-                    'OR' => $orConditions
-                ]);
+            // POCOR-7538 points 2.2/3.4/3.5/3.7: "Access All Subjects" (role-level flag,
+            // point 1.5) shows every subject; otherwise subjects the user teaches plus every
+            // subject of a class they are homeroom/secondary teacher of - whatever their
+            // role. Page CRUD is gated by the Subjects permission (SecurityAuthorize).
+            if (!$this->hasAccessAllSubjects($roles)) {
+                $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+                $query->where($InstitutionClasses->getTeacherSubjectConditions($userId, $this->_table->aliasField('id')));
             }
         }
         return $query;

@@ -2470,7 +2470,8 @@ class InstitutionsController extends AppController
                 $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
-                if (!$AccessControl->check(['Institutions', 'AllClasses', $action], $roles)) {
+                // POCOR-7538 point 3.6: role-level "Access All Classes" flag
+                if (!TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllClasses($roles)) {
                     if ($AccessControl->check(['Institutions', 'Classes', $action], $roles)) {
                         $ClassTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
@@ -2629,10 +2630,8 @@ class InstitutionsController extends AppController
             ->get('Institution.Institutions')
             ->getInstitutionRoles($userId, $institutionId);
 
-        $canEditAll   = $this->AccessControl->check(
-            ['Institutions', 'AllSubjects', 'edit'],
-            $roles
-        );
+        // POCOR-7538 point 3.7: role-level "Access All Subjects" flag
+        $canEditAll   = TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllSubjects($roles);
         $canEditOwn   = $this->AccessControl->check(
             ['Institutions', 'Subjects', 'edit'],
             $roles
@@ -9453,7 +9452,8 @@ class InstitutionsController extends AppController
             'Institution.InstitutionStaffPositionProfile' => __('Staff Career'),//POCOR-6581 //POCOR-6715 //POCOR-6886(changed report name from Staff Absences to Staff Career as per client suggestion)
             'Institution.InstitutionStandardStaffSpecialNeeds' => __('Staff Special Needs'),
             'Institution.InstitutionStandardStaffTrainings' => __('Staff Training'),
-            'Institution.InstitutionStandardStudentAbsences' => __('Student Absences'),//POCOR-6631
+            'Institution.InstitutionStandardStudentAbsences' => __('Student Absences') . ' (' . __('Monthly') . ')',//POCOR-6631 //POCOR-9874: renamed, Student Absences is now the Reports > Institutions report
+            'Report.StudentAbsences' => __('Student Absences'), //POCOR-9874
             'Institution.InstitutionStandardStudentAbsenceType' => __('Student Absence Type'),//POCOR-6632
             'Institution.StudentAttendanceSummary' => __('Student Attendance Summary Report'),//POCOR-6872
             'Institution.StudentHealths' => __('Student Health'),
@@ -9461,6 +9461,15 @@ class InstitutionsController extends AppController
             'Institution.StudentSpecialNeeds' => __('Student Special Needs'),
             'StaffAppraisal.Appraisals' => __('Staff Appraisals'),
             'Institution.InstitutionConsumablesReport' => __('Consumables'), //POCOR-9058
+            //POCOR-9874: reports from Reports > Institutions, run for the current institution only
+            'Report.Guardians' => __('Guardians'),
+            'Report.InstitutionPositions' => __('Institution Positions'),
+            'Report.InstitutionStaff' => __('Staff'),
+            'Report.StaffAttendances' => __('Staff Attendance'),
+            'Report.StaffLeave' => __('Staff Leave'),
+            'Report.InstitutionStudents' => __('Students'),
+            'Report.InstitutionSubjects' => __('Subjects'),
+            'Report.TeacherClasses' => __('Teacher Classes'),
             //POCOR-9831: Students Attendance Weekly moved to Reports > Institutions > Student Attendance Weekly Report
         ];
         // End POCOR-6871

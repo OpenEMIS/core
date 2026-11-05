@@ -80,6 +80,8 @@ $this->start('panelBody');
 						} else if ($status == -1) {
 							$downloadClass = 'none';
 							$errorClass = '';
+						} else if ($status == -2) {
+							echo __('No Data');	//POCOR-8247
 						}	else if ($status == 0 && !empty($obj->file_path)) {
 							echo __('Completed');
 						}
@@ -177,5 +179,12 @@ $this->start('panelBody');
 		</table>
 	</div>
 </div>
+<?php //POCOR-9874 pagination, same as Report/templates/Reports/index.php (POCOR-9841)
+$paginationFormOptions = $this->ControllerAction->getFormOptions();
+unset($paginationFormOptions["class"]);
+echo $this->Form->create($ControllerAction["table"]->newEmptyEntity(), $paginationFormOptions);
+echo $this->element("OpenEmis.pagination");
+echo $this->Form->end();
+?>
 <?php
 $this->end();

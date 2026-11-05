@@ -270,17 +270,12 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         $selectedClass = !is_null($this->request->getQuery('class_id')) ? $this->request->getQuery('class_id') : 'all';
         $classOptions = [];
         $classLists = [];
-        $classPermission = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
-            ->leftJoin(['SecurityFunctions' => 'security_functions'], [
-                'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-            ])
-            ->where([
-                'SecurityFunctions.controller' => 'Institutions',
-                'SecurityRoleFunctions.security_role_id' => $roleId,
-                'SecurityRoleFunctions._view' => 1,
-                'SecurityFunctions.name' => 'All Classes',
-            ])
-            ->first();
+        // POCOR-7538 point 3.6: role-level "Access All Classes" flag across the user's
+        // roles in this institution, instead of the hidden All Classes security_function
+        // on their first role only.
+        $classPermission = TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllClasses(
+            TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($loggedInUserId, $institutionId)
+        );
         if ($selectedReportCard != -1) {
             $reportCardEntity = $reportCardTable->find()->where(['id' => $selectedReportCard])->first();
             if (($isSuperAdmin) || $userRole['security_role']['name'] == 'Superrole') { //POCOR-8773
@@ -324,8 +319,9 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                 ->where([
                     'InstitutionClasses.institution_id' => $institutionId,
                     'InstitutionClasses.academic_period_id' => $academicPeriodId,
-                    'InstitutionClasses.staff_id' => $staffId,
                 ])
+                // POCOR-7538 point 3.4: homeroom or secondary teacher of the class
+                ->where($Classes->getTeacherClassConditions($staffId, 'InstitutionClasses.id', false))
                 ->group(['InstitutionClasses.id'])
                 ->order([
                     'EducationStages.order' => 'ASC',
