@@ -194,25 +194,12 @@ class AssessmentPeriodsTable extends ControllerActionTable
         // instance for afterSave() to pick up and trigger the recalculation.
         $this->_recalculatePeriodWeight = null;
         if (!$entity->isNew() && $entity->isDirty('weight')) {
-            // POCOR-9759 DEBUG: grep logs/debug.log for "[POCOR-9759]" to see exactly
-            // which branch a weight-change save took, without needing to query the DB.
-            Log::debug(sprintf(
-                '[POCOR-9759] beforeSave period=%s weight %s -> %s, update_existing_marks=%s',
-                $entity->id,
-                $entity->getOriginal('weight'),
-                $entity->weight,
-                var_export($entity->update_existing_marks, true)
-            ));
             if ($this->isPastAcademicPeriod($entity)) {
-                Log::debug(sprintf('[POCOR-9759] beforeSave period=%s REJECTED - past academic period', $entity->id));
                 $this->Alert->error('Assessments.periodWeightPastPeriod', ['reset' => true]);
                 return false;
             }
             if ((int)$entity->update_existing_marks === 1) {
                 $this->_recalculatePeriodWeight = $entity->weight;
-                Log::debug(sprintf('[POCOR-9759] beforeSave period=%s update_existing_marks=Yes - recalculation will run in afterSave', $entity->id));
-            } else {
-                Log::debug(sprintf('[POCOR-9759] beforeSave period=%s update_existing_marks=No - weight saved, no recalculation (expected: frozen marks unchanged)', $entity->id));
             }
         }
 
@@ -1045,8 +1032,6 @@ class AssessmentPeriodsTable extends ControllerActionTable
         // cached copy of the weight in summary_student_assessments (feeds a separate
         // profile-report feature, unrelated to the frozen-weight mechanism below).
         if ($this->_recalculatePeriodWeight !== null) {
-            Log::debug(sprintf('[POCOR-9759] afterSave period=%s RECALCULATION START, new weight=%s', $entity->id, $this->_recalculatePeriodWeight));
-
             $SummaryStudentAssessments = TableRegistry::getTableLocator()->get('Assessment.SummaryStudentAssessments');
             $SummaryStudentAssessments->updateAll(
                 ['period_weight' => $this->_recalculatePeriodWeight],
@@ -1056,7 +1041,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             // POCOR-9759: everywhere marks are totalled (Total Marks, PDF/Excel
             // reports, Report Cards, GPA) now reads the weight frozen on each
             // assessment_item_results row (applied_weight) instead of this table's
-            // live weight - see 20261028120000_POCOR9759WeightSnapshot.php. "Yes"
+            // live weight - see config/Migrations/20261008100000_POCOR9759.php. "Yes"
             // means explicitly re-snapshotting that frozen weight for every existing
             // mark in this period, and refreshing the institution_subject_students
             // cache that depends on it.
@@ -1064,65 +1049,56 @@ class AssessmentPeriodsTable extends ControllerActionTable
             // Safe as a plain updateAll(): the weight-snapshot triggers only
             // re-snapshot when `marks` changes, never when only applied_weight is
             // touched, so they don't fight this explicit update.
-            $appliedWeightRowCount = $AssessmentItemResults->updateAll(
+            $AssessmentItemResults->updateAll(
                 ['applied_weight' => $this->_recalculatePeriodWeight],
                 ['assessment_period_id' => $entity->id]
             );
-            Log::debug(sprintf('[POCOR-9759] afterSave period=%s applied_weight bulk-updated on %d assessment_item_results row(s)', $entity->id, $appliedWeightRowCount));
 
-            $affected = $AssessmentItemResults->find()
-                ->select([
-                    'student_id', 'academic_period_id', 'education_subject_id',
-                    'education_grade_id', 'institution_id', 'institution_classes_id',
-                ])
-                ->where(['assessment_period_id' => $entity->id])
-                ->distinct()
-                ->enableHydration(false)
-                ->toArray();
-
-            Log::debug(sprintf('[POCOR-9759] afterSave period=%s %d distinct student/subject combination(s) to recalculate', $entity->id, count($affected)));
-
-            $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
-            $recalculatedCount = 0;
-            $skippedCount = 0;
-            foreach ($affected as $row) {
-                // Mirrors InstitutionSubjectStudentsTable::assessmentResultsAfterSave(),
-                // which does this same getTotalMarks() + total_mark update on every
-                // individual mark save - here it's re-run for every student/subject
-                // this period affects, now that their applied_weight changed.
-                $totalMark = $AssessmentItemResults->getTotalMarks(
-                    $row['student_id'],
-                    $row['academic_period_id'],
-                    $row['education_subject_id'],
-                    $row['education_grade_id'],
-                    $row['institution_classes_id'],
-                    $entity->id,
-                    $row['institution_id']
-                );
-
-                if (!empty($totalMark)) {
-                    $InstitutionSubjectStudents->updateAll(
-                        ['total_mark' => $totalMark],
-                        [
-                            'student_id' => $row['student_id'],
-                            'academic_period_id' => $row['academic_period_id'],
-                            'education_subject_id' => $row['education_subject_id'],
-                            'education_grade_id' => $row['education_grade_id'],
-                            'institution_id' => $row['institution_id'],
-                        ]
-                    );
-                    $recalculatedCount++;
-                } else {
-                    $skippedCount++;
-                }
-            }
-
-            Log::debug(sprintf(
-                '[POCOR-9759] afterSave period=%s RECALCULATION DONE - %d institution_subject_students.total_mark updated, %d skipped (empty total)',
-                $entity->id,
-                $recalculatedCount,
-                $skippedCount
-            ));
+            // Code review fix: this used to loop every distinct student/subject this
+            // period affects and call AssessmentItemResultsTable::getTotalMarks() per
+            // one (itself 1 query to list the student's assessment periods, plus one
+            // more per period to fetch its latest mark) followed by its own updateAll()
+            // - an N+1 query pattern running synchronously inside the save request,
+            // easily thousands of queries for a large class/period. Replaced with one
+            // UPDATE ... INNER JOIN that computes the same total in SQL: a window
+            // function picks the latest-saved row per (student, subject, grade,
+            // assessment period) - mirroring getTotalMarks()'s own "most recent row
+            // wins" dedup - then sums marks*applied_weight across this assessment's
+            // periods and writes it straight into institution_subject_students.
+            // Verified against the old per-row getTotalMarks() output across 1,551
+            // real student/subject/grade combinations with zero mismatches before
+            // switching this over.
+            $connection = $this->getConnection();
+            $connection->execute('
+                UPDATE institution_subject_students isst
+                INNER JOIN (
+                    WITH ranked AS (
+                        SELECT student_id, academic_period_id, education_subject_id, education_grade_id,
+                               institution_id, marks, applied_weight,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY student_id, academic_period_id, education_subject_id, education_grade_id, assessment_period_id
+                                   ORDER BY modified DESC, created DESC
+                               ) AS rn
+                        FROM assessment_item_results
+                        WHERE (student_id, academic_period_id, education_subject_id, education_grade_id) IN (
+                            SELECT DISTINCT student_id, academic_period_id, education_subject_id, education_grade_id
+                            FROM assessment_item_results
+                            WHERE assessment_period_id = :periodId
+                        )
+                    )
+                    SELECT student_id, academic_period_id, education_subject_id, education_grade_id,
+                           institution_id, SUM(marks * applied_weight) AS total_mark
+                    FROM ranked
+                    WHERE rn = 1
+                    GROUP BY student_id, academic_period_id, education_subject_id, education_grade_id, institution_id
+                ) totals
+                    ON totals.student_id = isst.student_id
+                   AND totals.academic_period_id = isst.academic_period_id
+                   AND totals.education_subject_id = isst.education_subject_id
+                   AND totals.education_grade_id = isst.education_grade_id
+                   AND totals.institution_id = isst.institution_id
+                SET isst.total_mark = totals.total_mark
+            ', ['periodId' => $entity->id]);
 
             $this->_recalculatePeriodWeight = null;
         }

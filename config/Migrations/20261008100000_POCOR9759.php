@@ -15,6 +15,15 @@ use Migrations\AbstractMigration;
  * every write is covered regardless of which application/table class performs
  * it - this repo already has precedent for this pattern (see POCOR7940,
  * POCOR8974).
+ *
+ * Deploy note: this file's up()/down() were rewritten after an earlier version
+ * already shipped (that version did a full-table backup in up() and a destructive
+ * DROP+RENAME in down()). Any environment that already ran that earlier version
+ * under this same migration version number (20261008100000) needs: rollback, then
+ * migrate again (phinx tracks by version number, not content, so just deploying
+ * this file does nothing on an environment that already has it marked as run) -
+ * and its leftover zz_9759_assessment_periods / zz_9759_assessment_item_results
+ * backup tables, created only by that earlier version, dropped manually.
  */
 class POCOR9759 extends AbstractMigration
 {

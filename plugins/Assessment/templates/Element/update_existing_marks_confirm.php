@@ -33,16 +33,41 @@
         // confirmed" flag persisted. Handling this on 'change' means by the time
         // the user actually clicks Save, the field's value is already settled and
         // Save needs no special handling at all.
+        function confirmRecalculation() {
+            return window.confirm(<?= json_encode(__('Saving this change will recalculate and overwrite existing students\' assessment marks for this assessment period. This action cannot be undone.')) ?>);
+        }
+
         var previousValue = $select.val();
         $select.on('change', function () {
             if ($select.val() == '1') {
-                if (!window.confirm(<?= json_encode(__('Saving this change will recalculate and overwrite existing students\' assessment marks for this assessment period. This action cannot be undone.')) ?>)) {
+                if (!confirmRecalculation()) {
                     $select.val(previousValue);
                     return;
                 }
             }
             previousValue = $select.val();
         });
+
+        // Code review fix: update_existing_marks is saved on the record, so an Edit
+        // opened after a prior "Yes" save already shows the dropdown at Yes - its own
+        // 'change' event above never fires just because the user edits the weight
+        // instead, so a weight change went through silently with no warning even
+        // though it still triggers the same mass recalculation. Catch that case here:
+        // only while the flag is already Yes (isEdit is already guaranteed by the
+        // early return above - a new record has nothing to recalculate anyway).
+        var $weight = $form.find('[name$="[weight]"]');
+        if ($weight.length > 0) {
+            var previousWeight = $weight.val();
+            $weight.on('change', function () {
+                if ($select.val() == '1' && $weight.val() !== previousWeight) {
+                    if (!confirmRecalculation()) {
+                        $weight.val(previousWeight);
+                        return;
+                    }
+                }
+                previousWeight = $weight.val();
+            });
+        }
     });
 })(jQuery);
 </script>
