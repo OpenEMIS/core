@@ -1378,6 +1378,14 @@ class InstitutionCasesTable extends ControllerActionTable
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
+            // POCOR-9906: Personal > Cases has no institution in the URL/session; use the
+            // Institution selected on the form (posted on its onChangeReload) to build the list.
+            if ($request->getParam('controller') == 'Profiles') {
+                $selectedInstitutionId = $request->getData($this->getAlias() . '.institution_id');
+                if (!empty($selectedInstitutionId)) {
+                    $institutionId = $selectedInstitutionId;
+                }
+            }
             $assigneeOptions = [];
             if (!is_null($stepId)) {
                 $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
