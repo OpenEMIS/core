@@ -77,8 +77,9 @@ trait StudentCreationCheckTrait
      * Shared by isStudentCreationAllowed() (Save) and InstitutionsController::getEducationGrade()
      * (dropdown filter) so both read the excluded-roles list the exact same way.
      *
-     * @param int|null $institutionId when omitted, falls back to $this->getInstitutionID() (if
-     *                                available) and then to the Directory-context AccessControl roles
+     * @param int|null $institutionId institution context; when null/0 (Directory, which has no
+     *                                institution scope at all) the acting user's roles are resolved
+     *                                through the AccessControl component instead //POCOR-9876
      * @return bool
      */
     private function isUserExcludedFromStudentCreationRestriction(?int $institutionId = null): bool //POCOR-9385
@@ -91,14 +92,38 @@ trait StudentCreationCheckTrait
         }
 
         $excludedIds = array_filter(explode(',', $excludedRaw));
-        $userId = method_exists($this, 'getUserID') ? $this->getUserID() : (int)$this->request->getSession()->read('Auth.User.id');
-        $instId = $institutionId ?? (method_exists($this, 'getInstitutionID') ? ($this->getInstitutionID() ?: 0) : 0);
+        //POCOR-9876: the excluded-role check is about the ACTING (logged-in) user, so always read it from the
+        //session. getUserID() on controllers/tables returns the user_id from the query string (the subject
+        //user, e.g. the student) and is null on AJAX calls such as getEducationGrade, which crashed
+        //getSecurityGroupId() ("Users.id is missing operator with null value") and returned an error page
+        //instead of JSON, so the Education Grade dropdown rendered "undefined" options.
+        $userId = (int)$this->request->getSession()->read('Auth.User.id');
+        if ($userId <= 0) {
+            return false; //POCOR-9876: no logged-in user → not excluded
+        }
+
+        //POCOR-9876: was `$institutionId ?? (method_exists($this, 'getInstitutionID') ? ... : 0)`. That guard was
+        //dead code: getInstitutionID() is a Controller-only method, and behaviour-provided versions
+        //(ControllerAction.QueryString) are proxied through __call() so method_exists() never sees them. Every
+        //caller already resolves the institution itself, so the fallback only ever evaluated to 0.
+        $instId = (int)($institutionId ?? 0);
 
         if ($instId > 0) {
             $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-            $userRoles = $Institutions->getInstitutionRoles($userId, $instId); //POCOR-9385: institution roles
+            //POCOR-9385: institution roles - getRolesByUserAndGroup() is a find('list'), so these are scalar ids
+            $userRoles = $Institutions->getInstitutionRoles($userId, $instId);
+        } elseif (isset($this->AccessControl)) {
+            //POCOR-9876: getRolesByUser() returns hydrated SecurityGroupUsers ENTITIES, not role ids (unlike
+            //getInstitutionRoles() above). Iterating them raw made `(string)$roleId` render the entity's JSON
+            //(EntityTrait::__toString), which never matched a numeric role id, so the strict in_array() below
+            //silently reported "not excluded" for every user on the Directory path. Extract the id like every
+            //other consumer does (DashboardController::getUserSecurityRoleIds, NavigationComponent).
+            $userRoles = collection($this->AccessControl->getRolesByUser($userId)->toArray())
+                ->extract('security_role_id')
+                ->toArray();
         } else {
-            $userRoles = $this->AccessControl->getRolesByUser($userId)->toArray(); //POCOR-9385: directory fallback
+            //POCOR-9876: no AccessControl component (non controller-driven context) → cannot resolve roles
+            return false;
         }
 
         foreach ($userRoles as $roleId) {

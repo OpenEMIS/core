@@ -972,7 +972,16 @@ class StudentsTable extends ControllerActionTable
 
         $gradeId          = !empty($entity->education_grade_id)    ? (int)$entity->education_grade_id    : null;
         $academicPeriodId = !empty($entity->academic_period_id)    ? (int)$entity->academic_period_id    : null;
-        $institutionId    = method_exists($this, 'getInstitutionID') ? ($this->getInstitutionID() ?: null) : null;
+        //POCOR-9876: was `method_exists($this, 'getInstitutionID') ? ... : null`, which is ALWAYS null here -
+        //getInstitutionID() is a Controller-only method and the ControllerAction.QueryString behaviour version is
+        //proxied via __call(), so method_exists() never sees it. Passing null meant (a) the excluded-roles check
+        //fell into the Directory branch instead of the institution branch, and (b) isStudentCreationAllowed() used
+        //the global order=1 fallback instead of this institution's entry grades - so Save could reject a grade the
+        //Education Grade dropdown had just offered. The entity being saved is an institution_students row, so read
+        //institution_id from it (same pattern as checkStudentRecords()), falling back to the session scope.
+        $institutionId = !empty($entity->institution_id)
+            ? (int)$entity->institution_id
+            : ((int)$this->request->getSession()->read('Institution.Institutions.id') ?: null);
         if (!$this->isStudentCreationAllowed($gradeId, $institutionId, $academicPeriodId)) { //POCOR-9385: check vs institution's entry grade for this period
             $gradeName = '';
             if (!empty($gradeId)) {

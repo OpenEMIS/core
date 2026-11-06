@@ -84,71 +84,22 @@ class NoticesTable extends ControllerActionTable
         $readStatus = $this->request->getQuery('notice_status');
 
         if (!$isSuperAdmin) {
-            $usersGroup = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            //POCOR-9863: show enabled notices assigned to any of the user's roles (no separate permission needed)
+            $noticeIds = TableRegistry::getTableLocator()->get('Alert.NoticeRoles')->getVisibleNoticeIds($userId);
 
-            // Step 1: Get user's roles
-            $userRoleIdsQuery = $usersGroup->find()
-                ->select(['security_role_id'])
-                ->where(['security_user_id' => $userId])
-                ->enableHydration(false);    
-            $userRoleIds = array_column($userRoleIdsQuery->toArray(), 'security_role_id');
-            //This check is added to restrict users which don't have any roles assigned.(POCOR-9429)
-            if (empty($userRoleIds)) {
-               return $query->where(['1 = 0']);
-            }
-
-                $havePermissionToView = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
-                        ->leftJoin(['SecurityFunctions' => 'security_functions'], [
-                            [
-                                'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                            ]
-                        ])
-                        ->where([
-                            'SecurityFunctions.controller' => 'Systems',
-                            'SecurityFunctions.name' => 'Notice Message',
-                            'SecurityRoleFunctions.security_role_id IN'=> $userRoleIds,
-                            'SecurityRoleFunctions._view' => 1,
-                        ])
-                        ->toArray();
-                if (empty($havePermissionToView)) {
-                    // no permission to view any notice
-                    return ;
-                }
-
-            // Step 2: If user has no roles, redirect as unauthorized
-            /*if (empty($userRoleIds)) {
-                
-                $this->Alert->error(__('You are not authorized to access this page'), [
-                    'type' => 'string',
-                    'reset' => true
-                ]);
-                $event->stopPropagation();
-                return $this->controller->redirect(['plugin'=>null 'controller' => 'Dashboard', 'action' => 'null']);
-            }*/
-
-            // Step 3: Get notice IDs assigned to their roles
-            $noticeRoles = TableRegistry::getTableLocator()->get('Alert.NoticeRoles');
-            $assignedNoticeIdsQuery = $noticeRoles->find()
-                ->select(['notice_id'])
-                ->where(['security_role_id IN' => $userRoleIds])
-                ->enableHydration(false);
-            $assignedNoticeIds = array_column($assignedNoticeIdsQuery->toArray(), 'notice_id');
-
-            // Step 4: If user has roles but no assigned notices
-            if (empty($assignedNoticeIds)) {
+            if (empty($noticeIds)) {
                 $query->where(['1 = 0']);
                 $this->Alert->info(__('There are no records.'), [
                     'type' => 'string',
                     'reset' => true
                 ]);
                 $event->stopPropagation();
-              
+
                 return false;
             }
 
-            // Step 5: Filter by assigned notices
             $query->where([
-                $this->aliasField('id IN') => $assignedNoticeIds,
+                $this->aliasField('id IN') => $noticeIds,
                 $this->aliasField('status') => 1
             ]);
             $query->leftJoin(
@@ -190,8 +141,25 @@ class NoticesTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    //POCOR-9863: non-admin users may only open notices that are addressed to one of their roles
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
+        if (!$this->Auth->user('super_admin')) {
+            $noticeIds = TableRegistry::getTableLocator()->get('Alert.NoticeRoles')
+                ->getVisibleNoticeIds($this->Auth->user('id'));
+            $query->where(empty($noticeIds) ? ['1 = 0'] : [$this->aliasField('id IN') => $noticeIds]);
+        }
+    }
+
+    public function viewAfterAction(EventInterface $event, Entity|bool|null $entity, ArrayObject $extra)
+    {
+        //POCOR-9863: viewBeforeQuery above can legitimately filter the record out (notice disabled,
+        //or no longer assigned to any of the user's roles). ViewBehavior then passes a falsy entity
+        //here and redirects to the index, so bail out before touching $entity.
+        if (!$entity) {
+            return;
+        }
+
         $this->field('status', ['visible' => false]);
         $this->field('notice_status', ['visible' => true]);
         $this->field('security_role_id');

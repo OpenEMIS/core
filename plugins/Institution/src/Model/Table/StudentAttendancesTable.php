@@ -2317,7 +2317,11 @@ SQL;
         $selectFields = [
             $this->aliasField('id'),
             $this->aliasField('student_id'), // POCOR-9572: Add student_id field
-            'date' => $Details->aliasField('date'),
+            // POCOR-9888: Details (institution_student_absence_details) only has a row
+            // for absences, so a LEFT JOIN leaves this NULL for present students. Fall
+            // back to Records (student_attendance_marked_records), the generic
+            // "this day was marked" row that exists regardless of present/absent.
+            'date' => "COALESCE({$Details->aliasField('date')}, {$Records->aliasField('date')})",
             'day' => '"' . $day . '"',
             'period' => $Details->aliasField('period'),
             'subject_id' => $Details->aliasField('subject_id'),
@@ -2376,7 +2380,9 @@ SQL;
         $query->select(
             [
                 $this->aliasField('id'),
-                'date' => $Details->aliasField('date'),
+                // POCOR-9888: see getAttendanceDailySelectFields() - same fallback
+                // to Records so present students still show a date.
+                'date' => "COALESCE({$Details->aliasField('date')}, {$Records->aliasField('date')})",
                 'day' => '"' . $day . '"',
                 'period' => $Details->aliasField('period'),
                 'subject_id' => $Details->aliasField('subject_id'),

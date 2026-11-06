@@ -18,7 +18,6 @@ use Cake\Log\Log;
 class StudentAttendanceSummaryTable extends AppTable
 {
     private $workingDays = [];
-    private $schoolClosedDays = [];
 
     const MALE = 'M';
     const FEMALE = 'F';
@@ -79,7 +78,6 @@ class StudentAttendanceSummaryTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $sheetsData = $this->generateSheetsData($requestData);
         $sheets->exchangeArray($sheetsData);
-        $this->schoolClosedDays = $this->getSchoolClosedDate($requestData);
     }
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
@@ -345,16 +343,6 @@ class StudentAttendanceSummaryTable extends AppTable
         ];
 
         $fields->exchangeArray($extraField);
-    }
-
-    private function getSchoolClosedDate($requestData)
-    {
-        $filterInstitutionIds = $this->parseFilterInstitutionIds($requestData->institution_id);
-        $institutionList = !empty($filterInstitutionIds) ? $filterInstitutionIds : [$requestData->institution_id];
-        $startDate = new DateTime($requestData->report_start_date);
-        $endDate = new DateTime($requestData->report_end_date);
-        $closedDates = $this->getInstitutionClosedDates($startDate, $endDate, $institutionList);
-        return $closedDates;
     }
 
     private function generateSheetsData($requestData)

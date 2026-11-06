@@ -54,26 +54,31 @@ class ImportStudentBehavior extends Behavior
     public function addEditOnChangeFeature(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $table = $this->_table;
-        $request = $this->_table->request;
+        $selectedFeature = $data[$table->getAlias()]['feature'] ?? null;
 
-        if (isset($data) && isset($data[$table->getAlias()]) && !is_null($data[$table->getAlias()]['feature'])) {
-            $feature = explode('.', $data[$table->getAlias()]['feature']) ;
-            list($plugin, $controller, $action) = $feature;
-            $institutionParams = $request->params['institutionId'];
+        // POCOR-9896: only redirect to a known import feature
+        if (!empty($selectedFeature) && array_key_exists($selectedFeature, $this->importFeatureList)) {
+            list($plugin, $controller, $action) = explode('.', $selectedFeature);
 
-            $url = [
-                'plugin' => $plugin,
-                'controller' => $controller,
-                'institutionId' => $institutionParams,
-                'action' => $action,
-                'add'
-            ];
-
-            $requestQuery = $request->getQuery();
-            if (!empty($requestQuery)) {
-                $url = array_merge($url, $requestQuery);
+            // POCOR-9896: ServerRequest::$params is not accessible in CakePHP 5 (threw -> error404), and the
+            // institution is carried in the pass params (/ImportStudentAdmission/add/<encoded>), not in
+            // 'institutionId'. Keep the current pass + query and only swap the import action.
+            $request = $table->request;
+            $pass = (array)$request->getParam('pass');
+            if (($pass[0] ?? null) === 'add') {
+                array_shift($pass);
             }
-            $this->_table->controller->redirect($url);
+            $url = array_merge(
+                ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'add'],
+                $pass,
+                $request->getQuery()
+            );
+            if (!empty($request->getParam('institutionId'))) {
+                $url['institutionId'] = $request->getParam('institutionId');
+            }
+
+            $event->stopPropagation();
+            return $table->controller->redirect($url);
         }
     }
 

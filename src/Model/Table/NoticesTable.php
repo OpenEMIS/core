@@ -41,66 +41,17 @@ class NoticesTable extends AppTable
             ])
         ])->enableHydration(false);
 
-        if (!$isSuperAdmin && $userId) {
-            $usersGroup = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        //POCOR-9863: notices are shown to every user whose role the notice is assigned to.
+        //The extra "Notice Message" permission check was removed so that role assignment alone decides visibility.
+        $query->where([$this->aliasField('status') => 1])
+            ->order([$this->aliasField('created') => 'DESC']);
 
-            // Step 1: Get user's security role IDs
-            $userRoleIdsQuery = $usersGroup->find()
-                ->select(['security_role_id'])
-                ->where(['security_user_id' => $userId])
-                ->enableHydration(false);
-            $userRoleIds = array_column($userRoleIdsQuery->toArray(), 'security_role_id');
-            //POCOR-9429: This check is added to restrict users which don't have any roles assigned.
-            if (empty($userRoleIds)) {
-               return $query->where(['1 = 0']);
-            }
-            $havePermissionToView = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
-                    ->leftJoin(['SecurityFunctions' => 'security_functions'], [
-                        [
-                            'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                        ]
-                    ])
-                    ->where([
-                        'SecurityFunctions.controller' => 'Systems',
-                        'SecurityFunctions.name' => 'Notice Message',
-                        'SecurityRoleFunctions.security_role_id IN'=> $userRoleIds,
-                        'SecurityRoleFunctions._view' => 1,
-                    ])
-                    ->toArray();
-            if (empty($havePermissionToView)) {
-                // no permission to view any notice
+        if (!$isSuperAdmin) {
+            $noticeIds = TableRegistry::getTableLocator()->get('Alert.NoticeRoles')->getVisibleNoticeIds($userId);
+            if (empty($noticeIds)) {
                 return $query->where(['1 = 0']);
             }
-
-            // Step 2: Get notice IDs assigned to user's roles
-            $noticeRoles = TableRegistry::getTableLocator()->get('Alert.NoticeRoles');
-            $assignedNoticeIdsQuery = $noticeRoles->find()
-                ->select(['notice_id'])
-                ->where(['security_role_id IN' => $userRoleIds])
-                ->enableHydration(false);
-            $assignedNoticeIds = array_column($assignedNoticeIdsQuery->toArray(), 'notice_id');
-
-            if (!empty($assignedNoticeIds)) {
-                // Return assigned, active notices
-                $query->where([
-                    $this->aliasField('id IN') => $assignedNoticeIds,
-                    $this->aliasField('status') => 1
-                ])->order([
-                    $this->aliasField('created') => 'DESC'
-                ]);
-            } else {
-                // No notices assigned to user's roles
-                $query->where(['1 = 0'])->order([
-                    $this->aliasField('created') => 'DESC'
-                ]);
-            }
-        } else {
-            // Superadmin: show all active notices
-            $query->where([
-                $this->aliasField('status') => 1
-            ])->order([
-                $this->aliasField('created') => 'DESC'
-            ]);
+            $query->where([$this->aliasField('id IN') => $noticeIds]);
         }
 
         return $query;

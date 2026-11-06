@@ -231,66 +231,13 @@ class OpenEmisComponent extends Component
             $isAdmin = $controller->AccessControl->isAdmin();
 
             if(!$isAdmin){
-                $usersGroup   = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
                 $userNotices  = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
 
-                // 1. Get user role IDs
-                $userRoleIdsQuery = $usersGroup->find()
-                    ->select(['security_role_id'])
-                    ->where(['security_user_id' => $userId])
-                    ->enableHydration(false);
-                $userRoleIds = array_column($userRoleIdsQuery->toArray(), 'security_role_id');
-                if (empty($userRoleIds)) {
-                    // No roles → no notices can be assigned
-                    return true;
-                }
+                //POCOR-9863: same visibility rule as the dashboard and System Notices page
+                $assignedNoticeIds = TableRegistry::getTableLocator()->get('Alert.NoticeRoles')
+                    ->getVisibleNoticeIds($userId);
 
-                // 2. Check permission to view notices
-                $havePermissionToView = TableRegistry::getTableLocator()
-                    ->get('Security.SecurityRoleFunctions')
-                    ->find()
-                    ->leftJoin(
-                        ['SecurityFunctions' => 'security_functions'],
-                        ['SecurityFunctions.id = SecurityRoleFunctions.security_function_id']
-                    )
-                    ->where([
-                        'SecurityFunctions.controller' => 'Systems',
-                        'SecurityFunctions.name' => 'Notice Message',
-                        'SecurityRoleFunctions.security_role_id IN' => $userRoleIds,
-                        'SecurityRoleFunctions._view' => 1
-                    ])
-                    ->toArray();
-
-                if (empty($havePermissionToView)) {
-                    // User has no permission to view notices → no red dot
-                    return true;
-                }
-
-                // 3. Get notice IDs assigned to user's roles
-                $assignedNoticeIdsQuery = $usersGroup->find()
-                    ->select(['notice_id' => 'NoticeRoles.notice_id'])
-                    ->innerJoin(
-                        ['NoticeRoles' => 'notice_roles'],
-                        ['SecurityGroupUsers.security_role_id = NoticeRoles.security_role_id']
-                    )
-                    ->innerJoin(
-                        ['Notices' => 'notices'],
-                        ['Notices.id = NoticeRoles.notice_id']
-                    )
-                    ->where([
-                        'SecurityGroupUsers.security_user_id IS' => $userId,
-                        'Notices.status' => 1
-                    ])
-                    ->enableHydration(false);
-
-                $assignedNoticeIds = array_column($assignedNoticeIdsQuery->toArray(), 'notice_id');
-
-                // 4. Admins always return true (no red dot)
-                if ($isAdmin) {
-                    return true;
-                }
-
-                // 5. If no assigned notices, return true (no red dot)
+                // No notices addressed to this user → no red dot
                 if (empty($assignedNoticeIds)) {
                     return true;
                 }

@@ -12,7 +12,7 @@ use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use DateTimeInterface;
 use PHPExcel_Worksheet;
 
@@ -24,9 +24,9 @@ class ImportStaffSalariesTable extends AppTable
 
     private $institutionId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         //POCOR-5182 start 
@@ -35,7 +35,7 @@ class ImportStaffSalariesTable extends AppTable
         //POCOR-5182 end
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -56,9 +56,9 @@ class ImportStaffSalariesTable extends AppTable
         }
     }
 
-    public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona) 
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona) 
     {
-        $crumbTitle = $this->getHeader($this->alias());
+        $crumbTitle = $this->getHeader($this->getAlias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
@@ -157,7 +157,7 @@ class ImportStaffSalariesTable extends AppTable
         // going to be reported as failed anyway never gets a salary transaction created for it.
         if ($rowInvalidCodeCols->count() === 0 && !empty($addAmount)) {
                 $StaffSalaryTransactions = TableRegistry::getTableLocator()->get('Staff.StaffSalaryTransactions');
-                $data = $StaffSalaryTransactions->newEntity();
+                $data = $StaffSalaryTransactions->newEntity([]);
                 $data->amount = $addAmount;
                 $data->salary_addition_type_id = $tempRow['salary_addition_type_id'];
                 $data->salary_deduction_type_id = 0;
@@ -166,7 +166,7 @@ class ImportStaffSalariesTable extends AppTable
         }
         if ($rowInvalidCodeCols->count() === 0 && !empty($deductAmount)) {
                 $StaffSalaryTransactions = TableRegistry::getTableLocator()->get('Staff.StaffSalaryTransactions');
-                $data = $StaffSalaryTransactions->newEntity();
+                $data = $StaffSalaryTransactions->newEntity([]);
                 $data->amount = $deductAmount;
                 $data->salary_addition_type_id = 0;
                 $data->salary_deduction_type_id = $tempRow['salary_deduction_type_id'];

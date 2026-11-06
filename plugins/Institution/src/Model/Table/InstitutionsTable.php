@@ -375,9 +375,13 @@ class InstitutionsTable extends ControllerActionTable
                 'last' => true
             ])
 
+            // Provider is required: without notEmptyString Cake treats '' (-- Select --) as non-empty
+            // and runs checkLinkedSector on it, which threw RecordNotFoundException (404) on Save.
+            ->notEmptyString('institution_provider_id', __('Please select a Provider'))
             ->add('institution_provider_id', 'ruleLinkedSector', [
                 'rule' => 'checkLinkedSector',
-                'provider' => 'table'
+                'provider' => 'table',
+                'message' => __('Provider does not belong to the selected Sector')
             ])
 
             ->notEmptyString('address')
@@ -1707,12 +1711,33 @@ class InstitutionsTable extends ControllerActionTable
             }
             $adminOrder[$config->field_name] = $rank++;
 
-            if (empty($config->is_mandatory) && empty($config->visible)) {
+            if (empty($config->is_mandatory) && empty($config->visible)
+                && !$this->isFieldRequiredByValidator($config->field_name)) {
                 $this->field($config->field_name, ['visible' => false]);
             }
         }
 
         return $this->reorderWithinSections($baseOrder, $adminOrder);
+    }
+
+    /**
+     * Never hide a field the default validator requires to be present (requirePresence): a hidden
+     * field is not posted, so Save fails with a "_required" error the user cannot see (e.g. "name")
+     * and the Add/Edit page appears to do nothing.
+     */
+    private function isFieldRequiredByValidator(string $fieldName): bool
+    {
+        // Core identifying fields (Name, Alternative Name, Code) must always be on the form (Institution Code is mandatory in
+        // Fields Configurations by design; if its row got hidden the Add page could not be saved)
+        if (in_array($fieldName, ['name', 'alternative_name', 'code'], true)) {
+            return true;
+        }
+        $validator = $this->getValidator('default');
+        if (!$validator->hasField($fieldName)) {
+            return false;
+        }
+        $presence = $validator->field($fieldName)->isPresenceRequired();
+        return $presence === true || $presence === 'create' || $presence === 'update';
     }
 
     /**

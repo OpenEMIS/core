@@ -1,3 +1,20 @@
+### 5.23.0 - 2026-11-02
+- Bug Fixed: Missing date from Student > Attendance: Export 
+- Bug Fixed: Core>Institutions>Student>Counselling>Add : Page freezes as reported
+- Bug Fixed: Reports > Institutions > Student Attendance Report : Rename from Student Attendance Report to Individual Students Attendance Report
+- Bug Fixed: Institutions >> School Name>>Students>> Student Transfer Out: when user add all mandatory fields 404 error is displayed
+- Bug Fixed: Administration>Communication>Notices : The bullets or numbering that is applied when editing a notice does not reflect once the notice is published & Notices are not visible to other users except for the Super Admin user.
+- Bug Fixed: Reports > Institutions > Attendance Summary Report : User sees 404 not found error when trying to generate report
+- Bug Fixed: Institutions>>School Name>>Schedule Timetables: Erro displayed when user click on back arrow
+- Bug Fixed: Limit principals ability to create new students to only preschool level 1 & 2 and infant 1 only
+- Bug Fixed: Administration > Field Options >>Duties section, : When adding a security role, there is no option to undo it, as there is no blank option available.
+- Bug Fixed: Institutions >>Name>> Institution Grades:  Only error message is displayed while user try to add records without mandatory fields.
+- Bug Fixed: Personal   System Admin - Overview   Comments: 404 error is displayed when user select all mandatory fields and click on save 
+- Bug Fixed: Institutions>>Name >>  Student Attendances : Layout is not correct when user change attendance
+- Bug Fixed: Incorrect reason for absent > Attendance: Export
+- Bug Fixed: Institutions >> School Name>>Students>> Import: 404 error is displayed when user try to change the Feature
+- Bug Fixed: Administration > Field Options >>Duties section : 404 error is displayed when user didn't select Staff and click on save.
+
 ### 5.22.0 - 2026-10-22
 - Implemented: Issue with Schedules – Curriculum Subjects and Timetable Configuration
 - Implemented: Develop a function to upload custom reports 

@@ -507,11 +507,21 @@ class ReportListBehavior extends Behavior {
 		/*POCOR-6439 start : shorting report name as it is throwing error before save*/
 		if($feature == 'Report.StudentAttendanceSummary') {
 			$academicPeriodData = $AcademicPeriod->get($data['Institutions']['academic_period_id']);
-			if ($data['Institutions']['institution_id'] > 0) {
-				$institutionData = $Institutions->get($data['Institutions']['institution_id']);
-				$institutionCode = $institutionData->code;
+			$institutionIdValue = $data['Institutions']['institution_id'] ?? null;
+			//POCOR-9865
+			if (is_array($institutionIdValue)) {
+				$institutionIds = array_values(array_filter((array)($institutionIdValue['_ids'] ?? []), function ($id) {
+					return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+				}));
 			} else {
-				$institutionCode = 'All Institutions';
+				$institutionIds = $institutionIdValue > 0 ? [$institutionIdValue] : [];
+			}
+			if (count($institutionIds) == 1) {
+				$institutionCode = $Institutions->get($institutionIds[0])->code;
+			} elseif (count($institutionIds) > 1) {
+				$institutionCode = count($institutionIds) . ' ' . __('Institutions');
+			} else {
+				$institutionCode = __('All Institutions');
 			}
 	        if ($data['Institutions']['education_grade_id'] > -1) {
 	        	$EducationGradesData = $EducationGrades->get($data['Institutions']['education_grade_id']);
@@ -526,7 +536,7 @@ class ReportListBehavior extends Behavior {
 		}
 		/*POCOR-6439 ends*/
 		//POCOR-9831: short name - the generic one lists every selected institution and can exceed report_progress.name (200)
-		if ($feature == 'Report.StudentAttendanceReport') {
+		if ($feature == 'Report.IndividualStudentsAttendanceReport') {
 			$reportData = $data[$alias];
 			$academicPeriodData = $AcademicPeriod->get($reportData['academic_period_id']);
 			$institutionIds = [];

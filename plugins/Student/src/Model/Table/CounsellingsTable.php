@@ -23,12 +23,13 @@ class CounsellingsTable extends ControllerActionTable
         $this->setTable('counsellings');
         parent::initialize($config);
 
+        
         // one counselling record can have multiple guidance types, via the counselling_guidance_types join table
 
         //POCOR-9771
         $this->belongsToMany('GuidanceTypes', [
             'className' => 'Student.GuidanceTypes',
-            'joinTable' => 'counselling_guidance_types',
+            'through' => 'Student.CounsellingGuidanceTypes', // use AppTable so created_user_id / created are auto-filled
             'foreignKey' => 'counselling_id',
             'targetForeignKey' => 'guidance_type_id',
             'dependent' => true,
@@ -62,6 +63,7 @@ class CounsellingsTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete'; //POCOR-9523
+        $events['ControllerAction.Model.ajaxCounselorAutocomplete'] = 'ajaxCounselorAutocomplete'; //POCOR-9771
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
         return $events;
     }
@@ -79,7 +81,14 @@ class CounsellingsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
 
-        return $validator->allowEmpty('file_content');
+        return $validator
+            ->allowEmpty('file_content')
+            // date is NOT NULL in counsellings - validate here so a blank date shows a message instead of a DB error
+            ->requirePresence('date', 'create')
+            ->notEmptyDate('date', __('This field cannot be left empty'))
+            // counselor_id is NOT NULL in counsellings - same reason as date
+            ->requirePresence('counselor_id', 'create')
+            ->notEmptyString('counselor_id', __('This field cannot be left empty'));
     }
 
     public function getDefaultConfig()
@@ -97,25 +106,6 @@ class CounsellingsTable extends ControllerActionTable
             ->toArray();
 
         return $guidanceTypesOptions;
-    }
-
-    public function getCounselorOptions()
-    {
-        $counselorOptions = $this->Users
-            ->find('list', [
-                'keyField' => 'id',
-                'valueField' => 'name_with_id'
-            ])
-            ->where([
-                $this->Users->aliasField('status') => 1
-            ])
-            ->order([
-                $this->Users->aliasField('first_name'),
-                $this->Users->aliasField('last_name')
-            ])
-            ->toArray();
-
-        return $counselorOptions;
     }
 
     public function indexBeforeAction(EventInterface $event) {
@@ -227,9 +217,11 @@ class CounsellingsTable extends ControllerActionTable
                 'placeholder' => __('OpenEMIS ID, Identity Number or Name')
             ];
 
+            // POCOR-9873: resolve from the current request; this table is reached from more than one
+            // controller (Students / Directories), so a hardcoded controller 404s on the others.
             $attr['url'] = [
-                'controller' => 'Students',
-                'action'     => 'Counsellings',
+                'controller' => $this->controller->getName(),
+                'action'     => $this->getAlias(),
                 'ajaxUserAutocomplete'
             ];
 
@@ -261,16 +253,114 @@ class CounsellingsTable extends ControllerActionTable
         return $attr;
     }
 
+    //POCOR-9771: Counselor used to be a chosenSelect preloaded with every active user, which froze the page
+    // on large databases. It is now an ajax autocomplete (same widget as Requester) that loads at most 100 matches.
     public function onUpdateFieldCounselorId(EventInterface $event,array $attr,$action,ServerRequest $request)
     {
-        $counselorOptions = $this->getCounselorOptions();
-        $attr['type'] = 'chosenSelect';
-        $attr['onChangeReload'] = false;
-        $attr['options'] = $counselorOptions;
-        $attr['attr']['required'] = true;
-        $attr['attr']['multiple'] = false;
+        if (in_array($action, ['add', 'edit'])) {
+            $attr['type'] = 'autocomplete';
+            $attr['target'] = [
+                'key'  => 'counselor_id',
+                'name' => $this->aliasField('counselor_id')
+            ];
+            $attr['attr'] = array_merge($attr['attr'] ?? [], [
+                'label' => __('Counselor'),
+                'required' => true,
+                'placeholder' => __('OpenEMIS ID, Identity Number or Name')
+            ]);
+            // POCOR-9873: see onUpdateFieldRequesterId - resolve controller/action from the request.
+            $attr['url'] = [
+                'controller' => $this->controller->getName(),
+                'action'     => $this->getAlias(),
+                'ajaxCounselorAutocomplete'
+            ];
+
+            // Show the selected counselor's name in the search box: the posted value (re-render after a
+            // failed save) or, on edit, the stored value. The id itself is rendered from the entity.
+            $counselorId = $request->getData($this->getAlias() . '.counselor_id');
+            if (empty($counselorId) && $action === 'edit' && !$request->is(['post', 'put'])) {
+                $queryString = $this->getQueryString();
+                if (!empty($queryString['id'])) {
+                    $record = $this->find()
+                        ->select(['counselor_id'])
+                        ->where(['id' => $queryString['id']])
+                        ->first();
+                    $counselorId = $record->counselor_id ?? null;
+                }
+            }
+            if (!empty($counselorId)) {
+                try {
+                    $user = TableRegistry::get('User.Users')->get($counselorId);
+                    $attr['attr']['value'] = $user->openemis_no . ' - ' . $user->name;
+                } catch (\Exception $e) {
+                    // user no longer exists; leave the field empty
+                }
+            }
+        }
+
         return $attr;
-        
+    }
+
+    //POCOR-9771: ajax search for the Counselor field (active users, max 100 results)
+    public function ajaxCounselorAutocomplete()
+    {
+        $this->controller->autoRender = false;
+        $this->ControllerAction->autoRender = false;
+
+        if ($this->request->is(['ajax'])) {
+            $term = trim((string)$this->request->getQuery('term'));
+            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+
+            $query = $this->Users
+                ->find()
+                ->select([
+                    $this->Users->aliasField('id'),
+                    $this->Users->aliasField('openemis_no'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name')
+                ])
+                ->leftJoin(
+                    [$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()],
+                    [
+                        $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $this->Users->aliasField('id')
+                    ]
+                )
+                ->where([
+                    $this->Users->aliasField('status IS') => 1
+                ])
+                ->group([$this->Users->aliasField('id')])
+                ->order([
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('last_name')
+                ])
+                ->limit(100);
+
+            if (!empty($term)) {
+                $query = $this->addSearchConditions(
+                    $query,
+                    [
+                        'alias' => 'Users',
+                        'searchTerm' => $term,
+                        'OR' => [
+                            '`Identities`.number LIKE ' => $term . '%'
+                        ]
+                    ]
+                );
+            }
+
+            $data = [];
+            foreach ($query->all() as $obj) {
+                $data[] = [
+                    'label' => $obj->openemis_no . ' - ' . $obj->name,
+                    'value' => $obj->id
+                ];
+            }
+            echo json_encode($data);
+            die;
+        }
     }
 
     //POCOR-9523

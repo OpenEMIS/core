@@ -592,6 +592,17 @@ function InstitutionStudentAttendancesSvc(
 
         const isSubjectBased = context.attendance_by === "subject";
 
+        // POCOR-9892: only "Absence - Excused" offers a reason to pick in the UI
+        // (see getEditAttendanceElement()'s EXCUSED-only reason <select>) - this
+        // used to default to the first configured reason regardless of type,
+        // silently saving a reason on Late/Unexcused marks that was never shown
+        // or selectable. Resolve by code (not a hardcoded id) to match the same
+        // lookup already used in the response handler further down, and to stay
+        // correct if absence_types is ever reordered or extended.
+        const absenceTypeObj = (context.absenceTypes || []).find(
+            function (obj) { return obj.id == Number(data.absence_type_id); }
+        );
+        const isExcused = absenceTypeObj && absenceTypeObj.code === "EXCUSED";
         const defaultReasonId = context.studentAbsenceReasons[0]['id'];
         const studentAbsenceData = {
             student_id: Number(data.student_id),
@@ -599,9 +610,11 @@ function InstitutionStudentAttendancesSvc(
             academic_period_id: Number(data.academic_period_id),
             institution_class_id: Number(data.institution_class_id),
             absence_type_id: Number(data.absence_type_id),
-            student_absence_reason_id: data.student_absence_reason_id != null
-                ? Number(data.student_absence_reason_id)
-                : defaultReasonId,
+            student_absence_reason_id: !isExcused
+                ? null
+                : (data.student_absence_reason_id != null
+                    ? Number(data.student_absence_reason_id)
+                    : defaultReasonId),
             comment: data.comment,
             period: isSubjectBased ? 0 : Number(context.period),
             date: context.date,
@@ -1199,8 +1212,17 @@ function InstitutionStudentAttendancesSvc(
                         // console.log('Step 19: Checking api...', api ? 'EXISTS' : 'UNDEFINED');
 
                         // POCOR-9572: Refresh cells to show updated values
+                        // POCOR-9890: force-refresh the whole row. A plain refreshCells() only
+                        // redraws cells whose own value changed, so the Reason/Comment cell kept
+                        // its old layout (e.g. Excused reason select + comment) while the row
+                        // height changed, which broke the layout.
                         // console.log('Step 20: Calling refreshCells()...');
-                        api.refreshCells();
+                        var rowNode = api.getRowNode(String(data.student_id));
+                        if (rowNode) {
+                            api.refreshCells({ rowNodes: [rowNode], force: true });
+                        } else {
+                            api.refreshCells();
+                        }
                         // console.log('Step 21: Cells refreshed successfully');
 
                         // POCOR-9572: Reset row heights so they adjust to content

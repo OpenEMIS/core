@@ -2206,11 +2206,21 @@ class ValidationBehavior extends Behavior
 
     public static function checkLinkedSector($field, array $globalData)
     {
-        $selectedSector = $globalData['data']['institution_sector_id'];
+        // Empty provider is handled by notEmptyString; never let a lookup throw a 404 from validation
+        if (empty($field)) {
+            return true;
+        }
+        $selectedSector = $globalData['data']['institution_sector_id'] ?? null;
         $Providers = TableRegistry::getTableLocator()->get('Institution.Providers');
-        $LinkedSector = $Providers->get($field)->institution_sector_id;
+        $provider = $Providers->find()
+            ->select(['institution_sector_id'])
+            ->where([$Providers->aliasField('id') => $field])
+            ->first();
+        if (empty($provider)) {
+            return false; // unknown provider id → validation error instead of RecordNotFoundException
+        }
 
-        return $selectedSector == $LinkedSector;
+        return $selectedSector == $provider->institution_sector_id;
     }
 
     public static function validateJsonAPI($field, array $globalData)

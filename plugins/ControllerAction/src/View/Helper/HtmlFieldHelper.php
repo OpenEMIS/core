@@ -1043,7 +1043,8 @@ class HtmlFieldHelper extends Helper
                 $fieldName = $attr['fieldName'];
             }
 
-            $value = $this->_View->element('ControllerAction.autocomplete', ['attr' => $attr, 'options' => $options]);
+            // POCOR-9771: pass the entity so the element can render the stored value on edit
+            $value = $this->_View->element('ControllerAction.autocomplete', ['attr' => $attr, 'options' => $options, 'entity' => $data]);
             $fieldName = $attr['model'] . '.' . $attr['field'];
             $this->Form->unlockField($fieldName);
         }
