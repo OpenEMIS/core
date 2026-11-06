@@ -23,6 +23,8 @@ class InstitutionCasesTable extends ControllerActionTable
     use OptionsTrait;
 
     private $features = [];
+    // POCOR-9906: feature validated in indexBeforeAction, reused by indexBeforeQuery
+    private $selectedCaseFeature = null;
     const ACTIVE = 1;//POCOR-7439 for institution active
     const INACTIVE = 1;//POCOR-7439 for institution inactive
 
@@ -303,6 +305,7 @@ class InstitutionCasesTable extends ControllerActionTable
             'featureOptions',
             'selectedFeature'
         ));
+        $this->selectedCaseFeature = $selectedFeature; // POCOR-9906
         $selectedModel = $this->features[$selectedFeature];
 
         $session = $this->request->getSession();
@@ -328,7 +331,9 @@ class InstitutionCasesTable extends ControllerActionTable
             'query' => $this->request->getQuery()
         ]);
 
-        if (!empty($selectedModel)) {
+        // POCOR-9906: Personal > Cases has no institution - the feature's period/grade/class filters
+        // do not apply there (indexBeforeQuery skips them too), so do not render them.
+        if (!empty($selectedModel) && $this->request->getParam('controller') != 'Profiles') {
             $featureModel = TableRegistry::getTableLocator()->get($selectedModel);
 
             $featureModel->dispatchEvent(
@@ -403,6 +408,11 @@ class InstitutionCasesTable extends ControllerActionTable
         }
 
         $selectedFeature = $selectedFeature ?: -1;
+        // POCOR-9906: use the value indexBeforeAction validated against the feature options
+        // (an unknown value falls back to -1 "All"), not the raw request parameter.
+        if (!is_null($this->selectedCaseFeature)) {
+            $selectedFeature = $this->selectedCaseFeature;
+        }
 
         // Category filter
         $selectedCategory = $this->request->getQuery('category');
@@ -436,7 +446,7 @@ class InstitutionCasesTable extends ControllerActionTable
                 $this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id'),
             ];
             if ($selectedFeature != -1) {
-                $linkedRecordJoin[] = $this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"';
+                $linkedRecordJoin[$this->LinkedRecords->aliasField('feature')] = $selectedFeature; // bound value
             }
 
             $query
@@ -504,8 +514,7 @@ class InstitutionCasesTable extends ControllerActionTable
                             $this->LinkedRecords->aliasField('institution_case_id = ')
                             . $this->aliasField('id'),
 
-                            $this->LinkedRecords->aliasField('feature = ')
-                            . '"' . $selectedFeature . '"'
+                            $this->LinkedRecords->aliasField('feature') => $selectedFeature // POCOR-9906: bound value
                         ]
                     )
                     ->where([
@@ -1022,7 +1031,7 @@ class InstitutionCasesTable extends ControllerActionTable
                 [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
                 [
                     [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                    [$this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"']
+                    [$this->LinkedRecords->aliasField('feature') => $selectedFeature] // POCOR-9906: bound value
                 ]
             )
             ->LeftJoin([$this->Assignees->getAlias() => $this->Assignees->getTable()], [
@@ -1384,13 +1393,10 @@ class InstitutionCasesTable extends ControllerActionTable
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
-            // POCOR-9906: Personal > Cases has no institution in the URL/session; use the
-            // Institution selected on the form (posted on its onChangeReload) to build the list.
+            // POCOR-9906: Personal > Cases has no institution in the URL, and the session one is
+            // whatever institution was last browsed - resolve it from the form / case instead.
             if ($request->getParam('controller') == 'Profiles') {
-                $selectedInstitutionId = $request->getData($this->getAlias() . '.institution_id');
-                if (!empty($selectedInstitutionId)) {
-                    $institutionId = $selectedInstitutionId;
-                }
+                $institutionId = $this->getProfileCaseInstitutionId($action, $request);
             }
             $assigneeOptions = [];
             if (!is_null($stepId)) {
@@ -1401,10 +1407,11 @@ class InstitutionCasesTable extends ControllerActionTable
                     $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {
+                        // POCOR-9906: an unknown institution id gives an empty list instead of a fatal error
+                        $institutionObj = empty($institutionId) ? null : $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
+                        if (is_null($institutionObj)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
-                            $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
                             $securityGroupId = $institutionObj->security_group_id;
                             $areaObj = $institutionObj->area;
                             // School based assignee
@@ -1444,6 +1451,54 @@ class InstitutionCasesTable extends ControllerActionTable
             return $attr;
         }
 
+    }
+
+    /**
+     * POCOR-9906: institution that scopes the Assignee list on Personal > Cases.
+     * 1. the Institution selected on the form, only if the dropdown offers it (active institution)
+     * 2. on edit, the case's own institution
+     * 3. the only active institution - the dropdown preselects it and never reloads
+     * The Institution.Institutions.id session key is NOT used: it is unrelated to this form.
+     */
+    private function getProfileCaseInstitutionId($action, ServerRequest $request)
+    {
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $active = [$Institutions->aliasField('institution_status_id') => self::ACTIVE];
+
+        $posted = (int)$request->getData($this->getAlias() . '.institution_id');
+        if ($posted > 0) {
+            return $Institutions->exists([$Institutions->aliasField('id') => $posted] + $active) ? $posted : null;
+        }
+
+        if ($action == 'edit') {
+            $pass = $request->getParam('pass');
+            $caseId = null;
+            if (!empty($pass[1])) {
+                try {
+                    $caseId = $this->paramsDecode($pass[1])['id'] ?? null;
+                } catch (\Exception $e) {
+                    Log::write('debug', 'POCOR-9906: unable to decode case id: ' . $e->getMessage());
+                }
+            }
+            if (!empty($caseId)) {
+                $case = $this->find()
+                    ->select([$this->aliasField('institution_id')])
+                    ->where([$this->aliasField('id') => $caseId])
+                    ->first();
+                if (!empty($case) && !empty($case->institution_id)) {
+                    return (int)$case->institution_id;
+                }
+            }
+        }
+
+        $activeIds = $Institutions->find()
+            ->select([$Institutions->aliasField('id')])
+            ->where($active)
+            ->limit(2)
+            ->all()
+            ->extract('id')
+            ->toList();
+        return count($activeIds) === 1 ? (int)$activeIds[0] : null;
     }
 
     private static function getDynamicTableInstance(string $tableName): Table
