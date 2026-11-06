@@ -3658,23 +3658,6 @@ class StaffTable extends ControllerActionTable
             echo json_encode($data, true);
             die;
         } else {
-            // $permissionModule = ['All Subjects', 'Comments']; //Anubhav
-            $permissionModule = ['All Subjects'];
-            // $categories = ['Academic', 'Report Cards']; //Anubhav
-            $categories = ['Academic'];
-            $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
-            $SecurityFunctions = $SecurityFunctionsTbl->find()
-                ->select([$SecurityFunctionsTbl->aliasField('id')])
-                ->where([
-                    $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
-                    $SecurityFunctionsTbl->aliasField('category IN') => $categories,
-                ])->enableHydration(false)->toArray();
-            $funArr = [];
-            if (!empty($SecurityFunctions)) {
-                foreach ($SecurityFunctions as $funkey => $funval) {
-                    $funArr[$funkey] = $funval['id'];
-                }
-            }
             //get staff id roles POCOR-6814 Starts
             $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
             $SecurityGroupTbl = TableRegistry::getTableLocator()->get('Security.UserGroups');
@@ -3726,24 +3709,11 @@ class StaffTable extends ControllerActionTable
                     $RoleArr[] = $SecurityGroup_v['SecurityGroupUsers']['security_role_id'];
                 }
             } //POCOR-6814 Ends
-            $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
-            if (!empty($funArr) && !empty($RoleArr)) { //POCOR-7068
-                $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
-                    ->where([
-                        $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $funArr,
-                        $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $RoleArr,
-                        $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
-                    ])->enableHydration(false)->toArray();
-            }
-            if (!empty($SecurityRoleFunctions)) {
-                foreach ($SecurityRoleFunctions as $rkey => $rvalue) {
-                    if ($rvalue['_view'] == 1) {
-                        $count++;
-                    }
-                }
-            }
+            // POCOR-7538 point 3.7: the role-level "Access All Subjects" flag, instead of the
+            // All Subjects security_function now hidden from the permissions grid.
+            $hasAllSubjects = TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllSubjects($RoleArr);
 
-            if ($count >= 1) {
+            if ($hasAllSubjects) {
                 $data = array('result' => 1);
                 echo json_encode($data, true);
                 die;

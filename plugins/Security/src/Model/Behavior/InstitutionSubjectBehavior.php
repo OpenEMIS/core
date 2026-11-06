@@ -130,8 +130,14 @@ class InstitutionSubjectBehavior extends Behavior
     }
 
     // POCOR-7538: shared check for the role-level "Access All Subjects" flag (point 1.5).
-    private function hasAccessAllSubjects($roles)
+    // A super admin has no roles to carry the flag, so is let through explicitly - the
+    // AccessControl->check() this replaced did the same implicitly.
+    private function hasAccessAllSubjects($roles, $AccessControl = null)
     {
+        $AccessControl = $AccessControl ?: ($this->_table->AccessControl ?? null);
+        if ($AccessControl && $AccessControl->isAdmin()) {
+            return true;
+        }
         return TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllSubjects($roles);
     }
 
@@ -232,7 +238,7 @@ class InstitutionSubjectBehavior extends Behavior
             // point 1.5) shows every subject; otherwise subjects the user teaches plus every
             // subject of a class they are homeroom/secondary teacher of - whatever their
             // role. Page CRUD is gated by the Subjects permission (SecurityAuthorize).
-            if (!$this->hasAccessAllSubjects($roles)) {
+            if (!$this->hasAccessAllSubjects($roles, $AccessControl)) {
                 $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
                 $query->where($InstitutionClasses->getTeacherSubjectConditions($userId, $this->_table->aliasField('id')));
             }
