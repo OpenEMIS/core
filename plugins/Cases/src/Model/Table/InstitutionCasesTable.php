@@ -314,6 +314,11 @@ class InstitutionCasesTable extends ControllerActionTable
         if (empty($institutionId)) {
             $institutionId = $this->getInstitutionID();
         }
+        // POCOR-9906: Personal > Cases is not scoped to an institution. The session value is the
+        // institution last browsed and would leak into the encoded query string (and the export).
+        if ($this->request->getParam('controller') == 'Profiles') {
+            $institutionId = null;
+        }
 
         $this->controller->set(compact('institutionId'));
 
@@ -479,6 +484,12 @@ class InstitutionCasesTable extends ControllerActionTable
                 )
                 ->where($where)
                 ->group($this->aliasField('id'));
+
+            // POCOR-9906: the feature filters are skipped here (they need an institution and would
+            // drop manual cases), but cases whose source record was deleted must still be hidden.
+            if (!empty($featureModel)) {
+                $this->whereSourceRecordExists($query, $featureModel);
+            }
 
         } else {
 
@@ -984,22 +995,27 @@ class InstitutionCasesTable extends ControllerActionTable
             }
         }
         $featureOptions = $newFeatureOption;
-        if (!is_null($this->request->getQuery('feature')) && array_key_exists($this->request->getQuery('feature'), $featureOptions)) {
-            $selectedFeature = $this->request->getQuery('feature');
+        // POCOR-9906: same rule as the listing - an absent, unknown or "-- All --" (-1) feature means
+        // All. Previously this fell back to the first feature (or null when no rule type is
+        // registered, which a bound condition cannot take).
+        $requestedFeature = $this->request->getQuery('feature');
+        if (!is_null($requestedFeature) && array_key_exists($requestedFeature, $featureOptions)) {
+            $selectedFeature = $requestedFeature;
         } else {
-            $selectedFeature = key($featureOptions);
-            $this->request->getQuery['feature'] = $selectedFeature;
+            $selectedFeature = -1;
         }
         // for getting selected feature
 
         // query start
 
-        if (intval($institutionId) > 0) {
+        $controllerName = $this->request->getParam('controller');
+        $whereInstitution = [];
+        // POCOR-9906: Personal > Cases lists the user's own cases from every institution
+        if (intval($institutionId) > 0 && $controllerName != "Profiles") {
             $whereInstitution = [
                 'InstitutionCases.institution_id' => $institutionId
             ];
         }
-        $controllerName = $this->request->getParam('controller');
         if ($controllerName == "Profiles") {
             $userID = $this->getUserID();
             $whereInstitution[$this->aliasField('created_user_id')] = $userID;
@@ -1029,10 +1045,12 @@ class InstitutionCasesTable extends ControllerActionTable
             ->contain(['LinkedRecords', 'CaseTypes', 'CasePriority'])//POCOR-7613
             ->innerJoin(
                 [$this->LinkedRecords->getAlias() => $this->LinkedRecords->getTable()],
-                [
-                    [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
-                    [$this->LinkedRecords->aliasField('feature') => $selectedFeature] // POCOR-9906: bound value
-                ]
+                $selectedFeature != -1
+                    ? [
+                        [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')],
+                        [$this->LinkedRecords->aliasField('feature') => $selectedFeature] // POCOR-9906: bound value
+                    ]
+                    : [$this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id')]
             )
             ->LeftJoin([$this->Assignees->getAlias() => $this->Assignees->getTable()], [
                 $this->Assignees->aliasField('id') . ' = ' . 'InstitutionCases.assignee_id'
@@ -1054,7 +1072,20 @@ class InstitutionCasesTable extends ControllerActionTable
 
         // when user select academic period , feature ,instituion class and grade filter
         $requestQuery = $this->request->getQuery();
+        if ($selectedFeature == -1 || empty($this->features[$selectedFeature])) {
+            return; // POCOR-9906: "All" - no feature-specific filter
+        }
         $featuredTable = $this->features[$selectedFeature];
+
+        // POCOR-9906: Personal > Cases - match the listing (source record must exist, manual cases kept)
+        if ($controllerName == "Profiles") {
+            try {
+                $this->whereSourceRecordExists($query, TableRegistry::getTableLocator()->get($featuredTable));
+            } catch (\Exception $exception) {
+                $this->log($exception->getMessage(), 'debug');
+            }
+            return;
+        }
 
         //POCOR-7613 for proper records in excel
         if ($selectedFeature != 'StudentAttendances') {
@@ -1455,9 +1486,9 @@ class InstitutionCasesTable extends ControllerActionTable
 
     /**
      * POCOR-9906: institution that scopes the Assignee list on Personal > Cases.
-     * 1. the Institution selected on the form, only if the dropdown offers it (active institution)
-     * 2. on edit, the case's own institution
-     * 3. the only active institution - the dropdown preselects it and never reloads
+     * Edit: the saved case's own institution, only for the logged-in user's own case.
+     * Add:  1. the Institution selected on the form, only if the dropdown offers it (active)
+     *       2. the only active institution - the dropdown preselects it and never reloads
      * The Institution.Institutions.id session key is NOT used: it is unrelated to this form.
      */
     private function getProfileCaseInstitutionId($action, ServerRequest $request)
@@ -1465,11 +1496,8 @@ class InstitutionCasesTable extends ControllerActionTable
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $active = [$Institutions->aliasField('institution_status_id') => self::ACTIVE];
 
-        $posted = (int)$request->getData($this->getAlias() . '.institution_id');
-        if ($posted > 0) {
-            return $Institutions->exists([$Institutions->aliasField('id') => $posted] + $active) ? $posted : null;
-        }
-
+        // Edit: always the saved case's own institution (even if since made inactive); a posted
+        // value is ignored. Only the logged-in user's own case - Personal lists only those.
         if ($action == 'edit') {
             $pass = $request->getParam('pass');
             $caseId = null;
@@ -1480,15 +1508,23 @@ class InstitutionCasesTable extends ControllerActionTable
                     Log::write('debug', 'POCOR-9906: unable to decode case id: ' . $e->getMessage());
                 }
             }
-            if (!empty($caseId)) {
-                $case = $this->find()
-                    ->select([$this->aliasField('institution_id')])
-                    ->where([$this->aliasField('id') => $caseId])
-                    ->first();
-                if (!empty($case) && !empty($case->institution_id)) {
-                    return (int)$case->institution_id;
-                }
+            $loginUserId = $request->getSession()->read('Auth.User.id');
+            if (empty($caseId) || empty($loginUserId)) {
+                return null;
             }
+            $case = $this->find()
+                ->select([$this->aliasField('institution_id')])
+                ->where([
+                    $this->aliasField('id') => $caseId,
+                    $this->aliasField('created_user_id') => $loginUserId,
+                ])
+                ->first();
+            return (!empty($case) && !empty($case->institution_id)) ? (int)$case->institution_id : null;
+        }
+
+        $posted = (int)$request->getData($this->getAlias() . '.institution_id');
+        if ($posted > 0) {
+            return $Institutions->exists([$Institutions->aliasField('id') => $posted] + $active) ? $posted : null;
         }
 
         $activeIds = $Institutions->find()
@@ -1499,6 +1535,25 @@ class InstitutionCasesTable extends ControllerActionTable
             ->extract('id')
             ->toList();
         return count($activeIds) === 1 ? (int)$activeIds[0] : null;
+    }
+
+    /**
+     * POCOR-9906: keep cases whose linked source record (e.g. the student absence) still exists,
+     * plus cases added manually from Personal > Cases (linked record_id = 0, no source record).
+     */
+    private function whereSourceRecordExists(Query $query, $featureModel)
+    {
+        $recordId = $this->LinkedRecords->aliasField('record_id');
+        $sourceRecord = $this->getConnection()->newQuery()
+            ->select(['SourceRecords.id'])
+            ->from(['SourceRecords' => $featureModel->getTable()])
+            ->where(function ($exp) use ($recordId) {
+                return $exp->equalFields('SourceRecords.id', $recordId);
+            });
+        $query->where(['OR' => [
+            $recordId => 0,
+            $query->newExpr()->exists($sourceRecord),
+        ]]);
     }
 
     private static function getDynamicTableInstance(string $tableName): Table
