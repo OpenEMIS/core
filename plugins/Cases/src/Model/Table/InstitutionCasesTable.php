@@ -430,6 +430,15 @@ class InstitutionCasesTable extends ControllerActionTable
                 $this->aliasField('created_user_id') => $userId
             ];
 
+            // POCOR-9906: "-- All --" (-1) must not filter by feature; joining on feature = "-1"
+            // matched no linked record, so the Personal > Cases listing was always empty.
+            $linkedRecordJoin = [
+                $this->LinkedRecords->aliasField('institution_case_id = ') . $this->aliasField('id'),
+            ];
+            if ($selectedFeature != -1) {
+                $linkedRecordJoin[] = $this->LinkedRecords->aliasField('feature = ') . '"' . $selectedFeature . '"';
+            }
+
             $query
                 ->select([
                     $this->aliasField('id'),
@@ -456,13 +465,7 @@ class InstitutionCasesTable extends ControllerActionTable
                         $this->LinkedRecords->getAlias()
                         => $this->LinkedRecords->getTable()
                     ],
-                    [
-                        $this->LinkedRecords->aliasField('institution_case_id = ')
-                        . $this->aliasField('id'),
-
-                        $this->LinkedRecords->aliasField('feature = ')
-                        . '"' . $selectedFeature . '"'
-                    ]
+                    $linkedRecordJoin
                 )
                 ->where($where)
                 ->group($this->aliasField('id'));
@@ -550,7 +553,10 @@ class InstitutionCasesTable extends ControllerActionTable
 
         // Do not dispatch for StudentAttendances
         //if ($selectedFeature != 'StudentAttendances') { // comment line in POCOR-7626
-            if (!empty($featureModel)) {
+            // POCOR-9906: not in Personal > Cases - the feature filters (e.g. StudentAttendances
+            // grade/class/period) need an institution and inner-join the source record, which drops
+            // cases added manually there (linked record_id = 0). Institutions > Cases is unchanged.
+            if (!empty($featureModel) && $controllerName != "Profiles") {
                 $featureModel->dispatchEvent(
                     'InstitutionCase.onCaseIndexBeforeQuery',
                     [$requestQuery, $query],
