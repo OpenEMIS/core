@@ -2171,20 +2171,19 @@ class ReportCardsTable extends AppTable
                     ->group(['staff_id'])//POCOR-7478
                     ->toArray();
                 $name = [];
-                // POCOR[7033]
+                $preferredName = [];
+                $gender = [];
                 foreach ($StudentSubjectStaffData as $data) {
-                    if (isset($data->gender_id)) {
-                        if ($data->gender_id == '1') {
-                            $gender = "Male";
-                        } else {
-                            $gender = "Female";
-                        }
-                    }
-                    $name[] = $data->first_name . ' ' . $data->last_name . ' , ' . $data->preferred_name . ' , ' . $gender;
+                    $name[] = trim($data->first_name . ' ' . $data->last_name);
+                    $preferredName[] = $data->preferred_name;
+                    // POCOR[7033]: gender is exposed as its own placeholder, not appended to the name
+                    $gender[] = $data->gender_id == '1' ? 'Male' : ($data->gender_id == '2' ? 'Female' : '');
                 }
                 $entity[] = [
                     'education_subject_id' => $value['education_subject_id'],
-                    'name' => implode(",", $name)
+                    'name' => implode(', ', $name),
+                    'preferred_name' => implode(', ', array_filter($preferredName)),
+                    'gender' => implode(', ', array_filter($gender))
                 ];
             }
             return $entity;
