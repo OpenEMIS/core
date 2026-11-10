@@ -1068,13 +1068,23 @@ class AssessmentPeriodsTable extends ControllerActionTable
             // Verified against the old per-row getTotalMarks() output across 1,551
             // real student/subject/grade combinations with zero mismatches before
             // switching this over.
+            //
+            // Code review fix: getTotalMarks() (and InstitutionSubjectStudentsTable::
+            // assessmentResultsAfterSave()'s use of it) is institution-agnostic by
+            // design - a student with marks at two institutions for the same
+            // subject/grade/period (eg a mid-year transfer) gets one combined total,
+            // not one total per institution. Grouping/joining by institution_id here
+            // split that into a partial total per institution instead. Dropped from
+            // the SELECT, GROUP BY, and the join condition - every institution_subject_
+            // students row for the student/subject/grade now gets the same full total,
+            // matching getTotalMarks()'s own grouping exactly.
             $connection = $this->getConnection();
             $connection->execute('
                 UPDATE institution_subject_students isst
                 INNER JOIN (
                     WITH ranked AS (
                         SELECT student_id, academic_period_id, education_subject_id, education_grade_id,
-                               institution_id, marks, applied_weight,
+                               marks, applied_weight,
                                ROW_NUMBER() OVER (
                                    PARTITION BY student_id, academic_period_id, education_subject_id, education_grade_id, assessment_period_id
                                    ORDER BY modified DESC, created DESC
@@ -1087,16 +1097,15 @@ class AssessmentPeriodsTable extends ControllerActionTable
                         )
                     )
                     SELECT student_id, academic_period_id, education_subject_id, education_grade_id,
-                           institution_id, SUM(marks * applied_weight) AS total_mark
+                           SUM(marks * applied_weight) AS total_mark
                     FROM ranked
                     WHERE rn = 1
-                    GROUP BY student_id, academic_period_id, education_subject_id, education_grade_id, institution_id
+                    GROUP BY student_id, academic_period_id, education_subject_id, education_grade_id
                 ) totals
                     ON totals.student_id = isst.student_id
                    AND totals.academic_period_id = isst.academic_period_id
                    AND totals.education_subject_id = isst.education_subject_id
                    AND totals.education_grade_id = isst.education_grade_id
-                   AND totals.institution_id = isst.institution_id
                 SET isst.total_mark = totals.total_mark
             ', ['periodId' => $entity->id]);
 
