@@ -71,25 +71,11 @@ class InstitutionSubjectBehavior extends Behavior
         if (!$this->checkAllSubjectsPermission($action)) {
             if ($this->checkMySubjectsPermission($action)) {
                 $userId = $this->_table->Auth->user('id');
-                if (empty($entity->teachers)) {
+                if (!$this->userCanAccessSubject($entity->id, $userId)) {
                     $urlParams = $this->_table->url('view');
                     $event->stopPropagation();
                     $this->_table->Alert->error('security.noAccess');
                     return $this->_table->controller->redirect($urlParams);
-                } else {
-                    $isFound = false;
-                    foreach ($entity->teachers as $staff) {
-                        if ($userId == $staff->id) {
-                            $isFound = true;
-                            break;
-                        }
-                    }
-                    if (! $isFound) {
-                        $urlParams = $this->_table->url('view');
-                        $event->stopPropagation();
-                        $this->_table->Alert->error('security.noAccess');
-                        return $this->_table->controller->redirect($urlParams);
-                    }
                 }
             }
         }
@@ -139,6 +125,20 @@ class InstitutionSubjectBehavior extends Behavior
             return true;
         }
         return TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllSubjects($roles);
+    }
+
+    // POCOR-7538 points 3.4/3.5: a subject teacher of this subject, or the homeroom/
+    // secondary teacher of a class it belongs to - the same rule as the Subjects list.
+    // Previously edit was limited to assigned subject teachers, so a homeroom teacher
+    // with Subjects Edit was turned away from the subjects of their own class.
+    private function userCanAccessSubject($subjectId, $userId)
+    {
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        return $InstitutionSubjects->find()
+            ->where([$InstitutionSubjects->aliasField('id') => $subjectId])
+            ->where(TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')
+                ->getTeacherSubjectConditions($userId, $InstitutionSubjects->aliasField('id')))
+            ->count() > 0;
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -195,18 +195,7 @@ class InstitutionSubjectBehavior extends Behavior
                 if (!$this->checkAllSubjectsPermission('edit')) {
                     if ($this->checkMySubjectsPermission('edit')) {
                         $userId = $this->_table->Auth->user('id');
-                        $staffs = [];
-                        if (!empty($entity->teachers)) {
-                            $staffs = $entity->teachers;
-                        }
-                        $isFound = false;
-                        foreach ($staffs as $staff) {
-                            if ($userId == $staff->id) {
-                                $isFound = true;
-                                break;
-                            }
-                        }
-                        if (! $isFound) {
+                        if (!$this->userCanAccessSubject($entity->id, $userId)) {
                             if (isset($extra['toolbarButtons']) && isset($extra['toolbarButtons']['edit'])) {
                                 unset($extra['toolbarButtons']['edit']);
                             }

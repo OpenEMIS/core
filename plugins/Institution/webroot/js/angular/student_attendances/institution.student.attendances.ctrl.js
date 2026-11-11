@@ -381,6 +381,26 @@ function InstitutionStudentAttendancesController(
             { id: "subject", name: "Subject" },
             { id: "period", name: "Period" },
         ];
+
+        // POCOR-7538 point 3.4: Period attendance is for the class's homeroom/secondary
+        // teachers; the class list marks classes where the user is only a subject teacher
+        // with can_mark_period = 0 (absent for admins and Access All Classes = all allowed)
+        var canMarkPeriod = true;
+        angular.forEach(vm.classListOptions, function (classOption) {
+            if (classOption.id == vm.selectedClass && classOption.can_mark_period !== undefined && classOption.can_mark_period == 0) {
+                canMarkPeriod = false;
+            }
+        });
+        if (!canMarkPeriod) {
+            vm.attendanceByOptions = [
+                { id: "-1", name: "Select Attendance by" },
+                { id: "subject", name: "Subject" },
+            ];
+            vm.selectedAttendanceBy = "subject";
+            vm.gridOptions.context.attendance_by = vm.selectedAttendanceBy;
+            return;
+        }
+
         // console.log("already selected",vm.selectedAttendanceBy);
         if (vm.isMarkableAttendance == true) {
             if (vm.isMarkableSubjectAttendance == true) {

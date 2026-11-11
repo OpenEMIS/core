@@ -2625,14 +2625,17 @@ class InstitutionsController extends AppController
         // If not admin or “edit all,” enforce finer-grained rules
         if (! $isAdmin && $institutionId && ! $canEditAll) {
             if ($canEditOwn) {
-                // Teacher can only edit if assigned to this subject
-                $subject = TableRegistry::getTableLocator()
-                    ->get('Institution.InstitutionSubjects')
-                    ->get($subjectId, ['contain' => ['Teachers']]);
+                // POCOR-7538 points 3.4/3.5: a subject teacher of this subject, or the
+                // homeroom/secondary teacher of a class it belongs to - the same rule as the
+                // Subjects list. Previously only assigned subject teachers were allowed.
+                $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+                $canAccessSubject = $InstitutionSubjects->find()
+                    ->where([$InstitutionSubjects->aliasField('id') => $subjectId])
+                    ->where(TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')
+                        ->getTeacherSubjectConditions($userId, $InstitutionSubjects->aliasField('id')))
+                    ->count() > 0;
 
-                $teacherIds = array_column($subject->teachers, 'id');
-
-                if (!in_array($userId, $teacherIds, true)) {
+                if (!$canAccessSubject) {
                     // redirect back to subject list
                     return $this->redirect($indexUrl);
                 }

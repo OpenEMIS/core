@@ -125,18 +125,11 @@ class ReportCardCommentsTable extends ControllerActionTable
             $allclassesPermission = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->getRolePermissionAccessForAllClasses($staffId, $institutionId);
             $myClassesPermission = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->getRolePermissionAccessForMyClasses($staffId, $institutionId);
             if (!$allclassesPermission) {
-                //$where[$this->aliasField('staff_id')] = $staffId;
-                $where = [
-                    'OR' => [
-                        [
-                            $this->aliasField("staff_id = '") . $staffId. "'"
-                        ],
-                        [
-                            ("InstitutionSubjectStaff.staff_id = '") . $staffId. "'"
-                        ]
-                    ]
-                ];
-                $orWhere['InstitutionClassesSecondaryStaff.secondary_staff_id'] = $staffId;
+                // POCOR-7538 point 3.4/3.5: classes the user is homeroom, secondary or
+                // subject teacher of. The secondary-teacher condition here had been
+                // commented out (POCOR-7485), so secondary teachers saw none of their classes.
+                $where[] = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')
+                    ->getTeacherClassConditions($staffId, $this->aliasField('id'));
             }
         }
         /*POCOR-6508 ends*/
