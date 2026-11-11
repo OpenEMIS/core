@@ -1171,6 +1171,13 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.mark;
                                 }
 
+                                // POCOR-9759: a saved mark's total must reflect the weight
+                                // frozen when it was entered, not the period's live weight
+                                // (already defaulted above for periods with no mark yet,
+                                // which still want the live weight as a preview).
+                                if (subjectStudent.applied_weight !== null && subjectStudent.applied_weight !== undefined) {
+                                    studentResults['weight_' + parseInt(assessmentPeriodId)] = parseFloat(subjectStudent.applied_weight);
+                                }
 
                             } else if (isGradesType) {
                                 // console.log("isGradesType");

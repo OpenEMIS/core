@@ -1156,15 +1156,23 @@ class ReportCardGpaTable extends ControllerActionTable
                     term_info.assessment_period_end_date,
                     term_info.assessment_period_id,
                     subq2.marks,
+                    subq2.applied_weight,
                     term_info.weight,
+                    /* POCOR-9759: use the weight frozen when this mark was saved
+                       (subq2.applied_weight) so GPA doesn't change when the period's
+                       weight is edited later. Periods with no mark for this student
+                       (subq2.applied_weight IS NULL) fall back to the live term_info.weight,
+                       preserving the existing zero-fill averaging behaviour for
+                       ungraded periods - their contribution is 0 either way since
+                       marks is NULL there, so which weight multiplies it does not matter. */
                     IF(
-                        term_info.weight IS NULL,
+                        COALESCE(subq2.applied_weight, term_info.weight) IS NULL,
                         0,
                         IFNULL(
                             ROUND(
                                 SUM(
-                                    IFNULL(subq2.marks, 0) * term_info.weight
-                                ) / SUM(term_info.weight),
+                                    IFNULL(subq2.marks, 0) * COALESCE(subq2.applied_weight, term_info.weight)
+                                ) / SUM(COALESCE(subq2.applied_weight, term_info.weight)),
                                 2
                             ),
                             ''
@@ -1211,6 +1219,7 @@ class ReportCardGpaTable extends ControllerActionTable
                     ) AS academic_term,
                     assessment_item_results.assessment_period_id,
                     assessment_item_results.marks,
+                    assessment_item_results.applied_weight,
                     assessment_periods.weight
                 FROM
                     assessment_item_results
