@@ -452,35 +452,12 @@ class InstitutionSubjectStaffTable extends AppTable
      * Date: 26 June 2019
     */
 
+    // POCOR-7538 point 3.7: now the role-level "Access All Subjects" flag; whether the
+    // user may edit marks at all is the Assessments page's own Edit permission (3.1).
     public function getRoleEditPermissionAccessForAllSubjects($userId, $institutionId)
     {
         $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-        $userAccessRoles = implode(', ', $roles);
-
-        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
-                ->innerJoin(['SecurityFunctions' => 'security_functions'], [
-                    [
-                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                    ]
-                ])
-                ->where([
-                    'SecurityFunctions.controller' => 'Institutions',
-                    'SecurityRoleFunctions.security_role_id IN'=>$userAccessRoles,
-                    'AND' => [ 'OR' => [
-                                        "SecurityFunctions.`_view` LIKE '%AllSubjects.index%'",
-                                        "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
-                                    ]
-                              ],
-                    'SecurityRoleFunctions._view' => 1,
-                    'SecurityRoleFunctions._edit' => 1
-                ])
-                ->toArray();
-
-        if(!empty($QueryResult)){
-            return true;
-        }
-
-        return false;
+        return TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllSubjects($roles);
     }
 
     /**

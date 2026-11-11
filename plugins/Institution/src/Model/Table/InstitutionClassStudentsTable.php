@@ -204,20 +204,16 @@ class InstitutionClassStudentsTable extends AppTable
         $institutionId = $settings['institution_id'];
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
 
+        // POCOR-7538 points 3.4-3.7: "all" comes from the role-level flags; otherwise the
+        // export is scoped to the classes the user teaches, so my*Permission stay true
+        // whatever the role.
         $allSubjectsPermission = true;
         $mySubjectsPermission = true;
-        if (!$AccessControl->isAdmin()) {
-            if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
-                $allSubjectsPermission = false;
-                $mySubjectsPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
-            }
-        }
-
         $allClassesPermission = true;
         $myClassesPermission = true;
-        if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
-            $allClassesPermission = false;
-            $myClassesPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
+        if (!$AccessControl->isAdmin()) {
+            $allSubjectsPermission = \Cake\ORM\TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllSubjects($roles);
+            $allClassesPermission = \Cake\ORM\TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllClasses($roles);
         }
 
         $InstitutionClassesTable = self::getDynamicTableInstance('Institution.InstitutionClasses');
@@ -463,41 +459,10 @@ class InstitutionClassStudentsTable extends AppTable
             $query->where([$this->aliasField('institution_class_id') => $sheet['classId']]);
         }
 
+        // POCOR-7538 points 3.4-3.7: only the classes the user teaches (homeroom,
+        // secondary or subject teacher), whatever their role.
         if (!$allClassesPermission && !$allSubjectsPermission) {
-            if (!$myClassesPermission && !$mySubjectsPermission) {
-                $query->where(['1 = 0']);
-            } else {
-                $query->innerJoin(['InstitutionClasses' => 'institution_classes'], [
-                        'InstitutionClasses.id = '.$this->aliasField('institution_class_id'),
-                    ]);
-
-                if ($myClassesPermission && !$mySubjectsPermission) {
-                    $query->where(['InstitutionClasses.staff_id' => $staffId]);
-                } else {
-                    $query
-                        ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
-                            'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
-                            'InstitutionClassSubjects.status =   1'
-                        ])
-                        ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
-                            'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
-                        ]);
-
-                    // If both class and subject permission is available
-                    if ($myClassesPermission && $mySubjectsPermission) {
-                        $query->where([
-                            'OR' => [
-                                ['InstitutionClasses.staff_id' => $staffId],
-                                ['InstitutionSubjectStaff.staff_id' => $staffId]
-                            ]
-                        ]);
-                    } // If only subject permission is available
-                    else {
-                        $query->where(['InstitutionSubjectStaff.staff_id' => $staffId]);
-                    }
-                    $query->group([$this->aliasField('student_id')]);//POCOR-7900
-                }
-            }
+            $query->where(\Cake\ORM\TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->getTeacherClassConditions($staffId, $this->aliasField('institution_class_id')));
         }
     }
 
