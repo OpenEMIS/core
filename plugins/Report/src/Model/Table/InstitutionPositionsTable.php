@@ -98,7 +98,9 @@ class InstitutionPositionsTable extends AppTable
         if ($teachingFilter != -1) {
             $where[$StaffPositionTitles->aliasField('type')] = $teachingFilter;
         }
-        $where[$this->aliasField('status_id')] = $statusFilter; //POCOR-6869
+        if ($statusFilter != -1) { //POCOR-9874: -1 = All Statuses (Institution > Statistics > Standard)
+            $where[$this->aliasField('status_id')] = $statusFilter; //POCOR-6869
+        }
         //POCOR-7354 start
         if ($areaId != -1 && $areaId != '') {
             $areaIds = [];
