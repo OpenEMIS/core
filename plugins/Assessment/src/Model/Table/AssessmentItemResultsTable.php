@@ -463,11 +463,6 @@ class AssessmentItemResultsTable extends AppTable
      * @param \Cake\ORM\Entity $entity Entity containing `marks`, `assessment_id`, `assessment_period_id`, and `education_subject_id`
      * @return \Cake\ORM\Entity The updated entity with `assessment_grading_option`, `assessment_grading_option_id`, and `assessment_grading_type` set
      *
-<<<<<<< HEAD
-     *
-=======
-
->>>>>>> 30c1e730a8ff7bbb59a0ed44166ad027a97a39da
      */
     public static function evaluateGradingForMarks(Entity $entity): Entity
     {
@@ -513,7 +508,6 @@ class AssessmentItemResultsTable extends AppTable
             //     'calculated_total' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)')
             // ])//POCOR-6479 comment code
             ->matching('Assessments')
-            ->matching('AssessmentPeriods')
             ->matching('AssessmentGradingOptions.AssessmentGradingTypes')
             ->order([
                 $this->aliasField('created') => 'DESC'
@@ -536,7 +530,12 @@ class AssessmentItemResultsTable extends AppTable
             $assessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults'); //POCOR-8224
             $assessmentItemResultsData = $assessmentItemResults->find()
                 ->select([
-                    $assessmentItemResults->aliasField('marks')
+                    $assessmentItemResults->aliasField('marks'),
+                    // POCOR-9759: use the weight frozen at save-time (via the
+                    // trigger_assessment_item_results_weight_insert/update DB triggers)
+                    // instead of a live join to assessment_periods.weight, so this total
+                    // doesn't silently change when the period's weight is edited later.
+                    $assessmentItemResults->aliasField('applied_weight')
                 ])
                 ->order([
                     $assessmentItemResults->aliasField('modified') => 'DESC',
@@ -552,7 +551,7 @@ class AssessmentItemResultsTable extends AppTable
                 ])
                 ->first();
 
-            $sumMarks[] = $assessmentItemResultsData->marks * $result->_matchingData['AssessmentPeriods']->weight;
+            $sumMarks[] = $assessmentItemResultsData->marks * $assessmentItemResultsData->applied_weight;
         }
         $sumMarks = array_sum($sumMarks);
         return $sumMarks;//POCOR-6479 ends
@@ -1115,7 +1114,9 @@ class AssessmentItemResultsTable extends AppTable
      */
     private static function buildSelectFields($options): string
     {
-        $fields = ['marks'];
+        // POCOR-9759: always include the weight frozen at save-time so callers can
+        // compute the weighted mark without a live join to assessment_periods.weight.
+        $fields = ['marks', 'all_results.applied_weight'];
         $possibleFields = [
             'id', 'student_id', 'academic_period_id', 'education_grade_id',
             'education_subject_id', 'assessment_id', 'assessment_period_id',
@@ -1369,6 +1370,10 @@ class AssessmentItemResultsTable extends AppTable
 
             $returnArray[$studentId][$subjectId][$assessmentPeriodId] = [
                 'marks' => $result['marks'],
+                // POCOR-9759: weight frozen at save-time (see buildSelectFields()) -
+                // all items within one period should share it, so the first entry
+                // is representative.
+                'applied_weight' => $marks[0]['applied_weight'] ?? null,
                 'grade_name' => $result['grade_name'],
                 'grade_code' => $result['grade_code'],
                 'assessments' => $marks //Include assessments here

@@ -507,21 +507,12 @@ class ImportStudentAttendancesTable extends AppTable {
             $query = $this->InstitutionClasses->find();
 
             if (!$AccessControl->isAdmin()) {
-                if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
-                    $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
-                    $query->innerJoin(['ClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
-                        'ClassesSecondaryStaff.institution_class_id = InstitutionClasses.id'
-                    ]);
-                    if (!$classPermission) {
-                        $query->where(['1 = 0'], [], true);
-                    } else {
-                        $query->where([
-                            'OR' => [
-                                ['InstitutionClasses.staff_id' => $userId],
-                                ['ClassesSecondaryStaff.secondary_staff_id' => $userId]
-                            ]
-                        ]);
-                    }
+                // POCOR-7538 points 3.4-3.7: the role-level "Access All Classes"/"Access All
+                // Subjects" flags show every class; otherwise only the classes the user teaches,
+                // whatever their role (previously depended on the role having My Classes/My
+                // Subjects).
+                if (!\Cake\ORM\TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllClasses($roles)) {
+                    $query->where(\Cake\ORM\TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->getTeacherClassConditions($userId, $this->InstitutionClasses->aliasField('id')));
                 }
             }
 

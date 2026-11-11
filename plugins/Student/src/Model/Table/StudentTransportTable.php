@@ -28,6 +28,12 @@ class StudentTransportTable extends ControllerActionTable
                 [
                     'setUserTabElements' => 'setUserTabElements',
                 ],
+                // POCOR-9901: institution_trip_passengers has a composite primary key, so the
+                // view link must carry every key column - not just id/institution_id - for
+                // ViewBehavior to resolve the record.
+                'appliedAction' => ['StudentTransport' =>
+                    ['student_id', 'education_grade_id', 'academic_period_id', 'institution_id', 'institution_trip_id']
+                ],
             ]);
     }
 

@@ -33,6 +33,9 @@ trait MessagesTrait
             'educationSubject' => 'Education Subject',
             'subjectWeight' => 'Subject Weight',
             'periodWeight' => 'Period Weight',
+            'updateExistingMarks' => 'Update Existing Marks',
+            'updateExistingMarksWarning' => 'Saving this change will recalculate and overwrite existing students\' assessment marks for this assessment period. This action cannot be undone.',
+            'periodWeightPastPeriod' => 'The period weight cannot be changed because this assessment belongs to a previous academic period.',
             'classification' => 'Classification',
             'academic_term' => 'Please check the academic terms to ensure that all the values are entered.'
         ],
