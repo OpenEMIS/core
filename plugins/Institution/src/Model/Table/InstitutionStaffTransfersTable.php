@@ -393,8 +393,9 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
             ->where([
                 $this->aliasField('previous_institution_id') => $institutionId,
                 'OR' => [
-                    'WorkflowStepsParams.value' => self::OUTGOING, // institution_owner for the step can always see the record
-                    'WorkflowStepsParams.value' => self::INCOMING, // POCOR-4998
+                    // institution_owner for the step can always see the record; INCOMING added in POCOR-4998
+                    // POCOR-9907: was two duplicate 'WorkflowStepsParams.value' keys, so PHP dropped OUTGOING
+                    'WorkflowStepsParams.value IN' => [self::OUTGOING, self::INCOMING],
                     $this->aliasField('all_visible') => 1
                 ]
             ]);
