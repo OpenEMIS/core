@@ -682,34 +682,99 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function getMaleCountByClass($classId)
     {
-        $gender_id = 1; // male
-        $count = $this
-            ->find()
-            ->contain('Users')
-            ->matching('StudentStatuses', function ($q) {
-                return $q->where(['StudentStatuses.code' => 'CURRENT']);
-            })
-            ->where([$this->Users->aliasField('gender_id') => $gender_id])
-            ->where([$this->aliasField('institution_class_id') => $classId])
-            ->count()
-        ;
-        return $count;
+        return $this->getEnrolledCountByClass($classId, 1); // male
     }
 
     public function getFemaleCountByClass($classId)
     {
-        $gender_id = 2; // female
-        $count = $this
-            ->find()
-            ->contain('Users')
-            ->matching('StudentStatuses', function ($q) {
+        return $this->getEnrolledCountByClass($classId, 2); // female
+    }
+
+    /**
+     * POCOR-9908: single counting rule for a class's student totals
+     * (institution_classes.total_male_students / total_female_students).
+     *
+     * Class in the CURRENT academic period - aligned with Institutions > Students
+     * and the dashboard (POCOR-9410 / POCOR-9845). A student counts when ALL hold:
+     *  - the class row is CURRENT (Enrolled),
+     *  - the user account is active (security_users.status = 1),
+     *  - the student holds a CURRENT enrolment in institution_students for the
+     *    same institution, academic period and grade as the class row.
+     *
+     * Class in a PAST academic period (reporter-confirmed historical rule): a student
+     * counts when the class row is CURRENT, PROMOTED, GRADUATED or REPEATED - i.e. was
+     * enrolled in that period. Account status is ignored, so a later deactivation or
+     * lock never reduces historical totals.
+     *
+     * Counted DISTINCT by student so a duplicated class row cannot inflate totals.
+     * The same rule is mirrored in SQL in config/Migrations/*_POCOR9908.php
+     * (backfill + triggers); keep the two in sync.
+     */
+    public function getEnrolledCountByClass($classId, $genderId = null)
+    {
+        $isCurrentPeriod = $this->InstitutionClasses->find()
+            ->innerJoinWith('AcademicPeriods', function ($q) {
+                return $q->where(['AcademicPeriods.current' => 1]);
+            })
+            ->where([$this->InstitutionClasses->aliasField('id') => $classId])
+            ->count() > 0;
+
+        if (!$isCurrentPeriod) {
+            $userConditions = [];
+            if ($genderId !== null) {
+                $userConditions[$this->Users->aliasField('gender_id')] = $genderId;
+            }
+            $row = $this->find()
+                ->select(['total' => 'COUNT(DISTINCT ' . $this->aliasField('student_id') . ')'])
+                ->innerJoinWith('Users', function ($q) use ($userConditions) {
+                    return $q->where($userConditions);
+                })
+                ->innerJoinWith('StudentStatuses', function ($q) {
+                    return $q->where(['StudentStatuses.code IN' => ['CURRENT', 'PROMOTED', 'GRADUATED', 'REPEATED']]);
+                })
+                ->where([$this->aliasField('institution_class_id') => $classId])
+                ->disableHydration()
+                ->first();
+
+            return $row ? (int)$row['total'] : 0;
+        }
+
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+
+        $currentEnrolment = $InstitutionStudents->find()
+            ->select(['id' => $InstitutionStudents->aliasField('id')])
+            ->innerJoin(['EnrolmentStatuses' => 'student_statuses'], [
+                'EnrolmentStatuses.id = ' . $InstitutionStudents->aliasField('student_status_id'),
+                'EnrolmentStatuses.code' => 'CURRENT'
+            ])
+            ->where([
+                $InstitutionStudents->aliasField('student_id') . ' = ' . $this->aliasField('student_id'),
+                $InstitutionStudents->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id'),
+                $InstitutionStudents->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id'),
+                $InstitutionStudents->aliasField('education_grade_id') . ' = ' . $this->aliasField('education_grade_id'),
+            ]);
+
+        $userConditions = [$this->Users->aliasField('status') => 1];
+        if ($genderId !== null) {
+            $userConditions[$this->Users->aliasField('gender_id')] = $genderId;
+        }
+
+        $row = $this->find()
+            ->select(['total' => 'COUNT(DISTINCT ' . $this->aliasField('student_id') . ')'])
+            ->innerJoinWith('Users', function ($q) use ($userConditions) {
+                return $q->where($userConditions);
+            })
+            ->innerJoinWith('StudentStatuses', function ($q) {
                 return $q->where(['StudentStatuses.code' => 'CURRENT']);
             })
-            ->where([$this->Users->aliasField('gender_id') => $gender_id])
             ->where([$this->aliasField('institution_class_id') => $classId])
-            ->count()
-        ;
-        return $count;
+            ->where(function ($exp) use ($currentEnrolment) {
+                return $exp->exists($currentEnrolment);
+            })
+            ->disableHydration()
+            ->first();
+
+        return $row ? (int)$row['total'] : 0;
     }
 
     public function autoInsertClassStudent($data)

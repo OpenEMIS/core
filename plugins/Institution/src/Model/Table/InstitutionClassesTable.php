@@ -1606,50 +1606,13 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function onGetTotalStudents(EventInterface $event, Entity $entity)
     {
-        /*POCOR-6566 starts*/
-        $classId = $entity->id;
-        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
-        $statuses = $StudentStatuses->findCodeList();
-        $institutionId = $entity->institution_id;
-        $periodId = $entity->academic_period_id;
-        $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
-        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
-        $grades = [];
-        $classGradeData = $this->find()
-            ->select(['grade_id' => $InstitutionClassGrades->aliasField('education_grade_id')])
-            ->leftJoin([$InstitutionClassGrades->getAlias() => $InstitutionClassGrades->getTable()], [
-                $this->aliasField('id = ') . $InstitutionClassGrades->aliasField('institution_class_id')
-            ])
-            ->where([
-                $InstitutionClassGrades->aliasField('institution_class_id') => $classId,
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('academic_period_id') => $periodId
-            ])
-            ->toArray();
-        if (!empty($classGradeData)) {
-            foreach ($classGradeData as $data) {
-                $grades[] = $data->grade_id;
-            }
-        }
-
-        $totalStudentRecord = $InstitutionClassStudents->find()
-            ->where([
-                $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
-                $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
-                $InstitutionClassStudents->aliasField('academic_period_id') => $periodId,
-                $InstitutionClassStudents->aliasField('education_grade_id IN') => $grades,
-                //$InstitutionClassStudents->aliasField('student_status_id IN') => [$statuses['GRADUATED'], $statuses['PROMOTED'], $statuses['CURRENT'], $statuses['REPEATED']]  //POCOR-6733
-                $InstitutionClassStudents->aliasField('student_status_id') => $statuses['CURRENT']
-                //POCOR-9822
-
-            ]);
-        $count = 0;
-        if (!empty($totalStudentRecord)) {
-            return $count = $totalStudentRecord->count();
-        } else {
-            return $count;
-        }
-        /*POCOR-6566 ends*/
+        // POCOR-9908: Total = the stored Male + Female counters, the same source the
+        // Male/Female columns (POCOR-9613), the Excel export, report cards and the
+        // capacity checks already use. The previous live count here used a looser
+        // rule (any CURRENT class row, inactive users included), so Total could
+        // disagree both with Male + Female and with Institutions > Students.
+        // The counters themselves follow InstitutionClassStudentsTable::getEnrolledCountByClass().
+        return (int)$entity->total_male_students + (int)$entity->total_female_students;
     }
 
 
