@@ -23,10 +23,10 @@ use Migrations\AbstractMigration;
  *     rows that change to zz_9908_institution_classes (restored by down()).
  *  2. security_users trigger: a status/gender change refreshes the counters of that
  *     student's classes in the CURRENT period only (past periods are never touched).
- *  3. academic_periods trigger: when a period's `current` flag changes (set via
- *     updateAll in AcademicPeriodsTable, which bypasses PHP hooks), its classes are
- *     recalculated so the outgoing year switches to the historical rule and the
- *     incoming year to the current rule.
+ *
+ * No recalculation on academic-year switch (reporter decision): promotion happens after
+ * the new year is made current, so promoting a student re-counts the now-past class with
+ * the historical rule in InstitutionClassStudentsTable::afterSave().
  */
 class POCOR9908 extends AbstractMigration
 {
@@ -129,28 +129,11 @@ class POCOR9908 extends AbstractMigration
                 END IF;
             END
         ");
-
-        // 3. Current academic period switched -> recalculate that period's classes.
-        $this->execute('DROP TRIGGER IF EXISTS trigger_academic_periods_class_counts_update');
-        $this->execute("
-            CREATE TRIGGER trigger_academic_periods_class_counts_update
-            AFTER UPDATE ON academic_periods
-            FOR EACH ROW
-            BEGIN
-                IF NOT (OLD.current <=> NEW.current) THEN
-                    UPDATE institution_classes c
-                    SET c.total_male_students = {$male},
-                        c.total_female_students = {$female}
-                    WHERE c.academic_period_id = NEW.id;
-                END IF;
-            END
-        ");
     }
 
     public function down()
     {
         $this->execute('DROP TRIGGER IF EXISTS trigger_security_users_class_counts_update');
-        $this->execute('DROP TRIGGER IF EXISTS trigger_academic_periods_class_counts_update');
 
         $this->execute('
             UPDATE institution_classes c
