@@ -785,7 +785,13 @@ class AssessmentResultsTable extends AppTable
             if (isset($mark['marks'])) {
                 $simple_mark = floatval($mark['marks']);
             }
-            $weight = floatval($assessment_period['weight']);
+            // POCOR-9759: use the weight frozen when this mark was saved (already
+            // selected by AssessmentItemResultsTable::getLastMark()/buildSelectFields())
+            // instead of the period's live weight, so the export doesn't change when
+            // the period's weight is edited later. Exemption entries (merged in above
+            // from getLastExemptions(), which doesn't select applied_weight) fall back
+            // to the live weight, which is harmless since their weighted_mark is 0 anyway.
+            $weight = isset($mark['applied_weight']) ? floatval($mark['applied_weight']) : floatval($assessment_period['weight']);
             // POCOR-8330 END
             $weighted_mark = $simple_mark * $weight;
             $assessment_period_name = $assessment_period['name'];

@@ -96,8 +96,9 @@ class StudentAttendancesTable extends AppTable
         // this, a range spanning into a not-yet-marked month (e.g. the tail end of October when
         // only September has been marked) produces a spurious, entirely blank row per student
         // per period for that month. Suppress a month/period row unless at least one day has an
-        // actual value.
-        $dayColumnsNotBlank = implode(' OR ', array_map(fn($i) => "day_{$i} != ''", range(1, 31)));
+        // actual value. POCOR-9899: '-' (not enrolled that day) doesn't count as a value either, so a
+        // withdrawn/transferred student gets no all-'-' rows for months after they left.
+        $dayColumnsNotBlank = implode(' OR ', array_map(fn($i) => "day_{$i} NOT IN ('', '-')", range(1, 31)));
 
         $query
             ->where($conditions)
@@ -303,30 +304,38 @@ class StudentAttendancesTable extends AppTable
     // slot + month. A student is PRESENT for any marked slot unless a matching row exists in
     // institution_student_absence_details for that same student/date/period/subject, in which
     // case the absence type's name is shown instead.
+    // POCOR-9899: a LATE record still counts as Present, and a marked day outside the student's
+    // enrolment (institution_students start/end date) shows '-' instead of Present - covers
+    // withdrawn, transferred and later-joining students who are still on the class roster.
     private function buildAttendanceInfoSQL($academicPeriodId, $startDate, $endDate, $institutionConditionSQL = '')
     {
         $academicPeriodId = (int) $academicPeriodId;
 
-        $dayCases = [];
+        $dayColumns = [];
         for ($i = 1; $i <= 31; $i++) {
-            $dayCases[] = "CASE WHEN DAY(mr.date) = {$i} THEN IF(ab.student_id IS NOT NULL, IFNULL(ab_types.name, 'Absent'), 'Present') ELSE '' END AS day_{$i}";
+            $dayColumns[] = "MAX(IF(day_no = {$i}, day_status, '')) AS day_{$i}";
         }
-        $dayCasesSql = implode(",\n                   ", $dayCases);
+        $dayColumnsSql = implode(",\n               ", $dayColumns);
 
         return <<<SQL
         SELECT academic_period_id, student_id, institution_class_id, period, subject_id, year_name, month_id,
-               MAX(day_1) day_1, MAX(day_2) day_2, MAX(day_3) day_3, MAX(day_4) day_4,
-               MAX(day_5) day_5, MAX(day_6) day_6, MAX(day_7) day_7, MAX(day_8) day_8,
-               MAX(day_9) day_9, MAX(day_10) day_10, MAX(day_11) day_11, MAX(day_12) day_12,
-               MAX(day_13) day_13, MAX(day_14) day_14, MAX(day_15) day_15, MAX(day_16) day_16,
-               MAX(day_17) day_17, MAX(day_18) day_18, MAX(day_19) day_19, MAX(day_20) day_20,
-               MAX(day_21) day_21, MAX(day_22) day_22, MAX(day_23) day_23, MAX(day_24) day_24,
-               MAX(day_25) day_25, MAX(day_26) day_26, MAX(day_27) day_27, MAX(day_28) day_28,
-               MAX(day_29) day_29, MAX(day_30) day_30, MAX(day_31) day_31
+               {$dayColumnsSql}
         FROM (
             SELECT mr.academic_period_id, ics.student_id, mr.institution_class_id, mr.period, mr.subject_id,
-                   YEAR(mr.date) year_name, MONTH(mr.date) month_id,
-                   {$dayCasesSql}
+                   YEAR(mr.date) year_name, MONTH(mr.date) month_id, DAY(mr.date) day_no,
+                   CASE
+                       WHEN NOT EXISTS (
+                           SELECT 1 FROM institution_students ist
+                           WHERE ist.student_id = ics.student_id
+                             AND ist.institution_id = ics.institution_id
+                             AND ist.academic_period_id = ics.academic_period_id
+                             AND ist.education_grade_id = ics.education_grade_id
+                             AND ist.start_date <= mr.date
+                             AND (ist.end_date IS NULL OR ist.end_date >= mr.date)
+                       ) THEN '-'
+                       WHEN ab.student_id IS NOT NULL AND IFNULL(ab_types.code, '') <> 'LATE' THEN IFNULL(ab_types.name, 'Absent')
+                       ELSE 'Present'
+                   END AS day_status
             FROM student_attendance_marked_records mr
             INNER JOIN institution_class_students ics
                 ON ics.institution_class_id = mr.institution_class_id

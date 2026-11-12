@@ -30,7 +30,7 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
         'EXCUSED': {
             code: 'EXCUSED',
             icon: 'fa fa-circle-o',
-            color: '#CC5C5C'
+            color: '#E67E22' //POCOR-9886: orange to distinguish from unexcused (red)
         },
         'NoScheduledClicked': {
             code: 'NoScheduledClicked',

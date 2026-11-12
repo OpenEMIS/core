@@ -556,8 +556,13 @@ class AssessmentsTable extends AppTable
                 $mark = $result['marks'] ?? null;
 
                 if (!in_array($mark, ['EXEMPT', 'UNASSIGN']) && is_numeric($mark)) {
-                    $this->assessmentPeriodWeightedMark += ((float)$mark * (float)$attr['assessmentPeriodWeight']);
-                    $this->assessmentPeriodWeights[] = $attr['assessmentPeriodWeight'];
+                    // POCOR-9759: use the weight frozen when this mark was saved
+                    // (see AssessmentItemResultsTable::getAssessmentItemResultsReport())
+                    // instead of the column header's live assessmentPeriodWeight, so
+                    // the total doesn't change when the period's weight is edited later.
+                    $appliedWeight = $result['applied_weight'] ?? $attr['assessmentPeriodWeight'];
+                    $this->assessmentPeriodWeightedMark += ((float)$mark * (float)$appliedWeight);
+                    $this->assessmentPeriodWeights[] = $appliedWeight;
                 }
 
                 return is_numeric($mark) ? number_format($mark, 2) : $mark;

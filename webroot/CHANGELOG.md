@@ -1,3 +1,16 @@
+### 5.24.0 - 2026-11-11
+- Implemented: Develop absence placeholders for student report cards 
+- Implemented: Develop changes to Administration > Performance > Assessments > Assessments Periods > Edit: The field period weight is not editable
+- Implemented: Develop Institution > Statistics > Standard Reports
+- Implemented: Develop changes to colors in student attendance
+- Bug Fixed: Institution > Students > Student > General > Transport : On clicking View, a message shows that says Record does not exist. 
+- Bug Fixed: Core>Institution>Students : User cannot see the view profile button
+- Bug Fixed: Instiutition > Performance > Report Card : Subject Teacher Placeholder Includes Additional Characters and Gender Information
+- Bug Fixed: Core>Administration>Workflow> Steps & Core>Personal>Cases>Add : No workflow present to add Assignee
+- Bug Fixed: Reports > Institutions > Student Attendance Report : Issue in Student Attendance Report
+- Bug Fixed: Administration>System Setup>Education Structure : Search not taking more than one word
+- Bug Fixed: Core>Institution>Staff : The staff transfer list does not appear under "Pending Transfer Out" option
+
 ### 5.23.0 - 2026-11-02
 - Bug Fixed: Missing date from Student > Attendance: Export 
 - Bug Fixed: Core>Institutions>Student>Counselling>Add : Page freezes as reported
