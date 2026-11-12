@@ -31,6 +31,8 @@ class StudentAttendancesTable extends ControllerActionTable
     private $allDayOptions = [];
     private $selectedDate;
     private $_absenceData = [];
+    private $_periodNameMap = []; // POCOR-9911: period id => configured period name for Excel export
+    private $_exportPeriodId = null; // POCOR-9911: attendance period being exported (daily, by period)
 
     public function initialize(array $config): void
     {
@@ -1258,6 +1260,27 @@ class StudentAttendancesTable extends ControllerActionTable
         $options['subject_id'] = $sheet['subjectId']; //POCOR-8874
         $options['attendance_by'] = $sheet['attendance_by']; //POCOR-8874
 
+        // POCOR-9911 start: resolve configured period names (same source as the Attendance page period dropdown)
+        $this->_periodNameMap = [];
+        $this->_exportPeriodId = $sheet['attendancePeriodId'];
+        if ($attendanceBy != 'subject') {
+            $periodOptions = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes')
+                ->find('PeriodByClass', [
+                    'institution_class_id' => $sheet['classId'],
+                    'academic_period_id' => $sheet['academicPeriodId'],
+                    'day_id' => $sheet['dayId'],
+                    'education_grade_id' => $sheet['educationGradeId'],
+                    'week_start_day' => $sheet['weekStartDay'],
+                    'week_end_day' => $sheet['weekEndDay']
+                ])->toArray();
+            foreach ((array)$periodOptions as $periodOption) {
+                if (isset($periodOption['id']) && !isset($this->_periodNameMap[(string)$periodOption['id']])) {
+                    $this->_periodNameMap[(string)$periodOption['id']] = $periodOption['name'];
+                }
+            }
+        }
+        // POCOR-9911 end
+
         // POCOR-9572: Execute query once and cache results for all onExcelGet* methods
         $query = $this->findClassStudentsWithAbsence($sheet['query'], $options);
         $this->_absenceDataCache = [];
@@ -1308,8 +1331,16 @@ class StudentAttendancesTable extends ControllerActionTable
             if (empty($row->marked_date)) {
                 return '';
             }
-            $period = $row->period ?? 1;
-            return 'Period ' . $period;
+            // POCOR-9911: every row of a daily export belongs to the selected period. Present students
+            // have no absence-details row, so $row->period is NULL for them and must not default to 1.
+            $period = !empty($this->_exportPeriodId)
+                ? $this->_exportPeriodId
+                : ($row->marked_period ?? $row->period ?? 1);
+            // POCOR-9911: show the configured period name instead of the hard-coded "Period N"
+            if (isset($this->_periodNameMap[(string)$period])) {
+                return __($this->_periodNameMap[(string)$period]);
+            }
+            return __('Period') . ' ' . $period;
         }
         return ''; // attendance not marked
     }

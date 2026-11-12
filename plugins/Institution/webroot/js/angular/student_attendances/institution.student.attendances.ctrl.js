@@ -1393,6 +1393,7 @@ function InstitutionStudentAttendancesController(
     };
 
     vm.changeAttendancePeriod = function () {
+        vm.getClassStudentParams(); // POCOR-9911: refresh export URL immediately with the newly selected period
         vm.gridOptions.context.period = vm.selectedAttendancePeriod;
         //POCOR_7787 start
         var closedPeriod = false;
