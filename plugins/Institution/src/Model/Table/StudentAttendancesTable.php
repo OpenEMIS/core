@@ -32,8 +32,6 @@ class StudentAttendancesTable extends ControllerActionTable
     private $selectedDate;
     private $_absenceData = [];
     private $_periodNameMap = []; // POCOR-9911: period id => configured period name for Excel export
-    private $_exportPeriodId = null; // POCOR-9911: attendance period being exported (daily, by period)
-
     public function initialize(array $config): void
     {
         $this->setTable('institution_class_students');
@@ -1261,22 +1259,28 @@ class StudentAttendancesTable extends ControllerActionTable
         $options['attendance_by'] = $sheet['attendance_by']; //POCOR-8874
 
         // POCOR-9911 start: resolve configured period names (same source as the Attendance page period dropdown)
+        // Only needed for the daily export by period; the label must never break the export itself.
         $this->_periodNameMap = [];
-        $this->_exportPeriodId = $sheet['attendancePeriodId'];
-        if ($attendanceBy != 'subject') {
-            $periodOptions = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes')
-                ->find('PeriodByClass', [
-                    'institution_class_id' => $sheet['classId'],
-                    'academic_period_id' => $sheet['academicPeriodId'],
-                    'day_id' => $sheet['dayId'],
-                    'education_grade_id' => $sheet['educationGradeId'],
-                    'week_start_day' => $sheet['weekStartDay'],
-                    'week_end_day' => $sheet['weekEndDay']
-                ])->toArray();
-            foreach ((array)$periodOptions as $periodOption) {
-                if (isset($periodOption['id']) && !isset($this->_periodNameMap[(string)$periodOption['id']])) {
-                    $this->_periodNameMap[(string)$periodOption['id']] = $periodOption['name'];
+        if ($attendanceBy != 'subject' && $sheet['dayId'] != -1 && !empty($sheet['classId'])) {
+            try {
+                $periodOptions = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes')
+                    ->getAttendancePerDayOptionsByClass(
+                        $sheet['classId'],
+                        $sheet['academicPeriodId'],
+                        $sheet['dayId'],
+                        $sheet['educationGradeId'],
+                        $sheet['weekStartDay'],
+                        $sheet['weekEndDay']
+                    );
+                foreach ((array)$periodOptions as $periodOption) {
+                    $key = isset($periodOption['id']) ? (string)$periodOption['id'] : null;
+                    if ($key !== null && !isset($this->_periodNameMap[$key])) {
+                        $this->_periodNameMap[$key] = $periodOption['name'];
+                    }
                 }
+            } catch (\Throwable $e) {
+                Log::write('error', 'POCOR-9911: unable to resolve period names for attendance export: ' . $e->getMessage());
+                $this->_periodNameMap = [];
             }
         }
         // POCOR-9911 end
@@ -1331,14 +1335,13 @@ class StudentAttendancesTable extends ControllerActionTable
             if (empty($row->marked_date)) {
                 return '';
             }
-            // POCOR-9911: every row of a daily export belongs to the selected period. Present students
-            // have no absence-details row, so $row->period is NULL for them and must not default to 1.
-            $period = !empty($this->_exportPeriodId)
-                ? $this->_exportPeriodId
-                : ($row->marked_period ?? $row->period ?? 1);
+            // POCOR-9911: use the marked-record period (exists for present AND absent students).
+            // Absence details ($row->period) is NULL for present students, so it must not drive the label.
+            $period = $row->marked_period ?? $row->period ?? 1;
             // POCOR-9911: show the configured period name instead of the hard-coded "Period N"
+            // (names are admin-configured data, so they are not passed through __() again)
             if (isset($this->_periodNameMap[(string)$period])) {
-                return __($this->_periodNameMap[(string)$period]);
+                return $this->_periodNameMap[(string)$period];
             }
             return __('Period') . ' ' . $period;
         }
