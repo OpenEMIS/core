@@ -215,8 +215,12 @@ class ConfigItemsTable extends AppTable
                     $this->fields['value_selection']['attr'] = [
                         'label' => 'Excluded Security Roles',
                         'after' => 'value',
+                        'required' => true, //POCOR-9909: mandatory when Enabled — renders the asterisk
                     ];
                     $this->ControllerAction->field('value_selection', ['visible' => ['view' => true, 'edit' => true], 'after' => 'value']);
+
+                    //POCOR-9909: server-side guard — show a validation message instead of crashing when nothing is selected
+                    $this->getValidator()->notEmptyString('value_selection', __('Please select at least one Excluded Security Role.'));
                 } else {
                     $this->ControllerAction->field('value_selection', ['visible' => false]);
                 }
@@ -373,11 +377,15 @@ class ConfigItemsTable extends AppTable
                 //previously-saved role list survives a Disable/Enable round-trip instead of being wiped.
                 $submittedValue = $data['value'] ?? $entity->value;
                 if ((string)$submittedValue === '1') {
-                    if (isset($data['value_selection']['_ids'])) {
-                        $data['value_selection'] = implode(',', array_filter($data['value_selection']['_ids']));
-                    } else {
-                        $data['value_selection'] = ''; //POCOR-9385: nothing selected — store empty string
+                    //POCOR-9909: with nothing selected, FormHelper's hidden field posts value_selection[_ids] = ''
+                    //(a string, not an array). array_filter('') threw a TypeError on PHP 8, which
+                    //AppExceptionRenderer turns into a redirect to the 404 page. Normalise to an array first.
+                    $selectedIds = $data['value_selection']['_ids'] ?? [];
+                    if (!is_array($selectedIds)) {
+                        $selectedIds = ($selectedIds === '' || $selectedIds === null) ? [] : [$selectedIds];
                     }
+                    $data['value_selection'] = implode(',', array_filter($selectedIds)); //POCOR-9385: '' when nothing selected
+
                 } else {
                     unset($data['value_selection']);
                 }
