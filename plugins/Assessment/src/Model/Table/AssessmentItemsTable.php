@@ -395,6 +395,17 @@ class AssessmentItemsTable extends AppTable
                 'EducationSubjects.name'
             ]);
 
+        // POCOR-7538 points 3.4/3.5/3.7: "Access All Subjects" (role flag) shows every
+        // subject of the class; otherwise only subjects the user teaches, plus every subject
+        // of a class they are homeroom/secondary teacher of - the same rule as the Subjects
+        // page. Previously every user saw every subject (only is_editable differed).
+        if ($super_admin != 1) {
+            $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($logged_in_user_id, $institution_id);
+            if (empty($roles) || !TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllSubjects($roles)) {
+                $query->where($InstitutionClasses->getTeacherSubjectConditions($logged_in_user_id, $InstitutionSubjects->aliasField('id')));
+            }
+        }
+
         //POCOR-5999 starts
         $query
             ->formatResults(function (ResultSetInterface $results) use (
