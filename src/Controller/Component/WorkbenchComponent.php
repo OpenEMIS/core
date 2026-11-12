@@ -21,6 +21,7 @@ class WorkBenchComponent extends Component {
 		// Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
 		$this->components = ['Auth', 'AccessControl', 'Workflow'];
 		
+		
 		// Manually populate _componentMap since we set components after constructor
 		// This is needed for __get() to work properly in CakePHP 5
 		if ($this->components) {

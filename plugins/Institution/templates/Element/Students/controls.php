@@ -39,7 +39,8 @@
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $statusOptions,
-						'default' => $defaultStatusKey, //POCOR-9369 
+						//POCOR-9369 default to Enrolled only when no status is chosen. POCOR-9849: use the chosen status_id
+						'default' => $this->request->getQuery('status_id') ?: ($defaultStatusKey ?? null),
 						'url' => $baseUrl,
 						'data-named-key' => 'status_id',
 						'data-named-group' => 'academic_period_id,education_grade_id'

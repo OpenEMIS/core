@@ -11,6 +11,7 @@ use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
 use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
+use Cake\Validation\Validation;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
@@ -227,7 +228,17 @@ class AcademicPeriodsTable extends ControllerActionTable
                     'provider' => 'table',
                     'message' => __('This field has to be unique')
                 ] //POCOR-8284 -- ends
+            ])
+            //POCOR-9885 starts: School Days is optional (0 = not set); when keyed in it must be 1 to 365
+            ->add('school_days', [
+                'ruleRange' => [
+                    'rule' => function ($value) {
+                        return (string)$value === '0' || (Validation::naturalNumber($value) && Validation::range($value, 1, 365));
+                    },
+                    'message' => __('Value must be within 1 to 365')
+                ]
             ]);
+            //POCOR-9885 ends
     }
 
     // POCOR-9765/POCOR-8286-style fix: the "date" form field (bootstrap-datepicker) submits the
@@ -239,6 +250,10 @@ class AcademicPeriodsTable extends ControllerActionTable
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $this->normalizeDateFields($data, ['start_date', 'end_date']);
+        //POCOR-9885: School Days left empty is saved as 0 (column is NOT NULL)
+        if (array_key_exists('school_days', $data->getArrayCopy()) && trim((string)$data['school_days']) === '') {
+            $data['school_days'] = 0;
+        }
     }
 
     private function normalizeDateFields(ArrayObject $data, array $fields)
@@ -453,7 +468,12 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->field('academic_period_level_id');
         $this->fields['start_year']['visible'] = false;
         $this->fields['end_year']['visible'] = false;
-        $this->fields['school_days']['visible'] = false;
+        //POCOR-9885: School Days shown on add/edit/view (optional, range 1 - 365)
+        $this->field('school_days', [
+            'type' => 'integer',
+            'attr' => ['min' => 0, 'max' => 365],
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+        ]);
         $this->fields['lft']['visible'] = false;
         $this->fields['rght']['visible'] = false;
     }

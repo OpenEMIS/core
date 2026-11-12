@@ -64,9 +64,6 @@ class OpenEmisComponent extends Component
 
         $theme = $this->getTheme();
         $controller->set('theme', $theme);
-        if (file_exists(CONFIG . 'app_local.php')) { //POCOR-9203
-            $controller->set('SystemNotices', $this->SystemNotices());
-        }
         $controller->set('homeUrl', $this->getConfig('homeUrl'));
         $controller->set('headerMenu', $this->getHeaderMenu());
         $controller->set('SystemVersion', $this->getCodeVersion());
@@ -134,6 +131,16 @@ class OpenEmisComponent extends Component
             $controller->set('footerText', $footer);
         }
 
+    }
+
+    // Is called after the controller's action but before the view is rendered.
+    //POCOR-9820: computed here instead of startup() so a notice marked as read during this request
+    //(NoticesTable::saveNoticeStatus) is reflected in the header on the same page
+    public function beforeRender(EventInterface $event)
+    {
+        if (file_exists(CONFIG . 'app_local.php')) { //POCOR-9203
+            $this->controller->set('SystemNotices', $this->SystemNotices());
+        }
     }
 
     private function getTheme()
@@ -205,72 +212,32 @@ class OpenEmisComponent extends Component
     }
 
     //POCOR-7210
+    //POCOR-9820: returns true when there is nothing unread (no red dot), false when the logged in user has unread notices.
+    //The previous guard on POST data (session_id/username/url) meant this only ran on the login submit, so every
+    //other page got null and the header always showed the red dot.
     private function SystemNotices($userId = null)
     {
-        $sessionId =  $this->getController()->getRequest()->getData('session_id');
-        $username =  $this->getController()->getRequest()->getData('username');
-        $url =  $this->getController()->getRequest()->getData('url');
-        if (!empty($url) && !empty($sessionId) && !empty($username)) {
-            $userId  = $this->controller->Auth->user('id');
-            $isAdmin = $this->controller->AccessControl->isAdmin();
+        $controller = $this->controller;
+        $components = $controller->components();
+        if (!$components->has('Auth') || !$components->has('AccessControl')) {
+            return true;
+        }
 
-            if(!$isAdmin && $userId != null){
-                $usersGroup   = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        try {
+            $userId  = $controller->Auth->user('id');
+            if (empty($userId)) {
+                return true;
+            }
+            $isAdmin = $controller->AccessControl->isAdmin();
+
+            if(!$isAdmin){
                 $userNotices  = TableRegistry::getTableLocator()->get('Alert.SecurityUserNotices');
 
-                // 1. Get user role IDs
-                $userRoleIdsQuery = $usersGroup->find()
-                    ->select(['security_role_id'])
-                    ->where(['security_user_id' => $userId])
-                    ->enableHydration(false);
-                $userRoleIds = array_column($userRoleIdsQuery->toArray(), 'security_role_id');
+                //POCOR-9863: same visibility rule as the dashboard and System Notices page
+                $assignedNoticeIds = TableRegistry::getTableLocator()->get('Alert.NoticeRoles')
+                    ->getVisibleNoticeIds($userId);
 
-                // 2. Check permission to view notices
-                $havePermissionToView = TableRegistry::getTableLocator()
-                    ->get('Security.SecurityRoleFunctions')
-                    ->find()
-                    ->leftJoin(
-                        ['SecurityFunctions' => 'security_functions'],
-                        ['SecurityFunctions.id = SecurityRoleFunctions.security_function_id']
-                    )
-                    ->where([
-                        'SecurityFunctions.controller' => 'Systems',
-                        'SecurityFunctions.name' => 'Notice Message',
-                        'SecurityRoleFunctions.security_role_id IN' => $userRoleIds,
-                        'SecurityRoleFunctions._view' => 1
-                    ])
-                    ->toArray();
-
-                if (empty($havePermissionToView)) {
-                    // User has no permission to view notices → no red dot
-                    return true;
-                }
-
-                // 3. Get notice IDs assigned to user's roles
-                $assignedNoticeIdsQuery = $usersGroup->find()
-                    ->select(['notice_id' => 'NoticeRoles.notice_id'])
-                    ->innerJoin(
-                        ['NoticeRoles' => 'notice_roles'],
-                        ['SecurityGroupUsers.security_role_id = NoticeRoles.security_role_id']
-                    )
-                    ->innerJoin(
-                        ['Notices' => 'notices'],
-                        ['Notices.id = NoticeRoles.notice_id']
-                    )
-                    ->where([
-                        'SecurityGroupUsers.security_user_id IS' => $userId,
-                        'Notices.status' => 1
-                    ])
-                    ->enableHydration(false);
-
-                $assignedNoticeIds = array_column($assignedNoticeIdsQuery->toArray(), 'notice_id');
-
-                // 4. Admins always return true (no red dot)
-                if ($isAdmin) {
-                    return true;
-                }
-
-                // 5. If no assigned notices, return true (no red dot)
+                // No notices addressed to this user → no red dot
                 if (empty($assignedNoticeIds)) {
                     return true;
                 }
@@ -292,6 +259,9 @@ class OpenEmisComponent extends Component
             }else{
                 return true;
             }
+        } catch (\Exception $e) {
+            // e.g. during installation when the database is not ready yet (POCOR-9203)
+            return true;
         }
     }
 }

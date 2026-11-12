@@ -35,6 +35,32 @@ class CommentsTable extends ControllerActionTable
         $this->addBehavior('User.UserTab');
     }
 
+    /**
+     * POCOR-9883: every field on the Comments Add form is mandatory. Without these rules a
+     * blank field passed validation and died at INSERT time on the NOT NULL column, which is
+     * the error page the ticket reports.
+     *
+     * `title` and `comment` are only required to be non-empty on create. Their columns are
+     * NOT NULL but are strings, and MySQL stores '' quite happily, so existing rows with an
+     * empty body do exist - making the rule unconditional would block those records from
+     * being edited at all. `comment_type_id` and `comment_date` stay unconditional: they are
+     * int/date columns where a blank value marshals to null and crashes the save, so
+     * rejecting it protects edit as well as add.
+     */
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->requirePresence('comment_type_id', 'create')
+            ->notEmptyString('comment_type_id', __('Please select a Comment Type'))
+            ->requirePresence('title', 'create')
+            ->notEmptyString('title', __('Please enter a Title'), 'create')
+            ->requirePresence('comment', 'create')
+            ->notEmptyString('comment', __('Please enter a Comment'), 'create')
+            ->requirePresence('comment_date', 'create')
+            ->notEmptyDate('comment_date', __('Please select a Date'));
+    }
+
     // The bootstrap-datepicker "date" field for comment_date renders/accepts text in whatever
     // format is configured in System Configurations > Date Format (e.g. "July 31, 2026"), not just
     // 'Y-m-d'. Cake's DateType::marshal() only ever accepts the strict 'Y-m-d' format, so with any

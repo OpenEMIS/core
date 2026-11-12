@@ -29,8 +29,7 @@ class StudentWithdrawalReportTable extends AppTable
         ]);
 
         $this->addBehavior('Report.ReportList');
-        // $this->addBehavior('Report.ReportList');
-        // $this->addBehavior('Report.InstitutionSecurity');
+        $this->addBehavior('Report.InstitutionSecurity'); //POCOR-9823 restrict export to the user's accessible institutions
     }
 
     public function beforeAction(EventInterface $event)

@@ -12,7 +12,7 @@ use App\Model\Table\AppTable;
 use Cake\Log\Log;
 use Cake\Validation\Validator;
 use Cake\Database\Expression\QueryExpression;
-use Cake\Datasource\ConnectionManager; //POCOR-9611
+use Report\Model\Table\InstitutionPositionsTable as InstitutionPositions;
 
 /**
  *
@@ -30,13 +30,19 @@ class InstitutionStandardsTable extends AppTable
     private const FEATURES_WITH_GRADE = [
         'Institution.InstitutionStandardStudentAbsences',
         'Institution.InstitutionStandardStudentAbsenceType',
-        'Institution.InstitutionStudentWeeklyAttendance',
         'Institution.InstitutionStudentMonthlyAttendance', //POCOR-9611
+        'Report.StudentAbsences', //POCOR-9874
+        'Report.TeacherClasses', //POCOR-9874
+    ];
+    //POCOR-9874: Reports > Institutions features offered here, each with the filters it shows
+    private const FEATURES_WITH_DATE_RANGE = [
+        'Report.StaffAttendances',
+        'Report.StaffLeave',
+        'Report.StudentAbsences',
     ];
     private const FEATURES_WITH_CLASS = [
         'Institution.InstitutionStandardStudentAbsences',
         'Institution.InstitutionStandardStudentAbsenceType',
-        'Institution.InstitutionStudentWeeklyAttendance',
         'Institution.InstitutionStudentMonthlyAttendance', //POCOR-9611
     ];
     private const FEATURES_WITH_MONTH = [
@@ -112,7 +118,24 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_class_id', ['type' => 'hidden']);
         $this->ControllerAction->field('month', ['type' => 'hidden', 'after' => 'institution_class_id']);  // POCOR-6871
-        $this->ControllerAction->field('week_start_day', ['type' => 'hidden', 'after' => 'month']); //POCOR-9611: week filter for Students Weekly Attendance report
+        //POCOR-9874: filters of the Reports > Institutions features; area filters are fixed to "all"
+        // since the report is limited to the current institution
+        $this->ControllerAction->field('area_level_id', ['type' => 'hidden', 'value' => -1]);
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'value' => -1]);
+        $this->ControllerAction->field('institution_type_id', ['type' => 'hidden', 'value' => 0]);
+        $this->ControllerAction->field('position_filter', ['type' => 'hidden']);
+        $this->ControllerAction->field('teaching_filter', ['type' => 'hidden']);
+        $this->ControllerAction->field('type', ['type' => 'hidden']);
+        $this->ControllerAction->field('status', ['type' => 'hidden']);
+        $this->ControllerAction->field('status_feature', ['type' => 'hidden']);
+        $this->ControllerAction->field('education_level_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('education_programme_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('education_subject_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);
+        $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
+        $this->ControllerAction->field('position', ['type' => 'hidden']);
+        $this->ControllerAction->field('leave_type', ['type' => 'hidden']);
+        $this->ControllerAction->field('workflow_status', ['type' => 'hidden']);
         $this->ControllerAction->field('username', ['type' => 'hidden']);
         $this->ControllerAction->field('openemis_no', ['type' => 'hidden']);
         $this->ControllerAction->field('first_name', ['type' => 'hidden', 'value' => 'x']);
@@ -129,7 +152,6 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('identity_type_id', ['type' => 'hidden']);
         $this->ControllerAction->field('identity_number', ['type' => 'hidden']);
         $this->ControllerAction->field('super_admin', ['type' => 'hidden']);
-        $this->ControllerAction->field('status', ['type' => 'hidden']);
         $this->ControllerAction->field('photo_name', ['type' => 'hidden']);
         $this->ControllerAction->field('is_student', ['type' => 'hidden']);
         $this->ControllerAction->field('is_staff', ['type' => 'hidden']);
@@ -139,6 +161,7 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('address_area_id', ['type' => 'hidden']);
         $this->ControllerAction->field('date_of_death', ['type' => 'hidden']);
         $this->ControllerAction->field('external_reference', ['type' => 'hidden']);
+        $this->ControllerAction->field('sync_status', ['type' => 'hidden']); //POCOR-9831: security_users.sync_status (POCOR-9590) is not a report filter
         $this->ControllerAction->field('birthplace_area_id', ['type' => 'hidden']);
         $this->ControllerAction->field('photo_content', ['type' => 'hidden']);
         $this->ControllerAction->field('failed_logins', ['type' => 'hidden']);
@@ -248,12 +271,15 @@ class InstitutionStandardsTable extends AppTable
             $attr['type']           = 'select';
             $attr['select']         = false;
             $attr['onChangeReload'] = true;
-            //POCOR-9611: Weekly/Monthly Attendance requires a specific grade — no "All Grades" option
-            if (in_array($report, ['Institution.InstitutionStudentWeeklyAttendance', 'Institution.InstitutionStudentMonthlyAttendance'], true)) {
+            //POCOR-9611: Monthly Attendance requires a specific grade — no "All Grades" option
+            if (in_array($report, ['Institution.InstitutionStudentMonthlyAttendance'], true)) {
                 $attr['options']          = $gradeOptions;
                 $attr['attr']['required'] = true;
             } else {
                 $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+            }
+            if ($report == 'Report.StudentAbsences') { //POCOR-9874: mandatory as in Reports > Institutions
+                $attr['attr']['required'] = true;
             }
             return $attr;
         }
@@ -326,8 +352,8 @@ class InstitutionStandardsTable extends AppTable
             $attr['type']   = 'select';
             $attr['select'] = false;
             $attr['onChangeReload'] = true;
-            //POCOR-9611: Weekly/Monthly Attendance requires a specific class — mixed modes per class
-            if (in_array($report, ['Institution.InstitutionStudentWeeklyAttendance', 'Institution.InstitutionStudentMonthlyAttendance'], true)) {
+            //POCOR-9611: Monthly Attendance requires a specific class — mixed modes per class
+            if (in_array($report, ['Institution.InstitutionStudentMonthlyAttendance'], true)) {
                 $attr['options']          = $classes;
                 $attr['attr']['required'] = true;
             } else {
@@ -379,6 +405,351 @@ class InstitutionStandardsTable extends AppTable
             $attr['attr']['required'] = true;
             return $attr;
         }
+    }
+
+    /**
+     * POCOR-9874: Position Filter of Institution Positions
+     */
+    public function onUpdateFieldPositionFilter(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($this->getSelectedFeature() == 'Report.InstitutionPositions') {
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = [
+                InstitutionPositions::ALL_POSITION => __('All Positions'),
+                InstitutionPositions::POSITION_WITH_STAFF => __('Positions with Staff')
+            ];
+            return $attr;
+        }
+    }
+
+    /**
+     * POCOR-9874: Teaching Filter of Institution Positions
+     */
+    public function onUpdateFieldTeachingFilter(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($this->getSelectedFeature() == 'Report.InstitutionPositions') {
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = [
+                InstitutionPositions::ALL_STAFF => __('All Staff'),
+                InstitutionPositions::TEACHING => __('Teaching'),
+                InstitutionPositions::NON_TEACHING => __('Non Teaching')
+            ];
+            return $attr;
+        }
+    }
+
+    /**
+     * POCOR-9874: Staff Type of Staff
+     */
+    public function onUpdateFieldType(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($this->getSelectedFeature() == 'Report.InstitutionStaff') {
+            $StaffTypes = TableRegistry::getTableLocator()->get('Staff.StaffTypes');
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = [0 => __('All Types')] + $StaffTypes->getList()->toArray();
+            $attr['attr']['required'] = true;
+            return $attr;
+        }
+    }
+
+    /**
+     * POCOR-9874: Status of Institution Positions, Staff and Students
+     */
+    public function onUpdateFieldStatus(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        $feature = $this->getSelectedFeature();
+        $statusOptions = null;
+        if ($feature == 'Report.InstitutionPositions') {
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+            $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $statusOptions = $WorkflowSteps
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->innerJoin(
+                    [$Workflows->getAlias() => $Workflows->getTable()],
+                    [$Workflows->aliasField('id') . ' = ' . $WorkflowSteps->aliasField('workflow_id')]
+                )
+                ->where([$Workflows->aliasField('name LIKE') => 'Positions'])
+                ->toArray();
+        } elseif ($feature == 'Report.InstitutionStaff') {
+            $statusOptions = TableRegistry::getTableLocator()->get('Staff.StaffStatuses')->getList()->toArray();
+        } elseif ($feature == 'Report.InstitutionStudents') {
+            $statusOptions = TableRegistry::getTableLocator()->get('Student.StudentStatuses')
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->toArray();
+        }
+        if ($statusOptions !== null) {
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = [-1 => __('All Statuses')] + $statusOptions;
+            // default to All - otherwise the security_users.status column default (1) is preselected.
+            // Keep the posted status only for the feature it was picked for (status ids overlap across features)
+            $postedData = $this->request->getData($this->getAlias());
+            $postedStatus = $postedData['status'] ?? '';
+            $sameFeature = ($postedData['status_feature'] ?? '') === $feature;
+            $attr['attr']['value'] = ($sameFeature && isset($attr['options'][$postedStatus])) ? $postedStatus : -1;
+            $attr['attr']['required'] = true;
+            return $attr;
+        }
+        // hidden for other features: post All, so switching to a feature with Status starts on All
+        $attr['value'] = -1;
+        return $attr;
+    }
+
+    /**
+     * POCOR-9874: feature the posted Status belongs to, so Status resets to All when the feature changes
+     */
+    public function onUpdateFieldStatusFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        $attr['value'] = $this->getSelectedFeature();
+        return $attr;
+    }
+
+    /**
+     * POCOR-9874: Education Level of Students
+     */
+    public function onUpdateFieldEducationLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($this->getSelectedFeature() == 'Report.InstitutionStudents') {
+            $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
+            $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
+            $levelOptions = $EducationLevels->find('list', ['valueField' => 'system_level_name'])
+                ->find('visible')
+                ->find('order')
+                ->contain(['EducationSystems'])
+                ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+                ->toArray();
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = [0 => __('All Levels')] + $levelOptions;
+            $attr['onChangeReload'] = true;
+            return $attr;
+        }
+    }
+
+    /**
+     * POCOR-9874: Education Programme of Students and Subjects - programmes offered by the institution
+     */
+    public function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        $feature = $this->getSelectedFeature();
+        if (in_array($feature, ['Report.InstitutionStudents', 'Report.InstitutionSubjects'])) {
+            $data = $this->request->getData($this->getAlias());
+            $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+            $query = $EducationProgrammes
+                ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+                ->find('visible')
+                ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                ->innerJoin(['EducationGrades' => 'education_grades'], [
+                    'EducationGrades.education_programme_id = ' . $EducationProgrammes->aliasField('id')
+                ])
+                ->innerJoin(['InstitutionGrades' => 'institution_grades'], [
+                    'InstitutionGrades.education_grade_id = EducationGrades.id'
+                ])
+                ->where([
+                    'InstitutionGrades.institution_id' => $data['institution_id'],
+                    'EducationSystems.academic_period_id' => $data['academic_period_id'],
+                ])
+                ->order([
+                    'EducationCycles.order' => 'ASC',
+                    $EducationProgrammes->aliasField('order') => 'ASC'
+                ]);
+            if ($feature == 'Report.InstitutionStudents' && !empty($data['education_level_id'])) {
+                $query->where(['EducationCycles.education_level_id' => $data['education_level_id']]);
+            }
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = [0 => __('All Programmes')] + $query->toArray();
+            $attr['onChangeReload'] = true;
+            if ($feature == 'Report.InstitutionStudents') {
+                $attr['attr']['required'] = true;
+            }
+            return $attr;
+        }
+    }
+
+    /**
+     * POCOR-9874: Education Subject of Subjects - subjects of the institution, narrowed by the selected programme
+     */
+    public function onUpdateFieldEducationSubjectId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($this->getSelectedFeature() == 'Report.InstitutionSubjects') {
+            $data = $this->request->getData($this->getAlias());
+            $EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
+            $query = $EducationSubjects
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->innerJoin(['InstitutionSubjects' => 'institution_subjects'], [
+                    'InstitutionSubjects.education_subject_id = ' . $EducationSubjects->aliasField('id')
+                ])
+                ->where([
+                    'InstitutionSubjects.institution_id' => $data['institution_id'],
+                    'InstitutionSubjects.academic_period_id' => $data['academic_period_id'],
+                ])
+                ->distinct([$EducationSubjects->aliasField('id')])
+                ->order([$EducationSubjects->aliasField('order') => 'ASC']);
+            if (!empty($data['education_programme_id'])) {
+                $query
+                    ->innerJoin(['EducationGrades' => 'education_grades'], [
+                        'EducationGrades.id = InstitutionSubjects.education_grade_id'
+                    ])
+                    ->where(['EducationGrades.education_programme_id' => $data['education_programme_id']]);
+            }
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = [0 => __('All Subjects')] + $query->toArray();
+            return $attr;
+        }
+    }
+
+    /**
+     * POCOR-9874: Start Date - limited to the selected academic period, defaults to its start date
+     */
+    public function onUpdateFieldReportStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if (in_array($this->getSelectedFeature(), self::FEATURES_WITH_DATE_RANGE)) {
+            [$periodStart, $periodEnd] = $this->getSelectedPeriodDates();
+            $dateFormat = $this->getEditableDateFormat();
+            $startDate = $this->getPostedDate('report_start_date', $periodStart, $periodEnd) ?? $periodStart;
+
+            $attr['type'] = 'date';
+            $attr['date_options']['startDate'] = $periodStart->format($dateFormat);
+            $attr['date_options']['endDate'] = $periodEnd->format($dateFormat);
+            $attr['value'] = $startDate->format($dateFormat);
+            $attr['onChangeReload'] = true;
+            return $attr;
+        }
+    }
+
+    /**
+     * POCOR-9874: End Date - from Start Date to the end of the academic period
+     * (Student Absences is limited to 30 days, as in Reports > Institutions)
+     */
+    public function onUpdateFieldReportEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        $feature = $this->getSelectedFeature();
+        if (in_array($feature, self::FEATURES_WITH_DATE_RANGE)) {
+            [$periodStart, $periodEnd] = $this->getSelectedPeriodDates();
+            $dateFormat = $this->getEditableDateFormat();
+            $startDate = $this->getPostedDate('report_start_date', $periodStart, $periodEnd) ?? $periodStart;
+            $maxEndDate = $periodEnd;
+            if ($feature == 'Report.StudentAbsences') {
+                $maxEndDate = min((clone $startDate)->modify('+30 days'), $periodEnd);
+            }
+            $endDate = $this->getPostedDate('report_end_date', $startDate, $maxEndDate) ?? $maxEndDate;
+
+            $attr['type'] = 'date';
+            $attr['date_options']['startDate'] = $startDate->format($dateFormat);
+            $attr['date_options']['endDate'] = $maxEndDate->format($dateFormat);
+            $attr['value'] = $endDate->format($dateFormat);
+            return $attr;
+        }
+    }
+
+    /**
+     * POCOR-9874: Position of Staff Leave - position titles of the institution
+     */
+    public function onUpdateFieldPosition(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($this->getSelectedFeature() == 'Report.StaffLeave') {
+            $institutionId = $this->request->getData($this->getAlias())['institution_id'];
+            $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
+            $positionOptions = $StaffPositionTitles
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->innerJoin(['InstitutionPositions' => 'institution_positions'], [
+                    'InstitutionPositions.staff_position_title_id = ' . $StaffPositionTitles->aliasField('id')
+                ])
+                ->where(['InstitutionPositions.institution_id' => $institutionId])
+                ->distinct([$StaffPositionTitles->aliasField('id')])
+                ->order([$StaffPositionTitles->aliasField('name') => 'ASC'])
+                ->toArray();
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = [0 => __('All Positions')] + $positionOptions;
+            return $attr;
+        }
+    }
+
+    /**
+     * POCOR-9874: Leave Type of Staff Leave
+     */
+    public function onUpdateFieldLeaveType(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($this->getSelectedFeature() == 'Report.StaffLeave') {
+            $leaveTypeOptions = TableRegistry::getTableLocator()->get('Staff.StaffLeaveTypes')
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->toArray();
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = [0 => __('All Leave Types')] + $leaveTypeOptions;
+            return $attr;
+        }
+    }
+
+    /**
+     * POCOR-9874: Workflow Status of Staff Leave
+     */
+    public function onUpdateFieldWorkflowStatus(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($this->getSelectedFeature() == 'Report.StaffLeave') {
+            $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $statusOptions = $WorkflowSteps
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->innerJoin(['Workflows' => 'workflows'], [
+                    'Workflows.id = ' . $WorkflowSteps->aliasField('workflow_id')
+                ])
+                ->innerJoin(['WorkflowModels' => 'workflow_models'], [
+                    'WorkflowModels.id = Workflows.workflow_model_id'
+                ])
+                ->where(['WorkflowModels.model' => 'Institution.StaffLeave'])
+                ->toArray();
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['options'] = [0 => __('All Statuses')] + $statusOptions;
+            return $attr;
+        }
+    }
+
+    //POCOR-9874
+    private function getSelectedFeature(): string
+    {
+        return $this->request->getData($this->getAlias())['feature'] ?? '';
+    }
+
+    //POCOR-9874: start and end date of the selected academic period
+    private function getSelectedPeriodDates(): array
+    {
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'] ?? null;
+        $period = $AcademicPeriods->get(!empty($academicPeriodId) ? $academicPeriodId : $AcademicPeriods->getCurrent());
+
+        return [
+            DateTime::createFromFormat('!Y-m-d', $period->start_date->format('Y-m-d')),
+            DateTime::createFromFormat('!Y-m-d', $period->end_date->format('Y-m-d')),
+        ];
+    }
+
+    //POCOR-9874: posted date, or null when it is empty or outside the allowed range (e.g. after the academic period changed)
+    private function getPostedDate(string $field, DateTime $minDate, DateTime $maxDate): ?DateTime
+    {
+        $posted = $this->request->getData($this->getAlias())[$field] ?? null;
+        if (empty($posted)) {
+            return null;
+        }
+        $date = DateTime::createFromFormat('!' . $this->getEditableDateFormat(), $posted);
+        if ($date === false || $date < $minDate || $date > $maxDate) {
+            return null;
+        }
+        return $date;
+    }
+
+    //POCOR-9874: same date picker format as Reports > Institutions
+    private function getEditableDateFormat(): string
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        return preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
     }
 
     public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
@@ -977,6 +1348,30 @@ class InstitutionStandardsTable extends AppTable
             $validator = $validator
                 ->notEmpty('appraisal_form_id');
         }
+        //POCOR-9874: same mandatory filters as Reports > Institutions
+        $requiredMessage = __('This field cannot be left empty');
+        if ($feature == 'Report.InstitutionPositions') {
+            $validator->notEmpty('status', $requiredMessage);
+        }
+        if ($feature == 'Report.InstitutionStaff') {
+            $validator
+                ->notEmpty('type', $requiredMessage)
+                ->notEmpty('status', $requiredMessage);
+        }
+        if ($feature == 'Report.InstitutionStudents') {
+            $validator
+                ->notEmpty('education_programme_id', $requiredMessage)
+                ->notEmpty('status', $requiredMessage);
+        }
+        if ($feature == 'Report.StudentAbsences') {
+            $validator->setProvider('custom', $this); // compareDate lives on ValidationBehavior
+            $validator
+                ->notEmpty('education_grade_id', $requiredMessage)
+                ->add('report_start_date', 'ruleCompareDate', [
+                    'rule' => ['compareDate', 'report_end_date', true],
+                    'message' => __('Start Date should be earlier than or equal to End Date')
+                ]);
+        }
         return $validator;
     }
 
@@ -1025,100 +1420,6 @@ class InstitutionStandardsTable extends AppTable
             return $attr;
         }
     }
-    //POCOR-9611: Week dropdown for Students Weekly Attendance report — mirrors Laravel getAttendanceWeeks logic
-    public function onUpdateFieldWeekStartDay(EventInterface $event, array $attr, $action, $request)
-    {
-        $alias = $this->getAlias();
-        $data = $this->request->getData($alias);
-        if (($data['feature'] ?? '') !== 'Institution.InstitutionStudentWeeklyAttendance') { //POCOR-9611
-            return $attr; // hidden for other features
-        }
-
-        $academicPeriodId = (int)($data['academic_period_id'] ?? 0);
-        $weekOptions    = [];
-        $currentWeekKey = null; //POCOR-9611: declared at function scope so the default-inject below always sees it
-
-        if ($academicPeriodId > 0) {
-            $conn = ConnectionManager::get('default');
-
-            //POCOR-9611: Get academic period dates
-            $stmt = $conn->execute('SELECT start_date, end_date FROM academic_periods WHERE id = ? LIMIT 1', [$academicPeriodId]);
-            $period = $stmt->fetch('assoc');
-
-            //POCOR-9611: Get first_day_of_week config (0=Sun→7, 1=Mon, ..., 6=Sat)
-            $stmt = $conn->execute("SELECT value FROM config_items WHERE code = 'first_day_of_week' LIMIT 1");
-            $cfg = $stmt->fetch('assoc');
-            $firstDayOfWeek = ($cfg && $cfg['value'] !== '') ? (int)$cfg['value'] : 1;
-            if ($firstDayOfWeek === 0) {
-                $firstDayOfWeek = 7; // Sunday treated as 7 so Sunday ends the week
-            }
-            // Last day of week index (ISO: 1=Mon…7=Sun); end of week = day before firstDayOfWeek
-            $lastDayIndex = $firstDayOfWeek - 1;
-            if ($lastDayIndex === 0) {
-                $lastDayIndex = 7;
-            }
-
-            if ($period) {
-                $todayStr = date('Y-m-d');
-                $current = new DateTime($period['start_date']);
-                $periodEnd = new DateTime($period['end_date']);
-                $weekIndex = 1;
-
-                do {
-                    //POCOR-9611: Advance to the last-day-of-week (same algorithm as Laravel next('Sunday'))
-                    $weekEnd = clone $current;
-                    $dow = (int)$weekEnd->format('N'); // 1=Mon…7=Sun
-                    if ($dow !== $lastDayIndex) {
-                        $daysToEnd = ($lastDayIndex - $dow + 7) % 7;
-                        if ($daysToEnd === 0) {
-                            $daysToEnd = 7;
-                        }
-                        $weekEnd->modify("+{$daysToEnd} days");
-                    }
-                    if ($weekEnd > $periodEnd) {
-                        $weekEnd = clone $periodEnd;
-                    }
-
-                    $startStr = $current->format('Y-m-d');
-                    $endStr   = $weekEnd->format('Y-m-d');
-                    $startFmt = $current->format('d/m/Y');
-                    $endFmt   = $weekEnd->format('d/m/Y');
-
-                    if ($todayStr >= $startStr && $todayStr <= $endStr) {
-                        $label = sprintf(__('Current Week') . ' %d (%s - %s)', $weekIndex, $startFmt, $endFmt);
-                        $currentWeekKey = $startStr; //POCOR-9611: today falls in this week
-                    } elseif ($todayStr > $endStr) {
-                        $currentWeekKey = $startStr; //POCOR-9611: keep advancing — last past week becomes default when today is beyond the period
-                        $label = sprintf(__('Week') . ' %d (%s - %s)', $weekIndex, $startFmt, $endFmt);
-                    } else {
-                        $label = sprintf(__('Week') . ' %d (%s - %s)', $weekIndex, $startFmt, $endFmt);
-                    }
-
-                    $weekOptions[$startStr] = $label;
-                    $weekIndex++;
-
-                    $current = clone $weekEnd;
-                    $current->modify('+1 day');
-
-                } while ($weekEnd < $periodEnd);
-            }
-        }
-
-        $attr['options']          = $weekOptions;
-        $attr['type']             = 'select';
-        $attr['select']           = false;
-        $attr['onChangeReload']   = false;
-        $attr['attr']['required'] = true; //POCOR-9611: week is required for this report
-        //POCOR-9611: Default to current/latest past week
-        if (empty($data['week_start_day']) && $currentWeekKey !== null) {
-            $data['week_start_day'] = $currentWeekKey;
-            $this->request = $this->request->withData($alias, $data);
-        }
-        if (!empty($data['week_start_day'])) {
-            $attr['attr']['value'] = $data['week_start_day']; //POCOR-9611: attr.attr.value overrides POST/entity for first render
-        }
-        return $attr;
-    }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
@@ -1137,10 +1438,33 @@ class InstitutionStandardsTable extends AppTable
                 return __('Education Grade');
             case 'month':
                 return __('Month');
-            case 'week_start_day': //POCOR-9611
-                return __('Week');
             case 'format':
                 return __('Format');
+            //POCOR-9874
+            case 'position_filter':
+                return __('Position Filter');
+            case 'teaching_filter':
+                return __('Teaching Filter');
+            case 'type':
+                return __('Type');
+            case 'status':
+                return $this->getSelectedFeature() == 'Report.InstitutionStudents' ? __('Student Status') : __('Status');
+            case 'education_level_id':
+                return __('Education Level');
+            case 'education_programme_id':
+                return __('Education Programme');
+            case 'education_subject_id':
+                return __('Education Subject');
+            case 'report_start_date':
+                return __('Start Date');
+            case 'report_end_date':
+                return __('End Date');
+            case 'position':
+                return __('Position');
+            case 'leave_type':
+                return __('Leave Type');
+            case 'workflow_status':
+                return __('Workflow Status');
 
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);

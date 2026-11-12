@@ -34,7 +34,13 @@ class AddBehavior extends Behavior {
 
         $extra['config']['form'] = true;
         $extra['patchEntity'] = true;
-        $extra['redirect'] = $model->url('index', 'QUERY');
+        // POCOR-9819: unrestricted, not 'QUERY' - matches EditBehavior's own
+        // successful-save redirect (url('view'), no restriction). 'QUERY' only
+        // carries real ?query=string params forward, silently dropping any
+        // pass-parameter context (eg Directory > Student > Languages > Add,
+        // where security_user_id is encoded into the URL path) - Save would
+        // "succeed" but land on an index request missing that context entirely.
+        $extra['redirect'] = $model->url('index');
         $event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforeAction', [$extra], $this);
         if ($event->isStopped()) {
             $mainEvent->stopPropagation();

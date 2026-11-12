@@ -357,6 +357,16 @@ abstract class AlertCommandBase extends Command
     }
 
     /**
+     * POCOR-9862: Extra keys merged into alert_queue.payload. Default none — override per alert.
+     *
+     * @return array
+     */
+    protected function getQueuePayloadExtras(): array
+    {
+        return [];
+    }
+
+    /**
      * POCOR-9509: Queue a single alert
      *
      * @param string $method 'email' or 'sms'
@@ -379,11 +389,11 @@ abstract class AlertCommandBase extends Command
                 'recipient' => $recipient,
                 'subject' => $subject,
                 'message_body' => $message,
-                'payload' => json_encode([
+                'payload' => json_encode(array_merge([
                     'feature' => $this->featureName,
                     'rule_id' => $this->ruleId,
                     'user_id' => $this->userId,
-                ]),
+                ], $this->getQueuePayloadExtras())), //POCOR-9862: subclasses may add extra payload keys
                 'status' => \App\Models\Api5\AlertLogs::STATUS_PENDING, //POCOR-9509: use constant
                 'retry_count' => 0,
                 'available_at' => now(),

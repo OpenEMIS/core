@@ -7,7 +7,7 @@ use Cake\I18n\Date;
 use Cake\Controller\Component;
 use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use DateTimeInterface;
 use DateTime;
 use PHPExcel_Worksheet;
@@ -16,11 +16,13 @@ class ImportStudentBodyMassesTable extends AppTable
 {
     private $institutionId;
 
-    public function initialize(array $config) 
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
-        $this->addBehavior('Import.Import', ['plugin'=>'User', 'model'=>'UserBodyMasses']);
+        $this->addBehavior('Import.Import', ['plugin'=>'User', 'model'=>'UserBodyMasses',
+            'backUrl' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'] // POCOR-9896
+        ]);
         $this->addBehavior('Institution.ImportStudent');
 
         // register the target table once
@@ -28,10 +30,10 @@ class ImportStudentBodyMassesTable extends AppTable
     }
 
     public function beforeAction($event) {
-        $this->institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $this->institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
     }
 
-    public function implementedEvents() 
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -50,9 +52,9 @@ class ImportStudentBodyMassesTable extends AppTable
         }
     }
 
-    public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona) 
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona) 
     {
-        $crumbTitle = $this->getHeader($this->alias());
+        $crumbTitle = $this->getHeader($this->getAlias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 

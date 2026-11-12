@@ -12,7 +12,7 @@ class Counsellings extends Model
     protected $table = 'counsellings';
 
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'date', 'guidance_utilized', 'description', 'intervention', 'comment', 'file_name', 'file_content', 'counselor_id', 'student_id', 'guidance_type_id', 'requester_id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+    protected $fillable = ['id', 'date', 'guidance_utilized', 'description', 'intervention', 'comment', 'file_name', 'file_content', 'counselor_id', 'student_id', 'requester_id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
 
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
@@ -98,7 +98,6 @@ public function _swaggerPath() {}
                           @OA\Property(property="file_content", type="string", example=null),
                           @OA\Property(property="counselor_id", type="integer", example=null),
                           @OA\Property(property="student_id", type="integer", example=null),
-                          @OA\Property(property="guidance_type_id", type="integer", example=null),
                           @OA\Property(property="requester_id", type="integer", example=null),
                           @OA\Property(property="modified_user_id", type="integer", example=null),
                           @OA\Property(property="modified", type="string", format="date-time", example=null),
@@ -135,7 +134,6 @@ public function _swaggerList() {}
                      @OA\Property(property="file_content", type="string", example=null),
                      @OA\Property(property="counselor_id", type="integer", example=null),
                      @OA\Property(property="student_id", type="integer", example=null),
-                     @OA\Property(property="guidance_type_id", type="integer", example=null),
                      @OA\Property(property="requester_id", type="integer", example=null),
                      @OA\Property(property="modified_user_id", type="integer", example=null),
                      @OA\Property(property="modified", type="string", format="date-time", example=null),
@@ -210,7 +208,6 @@ public function _swaggerView() {}
                      @OA\Property(property="file_content", type="string", example=null),
                      @OA\Property(property="counselor_id", type="integer", example=null),
                      @OA\Property(property="student_id", type="integer", example=null),
-                     @OA\Property(property="guidance_type_id", type="integer", example=null),
                      @OA\Property(property="requester_id", type="integer", example=null),
                      @OA\Property(property="modified_user_id", type="integer", example=null),
                      @OA\Property(property="modified", type="string", format="date-time", example=null),

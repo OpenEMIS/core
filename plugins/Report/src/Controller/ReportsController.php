@@ -40,7 +40,8 @@ class ReportsController extends AppController
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
             'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']],
             'Meals' => ['className' => 'Report.Meals', 'actions' => ['index', 'add']],//POCOR-9267 
-            'InstitutionInfrastructures' => ['className' => 'Report.InstitutionInfrastructures', 'actions' => ['index', 'add']]//POCOR-9562 
+            'InstitutionInfrastructures' => ['className' => 'Report.InstitutionInfrastructures', 'actions' => ['index', 'add']],//POCOR-9562 
+            'Education' => ['className' => 'Report.Education', 'actions' => ['index', 'add']]//POCOR-9835
         ];
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
@@ -117,6 +118,8 @@ class ReportsController extends AppController
         $alias = $table->getAlias();
         if ($alias == 'InstitutionInfrastructures') {
             $header = __('Reports') . ' - ' . __('Infrastructures');
+        } elseif ($alias == 'CustomReportSetups') { //POCOR-9812
+            $header = __('Reports') . ' - ' . __('Custom');
         } else {
             $header = __('Reports') . ' - ' . __($alias);
         }
@@ -156,6 +159,7 @@ class ReportsController extends AppController
                 'Report.InstitutionPositions' => __('Institution Positions'),
                 'Report.InstitutionPositionsSummaries' => __('Institution Positions Summaries'),
                 'Report.InstitutionProgrammes' => __('Programmes'),
+                'Report.InstitutionScanned' => __('Scanned'), //POCOR-9840
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
                 'Report.InstitutionStaff' => __('Staff'),
                 'Report.StaffAttendances' => __('Staff Attendance'),
@@ -171,6 +175,8 @@ class ReportsController extends AppController
                 'Report.InstitutionSubjects' => __('Subjects'),
                 'Report.StudentWithdrawalReport' => __('Student Withdrawal Report'),
                 'Report.TeacherClasses' => __('Teacher Classes'), //POCOR-9064
+                'Report.IndividualStudentsAttendanceReport' => __('Individual Students Attendance Report'), //POCOR-9831 //POCOR-9850: renamed from Student Attendance Weekly Report //POCOR-9877: renamed from Student Attendance Report
+                'Report.StudentAttendances' => __('Student Attendance'), //POCOR-9813
                 // 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
                 // 'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
                 // 'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
@@ -337,6 +343,11 @@ class ReportsController extends AppController
             ];
                 
         }
+        elseif ($module == 'Education') {//POCOR-9835 Starts
+            $options = [
+                'Report.EducationStructureSystems' => __('Systems'),
+            ];
+        }//POCOR-9835 Ends
         return $options;
     }
     //POCOR-9563[END]
@@ -406,6 +417,12 @@ class ReportsController extends AppController
     public function Profiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Profiles']);
+    }
+
+    //POCOR-9812: Reports > Custom > Add - create a custom report definition (separate permission from Process)
+    public function CustomReportSetups()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.CustomReportSetups']);
     }
 
     // View report

@@ -48,6 +48,7 @@ class StaffAttendancesTable extends ControllerActionTable
             ]
         ]);
         $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity'); //POCOR-9823
     }
 
     public function implementedEvents(): array
@@ -81,6 +82,8 @@ class StaffAttendancesTable extends ControllerActionTable
         $endDate = date("Y-m-d", strtotime($requestData->report_end_date));
         $startMonth = date('m', strtotime($startDate));
         $endMonth = date('m', strtotime($endDate));
+        $superAdmin = $requestData->super_admin; //POCOR-9823
+        $userId = $requestData->user_id; //POCOR-9823
         $conditions = [];
 
         $institutionIds = [];
@@ -119,6 +122,11 @@ class StaffAttendancesTable extends ControllerActionTable
             ->where($conditions)
             ->group(['security_users.id', 'month_generator.year_name', 'month_generator.month_id'])
             ->order(['Institutions.code', 'security_users.openemis_no', 'month_generator.year_name', 'month_generator.month_id']);
+
+        //POCOR-9823
+        if (!$superAdmin) {
+            $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
+        }
 
         // Format the final output
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {

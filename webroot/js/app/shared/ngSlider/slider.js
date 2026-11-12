@@ -1,4 +1,24 @@
 angular.module('ui.bootstrap-slider', [])
+    // Maps a slider's current (possibly in-between) numeric value to the label of the
+    // nearest defined tick, e.g. for a Text-type Appraisal slider. Falls back to the raw
+    // value if no ticks/labels are supplied.
+    .filter('tickLabel', function () {
+        return function (value, ticks, labels) {
+            if (!angular.isArray(ticks) || !angular.isArray(labels) || ticks.length === 0) {
+                return value;
+            }
+            var closestIndex = 0;
+            var closestDiff = Infinity;
+            for (var i = 0; i < ticks.length; i++) {
+                var diff = Math.abs(parseFloat(ticks[i]) - parseFloat(value));
+                if (diff < closestDiff) {
+                    closestDiff = diff;
+                    closestIndex = i;
+                }
+            }
+            return (labels[closestIndex] !== undefined) ? labels[closestIndex] : value;
+        };
+    })
     .directive('slider', ['$parse', '$timeout', '$rootScope', function ($parse, $timeout, $rootScope) {
         return {
             restrict: 'AE',

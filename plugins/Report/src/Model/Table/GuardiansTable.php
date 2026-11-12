@@ -22,6 +22,7 @@ class GuardiansTable extends AppTable
         $this->setTable('student_guardians');
         parent::initialize($config);
         $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity'); //POCOR-9823
         $this->addBehavior('Excel', [
             'pages' => false
         ]);
@@ -224,6 +225,8 @@ class GuardiansTable extends AppTable
         $institutionTypeId = $requestData->institution_type_id;
         $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area_education_id;
+        $superAdmin = $requestData->super_admin; //POCOR-9823
+        $userId = $requestData->user_id; //POCOR-9823
         $conditions = [];
 
         $institutionIds = [];
@@ -341,6 +344,11 @@ class GuardiansTable extends AppTable
 //            'Areas.area_level_id !=' . 1,
                 $conditions
             ]);
+
+        //POCOR-9823
+        if (!$superAdmin) {
+            $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
+        }
     //POCOR-9005 removed map
     }
 

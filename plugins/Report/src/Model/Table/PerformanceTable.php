@@ -880,6 +880,20 @@ class PerformanceTable extends AppTable
             $academicPeriodId = $request->getData($this->getAlias())['academic_period_id'] ?? $AcademicPeriods->getCurrent();
             if ($gradeId > 0) {
                 $condition[$this->Assessments->aliasField('education_grade_id')] = $gradeId;
+            } elseif ($this->request->getData()['Performance']['feature'] == 'Report.Assessments') {
+                // POCOR-9852: for the Assessment report, "All Grades" only lists periods of the
+                // selected programme's grades. Assessment Missing Mark Entry keeps its old list
+                $programmeId = $request->getData($this->getAlias())['education_programme_id'] ?? null;
+                if (!empty($programmeId)) {
+                    $programmeGradeIds = $this->EducationGrades->find()
+                        ->select(['id'])
+                        ->where([$this->EducationGrades->aliasField('education_programme_id') => $programmeId])
+                        ->enableHydration(false)
+                        ->all()
+                        ->extract('id')
+                        ->toList();
+                    $condition[$this->Assessments->aliasField('education_grade_id IN')] = !empty($programmeGradeIds) ? $programmeGradeIds : [-1];
+                }
             }
             if (!empty($academicPeriodId)) {
                 $condition[$this->Assessments->aliasField('academic_period_id')] = $academicPeriodId;
@@ -1011,6 +1025,7 @@ class PerformanceTable extends AppTable
         if ($gradeId > 0) {
             $conditions[$this->aliasField('education_grade_id')] = $gradeId;
         }
+        $filterInstitutionIds = $this->parseFilterInstitutionIds($institutionId);
         if (!empty($filterInstitutionIds)) {
             $conditions[$this->aliasField('institution_id IN')] = $filterInstitutionIds;
         } else {//Added condition to get only user's accessiable institution data
@@ -1056,6 +1071,24 @@ class PerformanceTable extends AppTable
             ])
             ->contain(['AssessmentPeriods'])
             ->where([$conditions,]);
+    }
+
+     private function parseFilterInstitutionIds($institutionId): array
+    {
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
+        return $filterInstitutionIds;
     }
 
     /**

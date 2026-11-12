@@ -137,7 +137,6 @@ class UndoStudentStatusTable extends AppTable
         $institutionStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
-        $currentId = $StudentStatuses->getIdByCode('CURRENT');
         $promoteId = $StudentStatuses->getIdByCode('PROMOTED');
         //POCOR-6992 end
 
@@ -170,19 +169,22 @@ class UndoStudentStatusTable extends AppTable
                 if ($studentId != 0) {
                     $studentIds[$studentId] = $studentId;
                     //POCOR-6992 start
-                    $studentEnrollRecord = $institutionStudent->find()->where(['student_status_id' => $currentId, 'student_id' => $studentId])->first();
-                    $enrolledInstitutionId = '';
-                    if (!empty($studentEnrollRecord)) {
-                        $enrolledInstitutionId = $studentEnrollRecord->institution_id;
-                        $getInstitutions = $institution->find()->where(['id' => $enrolledInstitutionId])->first();
-                        $institutionCode = $getInstitutions->code;
-                        $institutionName = $getInstitutions->name;
-                    }
-
                     $studentPromoteRecord = $institutionStudent->find()->where(['student_status_id' => $promoteId, 'student_id' => $studentId, 'academic_period_id' => $entity->academic_period_id])->first();
-                    $promoteInstitutionId = $studentPromoteRecord->institution_id;
-                    if(!empty($studentPromoteRecord)) { //POCOR-8564
-                        if ($promoteInstitutionId != $enrolledInstitutionId && !empty($enrolledInstitutionId)) {
+                    if (!empty($studentPromoteRecord)) { //POCOR-8564
+                        // POCOR-9848: this used to compare against an unordered first() CURRENT record,
+                        // while the list screen kept the last one -- a student with CURRENT rows at two
+                        // institutions (e.g. 38 and 326) showed as selectable, then bounced Next back to
+                        // the add page. Use the same any-CURRENT-elsewhere rule as the list screen.
+                        $studentEnrollRecord = $this->getCurrentEnrolmentElsewhere($studentId, $studentPromoteRecord->institution_id);
+                        if (!empty($studentEnrollRecord)) {
+                            $institutionCode = '';
+                            $institutionName = '';
+                            $getInstitutions = $institution->find()->where(['id' => $studentEnrollRecord->institution_id])->first();
+                            // POCOR-9900: guard in case the enrolled institution_id no longer resolves.
+                            if (!empty($getInstitutions)) {
+                                $institutionCode = $getInstitutions->code;
+                                $institutionName = $getInstitutions->name;
+                            }
                             $message = __('There is an existing enrolment. Please contact ') . "$institutionCode" . ' - ' . $institutionName;
                             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                             $url = $this->ControllerAction->url('view');
@@ -252,9 +254,24 @@ class UndoStudentStatusTable extends AppTable
                 break;
             case 'reconfirm':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
-                $cancelUrl = $this->ControllerAction->url('add');
-                $cancelUrl = array_diff_key($cancelUrl, $this->request->getQuery());
-                $buttons[1]['url'] = $cancelUrl;
+                // POCOR-9848: ControllerAction->url('add') drops the encoded pass segment (paramsPass()
+                // reads getAttribute('pass'), which is empty in CakePHP 5), so Cancel landed on a bare
+                // Undo/add, paramsDecode() threw "Wrong number of segments" and the error renderer sent
+                // the user to error404. Build the URL with the encoded query string, as reconfirm() and
+                // the toolbar Back button already do.
+                $params = $this->ControllerAction->getQueryString();
+                if (!empty($params)) {
+                    $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+                } else {
+                    $encodedQueryParams = $this->request->getParam('pass')[1];
+                }
+                $buttons[1]['url'] = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'Undo',
+                    '0' => 'add',
+                    '1' => $encodedQueryParams
+                ];
                 break;
         }
     }

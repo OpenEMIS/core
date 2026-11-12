@@ -12,7 +12,7 @@ class Counsellings extends Model
     protected $table = 'counsellings';
 
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'date', 'guidance_utilized', 'description', 'intervention', 'comment', 'file_name', 'file_content', 'counselor_id', 'student_id', 'guidance_type_id', 'requester_id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+    protected $fillable = ['id', 'date', 'guidance_utilized', 'description', 'intervention', 'comment', 'file_name', 'file_content', 'counselor_id', 'student_id', 'requester_id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
 
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;

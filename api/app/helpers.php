@@ -669,27 +669,47 @@ if(!function_exists('getNewOpenemisNo')){
 
             $resultOpenemisTemp = OpenemisTemp::orderBy('id', 'DESC')->first();
 
-            if(strlen($resultOpenemisTemp->openemis_no) < 5){
+            // POCOR-9829: guard against $resultOpenemisTemp still being null
+            // (e.g. security_users_openemis_no has no rows yet) - the original
+            // `strlen($resultOpenemisTemp->openemis_no)` crashed here with a
+            // property access on null.
+            if (empty($resultOpenemisTemp) || strlen($resultOpenemisTemp->openemis_no) < 5) {
                 $resultOpenemisTemp = SecurityUsers::orderBy('id', 'DESC')->first();
             }
 
-            $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
+            // POCOR-9829: same null guard, plus preserve the existing
+            // zero-padded width (e.g. "00012") instead of losing it to numeric
+            // addition, which silently produced "13" instead of "00013" and
+            // broke the established id format for every id generated after it.
+            $lastOpenemisNo = $resultOpenemisTemp->openemis_no ?? ($prefix . '00000');
+            $resultOpenemisNoTemp = substr($lastOpenemisNo, strlen($prefix));
+            $padWidth = strlen($resultOpenemisNoTemp);
 
-            $newOpenemisNo = $resultOpenemisNoTemp+1;
-            $newOpenemisNo=$prefix.$newOpenemisNo;
+            $newOpenemisNo = str_pad((string) ((int) $resultOpenemisNoTemp + 1), $padWidth, '0', STR_PAD_LEFT);
+            $newOpenemisNo = $prefix.$newOpenemisNo;
 
             $resultOpenemisTemps = OpenemisTemp::where('openemis_no', $newOpenemisNo)->first();
 
             if(empty($resultOpenemisTemps->openemis_no)){
                 $storeOpenemisTemp = OpenemisTemp::insert([
                     'openemis_no' => $newOpenemisNo,
-                    'ip_address' => $_SERVER['REMOTE_ADDR'],
+                    'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
                     'created' => Carbon::now()->toDateTimeString()
                 ]);
             }
 
             return $newOpenemisNo;
         }
+
+        // POCOR-9829: the original fell through here with no return when the
+        // 'openemis_id_prefix' config row is missing, so the function
+        // implicitly returned null - callers treated that as a successful
+        // result (e.g. DirectoryRepository::getUniqueOpenemisId() returned
+        // {"openemis_no": null} with no error), which is a plausible root
+        // cause of students being created with a null openemis_no. Throw
+        // instead, so it surfaces as the same handled error every caller
+        // already catches.
+        throw new \RuntimeException("Unable to generate OpenEMIS ID: 'openemis_id_prefix' config item not found.");
     }
 }
 

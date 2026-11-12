@@ -1082,9 +1082,14 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('academic_period_id'),
                                         $AssessmentItemResults->aliasField('institution_id'),
                                         $AssessmentItemResults->aliasField('institution_classes_id'), // POCOR-6750
-                                        'weightage' => $AssessmentItemResults->AssessmentPeriods->aliasField('weight')
+                                        // POCOR-9759: weight frozen at save-time, not a live
+                                        // join to assessment_periods.weight - see AssessmentItemResultsTable.
+                                        'weightage' => $AssessmentItemResults->aliasField('applied_weight')
 
                                     ])
+                                    // Still needed for the start_date/end_date filter in
+                                    // $conditions above (overallResult == 0 branch) - the
+                                    // weight itself no longer needs this join.
                                     ->contain([
                                         'AssessmentPeriods'
                                     ])
@@ -1231,8 +1236,13 @@ class InstitutionClassStudentsTable extends AppTable
                                         $AssessmentItemResults->aliasField('academic_period_id'),
                                         $AssessmentItemResults->aliasField('institution_id'),
                                         $AssessmentItemResults->aliasField('institution_classes_id'), // POCOR-6750
-                                        'weightage' => $AssessmentItemResults->AssessmentPeriods->aliasField('weight')
+                                        // POCOR-9759: weight frozen at save-time, not a live
+                                        // join to assessment_periods.weight - see AssessmentItemResultsTable.
+                                        'weightage' => $AssessmentItemResults->aliasField('applied_weight')
                                     ])
+                                    // Still needed for the start_date/end_date filter in
+                                    // $conditions above (overallResult == 0 branch) - the
+                                    // weight itself no longer needs this join.
                                     ->contain([
                                         'AssessmentPeriods'
                                     ])
@@ -1403,9 +1413,14 @@ class InstitutionClassStudentsTable extends AppTable
                                     $AssessmentItemResults->aliasField('academic_period_id'),
                                     $AssessmentItemResults->aliasField('institution_id'),
                                     $AssessmentItemResults->aliasField('institution_classes_id'), // POCOR-6750
-                                    'weightage' => $AssessmentItemResults->AssessmentPeriods->aliasField('weight')
+                                    // POCOR-9759: weight frozen at save-time, not a live
+                                    // join to assessment_periods.weight - see AssessmentItemResultsTable.
+                                    'weightage' => $AssessmentItemResults->aliasField('applied_weight')
 
                                 ])
+                                // Still needed for the start_date/end_date filter in
+                                // $conditions above (overallResult == 0 branch) - the
+                                // weight itself no longer needs this join.
                                 ->contain([
                                     'AssessmentPeriods'
                                 ])

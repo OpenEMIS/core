@@ -175,5 +175,12 @@ $this->start('panelBody');
 		</table>
 	</div>
 </div>
+<?php //POCOR-9841 pagination (page links + "Display N records", which submits this form)
+$paginationFormOptions = $this->ControllerAction->getFormOptions();
+unset($paginationFormOptions["class"]);
+echo $this->Form->create($ControllerAction["table"]->newEmptyEntity(), $paginationFormOptions);
+echo $this->element("OpenEmis.pagination");
+echo $this->Form->end();
+?>
 <?php
 $this->end();

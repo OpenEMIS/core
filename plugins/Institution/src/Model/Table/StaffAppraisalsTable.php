@@ -258,8 +258,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 ]);
             })
             ->where([
-                $this->aliasField('assignee_id') => $userId,
-                'Assignees.super_admin IS NOT' => 1]) //POCOR-7102
+                $this->aliasField('assignee_id') => $userId]) //POCOR-9824
             ->order([
                 $this->aliasField('created') => 'DESC'
             ])

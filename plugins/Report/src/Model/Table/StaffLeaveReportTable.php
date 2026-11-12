@@ -116,13 +116,23 @@ class StaffLeaveReportTable extends AppTable
             ])
             ->where($conditions);
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-            return $results->map(function ($row) {
+            $rows = $results->toArray();
 
+            // POCOR-9857: batch-load custom field values for every staff id in this page instead of
+            // running one query per row (was an N+1 query -- could time out for tenants with large
+            // leave datasets).
+            $staffIds = array_values(array_unique(array_filter(array_map(function ($row) {
+                return $row['staff_id'];
+            }, $rows))));
+
+            $customFieldsByStaffId = [];
+            if (!empty($staffIds)) {
                 $StaffCustomFieldValues = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldValues');
 
                 // POCOR-9314 start
                 $customFieldData = $StaffCustomFieldValues->find()
                     ->select([
+                        'staff_id' => 'StaffCustomFieldValues.staff_id',
                         'custom_field_id' => 'StaffCustomFields.id',
                         'StaffCustomFieldValues.text_value',
                         'StaffCustomFieldValues.number_value',
@@ -137,30 +147,43 @@ class StaffLeaveReportTable extends AppTable
                             'StaffCustomFields.id = StaffCustomFieldValues.staff_custom_field_id'
                         ]
                     )
-                    ->where(['StaffCustomFieldValues.staff_id' => $row['staff_id']])
+                    ->where(['StaffCustomFieldValues.staff_id IN' => $staffIds])
                     ->toArray();
-
                 //POCOR-9314 end
+
                 foreach ($customFieldData as $data) {
-                    if (!empty($data->text_value)) {
-                        $row[$data->custom_field_id] = $data->text_value;
-                    }
-                    if (!empty($data->number_value)) {
-                        $row[$data->custom_field_id] = $data->number_value;
-                    }
-                    if (!empty($data->decimal_value)) {
-                        $row[$data->custom_field_id] = $data->decimal_value;
-                    }
-                    if (!empty($data->textarea_value)) {
-                        $row[$data->custom_field_id] = $data->textarea_value;
-                    }
-                    if (!empty($data->date_value)) {
-                        $row[$data->custom_field_id] = $data->date_value;
-                    }
+                    $customFieldsByStaffId[$data->staff_id][] = $data;
                 }
-                return $row;
-            });
+            }
+
+            foreach ($rows as $row) {
+                foreach ($customFieldsByStaffId[$row['staff_id']] ?? [] as $data) {
+                    // POCOR-9857: custom_field_id is an int (StaffCustomFields.id); Entity::set()/offsetSet()
+                    // requires a string field name or it throws "Cannot set an empty field".
+                    $customFieldKey = (string)$data->custom_field_id;
+                    $this->mergeCustomFieldValue($row, $customFieldKey, $data);
+                }
+            }
+
+            return new \Cake\Collection\Collection($rows);
         });
+    }
+
+    /**
+     * POCOR-9857: shared by the custom field merge loop above. Uses `!== null` (not `!empty()`) so a
+     * legitimate numeric value of 0 is not treated as absent, and routes date_value through
+     * formatDateCell() for consistency with the Date From / Date To columns.
+     */
+    private function mergeCustomFieldValue($row, string $key, $data)
+    {
+        foreach (['text_value', 'number_value', 'decimal_value', 'textarea_value'] as $field) {
+            if ($data->$field !== null) {
+                $row[$key] = $data->$field;
+            }
+        }
+        if ($data->date_value !== null) {
+            $row[$key] = $this->formatDateCell($data->date_value);
+        }
     }
 
     //  POCOR-9314 start
@@ -352,7 +375,9 @@ class StaffLeaveReportTable extends AppTable
             ->toArray();
 
         foreach ($customFieldData as $data) {
-            $custom_field_id = $data->custom_field_id;
+            // POCOR-9857: cast to string to match the row key formatResults() now writes custom
+            // field values under (see mergeCustomFieldValue()).
+            $custom_field_id = (string)$data->custom_field_id;
             $custom_field = $data->custom_field;
             $extraFields[] = [
                 'key' => '',

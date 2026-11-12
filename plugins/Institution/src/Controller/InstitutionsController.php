@@ -24,6 +24,7 @@ use Cake\Utility\Text;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Institution\Model\Traits\StudentCreationCheckTrait;
 use Institution\Model\Traits\RouteInstitutionIdTrait;
+use User\Controller\SyncUserTrait; //POCOR-9821
 use Exception;
 use PHPExcel_IOFactory;
 use Cake\Auth\DefaultPasswordHasher;
@@ -46,6 +47,12 @@ class InstitutionsController extends AppController
     use UtilityTrait;
     use StudentCreationCheckTrait; //POCOR-9385: single source of truth for the student-creation entry-grade gate
     use RouteInstitutionIdTrait; //POCOR-7692: shared ':institutionId' route param decode (Houses/Associations add-edit links)
+    use SyncUserTrait;
+
+    public function syncUserPermission(): array
+    {
+        return [$this->getName(), 'SyncUser', 'execute'];
+    }
     // POCOR-8231 start
     const STUDENT = 1;
     const STAFF = 2;
@@ -2598,6 +2605,13 @@ class InstitutionsController extends AppController
         // 2) Determine current institution
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 // URL for “Back to Subjects” in InstitutionsController
+        // POCOR-9836: preserve the Programme/Class selection the user had on the
+        // index page (carried here as query params) so returning to the list
+        // doesn't reset back to the first Programme/Class.
+        $indexQuery = array_intersect_key(
+            $this->request->getQueryParams(),
+            array_flip(['academic_period_id', 'class_id'])
+        );
         $indexUrl = [
             'plugin'     => 'Institution',
             'controller' => 'Institutions',
@@ -2607,6 +2621,7 @@ class InstitutionsController extends AppController
                 'id'             => $institutionId,
                 'institution_id'=> $institutionId,
             ]),
+            '?'          => $indexQuery,
         ];
         // 3) Authorization checks
         $isAdmin = $this->AccessControl->isAdmin();
@@ -2648,6 +2663,12 @@ class InstitutionsController extends AppController
         // ─── PREPARE VIEW VARIABLES ─────────────────────────────────────────────
 
         // URL for “View” button
+        // POCOR-9836: this is also the URL the Angular controller redirects to after a
+        // successful Save (see institution.subject.students.ctrl.js:Controller.redirectUrl).
+        // Without '?' => $indexQuery here, the view page loaded straight after saving would
+        // carry no Programme/Class query params of its own, so its own "Back" button (built
+        // from $this->request->getQueryParams() in InstitutionSubjectsTable::viewBeforeAction())
+        // would have nothing left to preserve.
         $viewUrl = [
             'plugin'     => 'Institution',
             'controller' => 'Institutions',
@@ -2658,6 +2679,7 @@ class InstitutionsController extends AppController
                 'institution_id'         => $institutionId,
                 'institution_subject_id' => $subjectId,
             ]),
+            '?'          => $indexQuery,
         ];
 
         // URL for setting alerts
@@ -6230,8 +6252,17 @@ class InstitutionsController extends AppController
     public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate, $openemisNo, $staffUserPriId = '')
     {
         // Normalize null values
-        $endDate = $endDate === 'null' ? null : new Date($endDate);
-        $startDate = $startDate === 'null' ? null : new Date($startDate);
+        // POCOR-9830: this only checked against the STRING 'null', not actual null - the
+        // real null Add Staff always passes as $endDate (getPositions() sets it explicitly
+        // to null) fell through to new Date(null), which resolves to TODAY, not an empty
+        // value. That made getExcludePositions()'s !empty($endDate) check always true,
+        // permanently routing into the narrower InDateRange branch instead of the correct
+        // "still occupying as of the new start date" fallback (end_date IS NULL OR
+        // end_date >= startDate - the inclusive end-date rule from the spec), silently
+        // over-excluding positions depending on how an existing occupant's dates compared
+        // to today vs. the new hire's start date.
+        $endDate = empty($endDate) || $endDate === 'null' ? null : new Date($endDate);
+        $startDate = empty($startDate) || $startDate === 'null' ? null : new Date($startDate);
 
         $this->autoRender = false;
         $userId = $this->Auth->user('id');
@@ -6275,13 +6306,14 @@ class InstitutionsController extends AppController
             ->where([$SecurityUsers->aliasField('openemis_no') => $openemisNo])
             ->first();
         $staffUserPriId = $SecurityUsersData->id;
-        $expectedStaffStatuses = $this->getSpecificInstitutionStaff($institutionId, $staffUserPriId);
-//        Log::debug('$expectedStaffStatuses');
-//        Log::debug(print_r($expectedStaffStatuses, true));
-
-        if (!empty($expectedStaffStatuses && !empty($staffUserPriId))) {//POCOR-8613
-            $positionConditions[$StaffTable->Positions->aliasField('staff_position_title_id') . ' NOT IN '] = $expectedStaffStatuses;
-        }
+        // POCOR-9830: title-based exclusion (POCOR-8613) removed - filtering by
+        // staff_position_title_id was too broad and hid every position sharing a title
+        // (e.g. all Teacher slots) whenever the staff already held just one of them.
+        // The actual "don't let them double-book the same position" exclusion is handled
+        // below via getPositionHeldByStaff(), which excludes by specific position ID, not
+        // by title. Same bug and same fix already applied to the sibling Transfer-In/
+        // Release-In code path in InstitutionPositionsTable::getInstitutionPositions()
+        // (POCOR-9628), never applied here where Add Staff actually uses it.
 
         $SecurityGroupUsers = self::getDynamicTableInstance('Security.SecurityGroupUsers');
         $staffMinRole = $SecurityGroupUsers->find()
@@ -7089,13 +7121,23 @@ class InstitutionsController extends AppController
         }
         //POCOR-9385: end — student creation restriction check
 
+        //POCOR-9867: the POCOR-9766 gate below existed only on the Staff flow. Without it, pressing
+        //Back and re-entering an identity that already belongs to someone else created a SECOND
+        //account for that person - and handleIdentities() then silently dropped the identity row
+        //(it skips creation when the number is already registered), so the duplicate was not even
+        //findable by identity afterwards. Stop before the security_users row is created, as Staff does.
+        $selectedUserId = $this->selectedUserIdFromRequest($requestData, 'student_id'); //POCOR-9867
+        $identityConflict = $this->identityOwnedByAnotherUser($requestData, $selectedUserId);
+        if ($identityConflict instanceof Response) {
+            return $identityConflict;
+        }
         $studentData = $this->extractSecurityUserData($requestData, $userId, true);
         if ($requestData['is_diff_school'] == 1) {
             $userRecordId = $requestData['student_id'];
             $result = $this->handleStudentTransfer($requestData, $userRecordId, $userId);
             return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         }
-        $securityUserResult = $this->saveSecurityUser($studentData);
+        $securityUserResult = $this->saveSecurityUser($studentData, $selectedUserId); //POCOR-9867
         if ($securityUserResult instanceof \Cake\ORM\Entity || $securityUserResult instanceof EntityInterface) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
@@ -7142,7 +7184,8 @@ class InstitutionsController extends AppController
             return $identityValidationError;
         }
         //POCOR-9766: start - stop BEFORE creating the security_users row when the identity number already belongs to another user (each failed retry used to leave a half-created duplicate user behind)
-        $identityConflict = $this->identityOwnedByAnotherUser($requestData, (int)($requestData['staff_id'] ?? 0) ?: null);
+        $selectedUserId = $this->selectedUserIdFromRequest($requestData, 'staff_id'); //POCOR-9867
+        $identityConflict = $this->identityOwnedByAnotherUser($requestData, $selectedUserId);
         if ($identityConflict instanceof Response) {
             return $identityConflict;
         }
@@ -7156,7 +7199,7 @@ class InstitutionsController extends AppController
             $result = $this->handleStaffTransfer($requestData, $userRecordId, $userId);
             return $this->sendJsonResponse(['message' => 'success', 'staff' => $result], 200);
         }
-        $securityUserResult = $this->saveSecurityUser($staffData);
+        $securityUserResult = $this->saveSecurityUser($staffData, $selectedUserId); //POCOR-9867
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
@@ -7238,12 +7281,22 @@ class InstitutionsController extends AppController
      *
      */
     /**
-     * Save or update a Security User by openemis_no.
+     * Create a Security User, or update the one the caller explicitly selected.
+     *
+     * POCOR-9867: create-vs-update is NOT inferred from the submitted openemis_no any more.
+     *  - $selectedExistingUserId names the record the operator picked in Internal Search; that row
+     *    is updated only if the submitted OpenEMIS ID is its own (the id is client-supplied, so it
+     *    cannot be used on its own to retarget a different account).
+     *  - an id with no matching local user is not a local selection (External Search posts the
+     *    external source's row id) and falls through to the create path.
+     *  - with no selected record this is an Add: a matching OpenEMIS ID is a collision (409), never
+     *    an invitation to overwrite. created/created_user_id are never rewritten by an update.
+     *
      * Returns the saved Entity on success, or a JSON Response on failure.
      *
      * @return \Cake\Datasource\EntityInterface|\Cake\Http\Response
      */
-    private function saveSecurityUser(array $userData): \Cake\Datasource\EntityInterface|Response
+    private function saveSecurityUser(array $userData, ?int $selectedExistingUserId = null): \Cake\Datasource\EntityInterface|Response
     {
         $securityUsers = self::getDynamicTableInstance('User.Users'); // POCOR-8706
         if($userData['mobile_number'] == ''){
@@ -7252,10 +7305,65 @@ class InstitutionsController extends AppController
         if($userData['email'] == ''){
             unset($userData['email']);
         }
-        // Find existing by openemis_no
-        $existing = $securityUsers->find()
-            ->where(['openemis_no' => $userData['openemis_no'] ?? null])
-            ->first();
+        //POCOR-9867: resolve create-vs-update EXPLICITLY instead of inferring it from a
+        //browser-supplied openemis_no. An Add inserts; only a caller that names the record it
+        //selected may update, and only that record. This removes the path by which one person's
+        //details could ever land on another person's row.
+        $submittedOpenemisNo = isset($userData['openemis_no']) ? (string)$userData['openemis_no'] : '';
+        $target = null;
+
+        if (!empty($selectedExistingUserId)) {
+            $target = $securityUsers->find()
+                ->where([$securityUsers->aliasField($securityUsers->getPrimaryKey()) => $selectedExistingUserId])
+                ->first();
+
+            //POCOR-9867: the posted id is not always a LOCAL user id. getUserData() fills staffData /
+            //userData from the External Search grid too, so an external selection posts that source's
+            //row id. If no local user has this id it is simply not a local selection - fall through to
+            //the create path (where the OpenEMIS ID collision check still applies) rather than refusing,
+            //otherwise External Search add breaks for every tenant with an external data source.
+            if (!$target) {
+                $selectedExistingUserId = null;
+            }
+        }
+
+        if ($target) {
+            //The submitted id is client-supplied, so it alone is not trusted to pick the row: the
+            //OpenEMIS ID must be that same user's own. A request cannot retarget a different account.
+            if ($submittedOpenemisNo !== (string)$target->openemis_no) {
+                Log::error(sprintf(
+                    'POCOR-9867: refused update - selected user id=%s owns openemis_no=%s but the request submitted %s',
+                    $target->id,
+                    (string)$target->openemis_no,
+                    $submittedOpenemisNo
+                ));
+
+                return $this->sendJsonResponse([
+                    'message' => __('The selected record does not match the submitted OpenEMIS ID. Please start the Add process again.')
+                ], 409);
+            }
+        } elseif ($submittedOpenemisNo !== '') {
+            //Create path: a matching OpenEMIS ID is a collision, never an invitation to overwrite.
+            $collision = $securityUsers->find()
+                ->where(['openemis_no' => $submittedOpenemisNo])
+                ->first();
+
+            if ($collision) {
+                Log::error(sprintf(
+                    'POCOR-9867: refused create - openemis_no=%s already belongs to security_user id=%s (%s %s); submitted as (%s %s)',
+                    $submittedOpenemisNo,
+                    $collision->id,
+                    (string)$collision->first_name,
+                    (string)$collision->last_name,
+                    (string)($userData['first_name'] ?? ''),
+                    (string)($userData['last_name'] ?? '')
+                ));
+
+                return $this->sendJsonResponse([
+                    'message' => __('This OpenEMIS ID already belongs to another account. Please start the Add process again, or use the Internal Search step to select the existing person.')
+                ], 409);
+            }
+        }
 
         // POCOR-9793 start: security_users.mobile_number carries a genuine UNIQUE
         // index (unique_mobile) because it doubles as an account identifier for
@@ -7279,8 +7387,8 @@ class InstitutionsController extends AppController
         $isStaffAccount = !empty($userData['is_staff']);
         if (!$isStaffAccount && !empty($userData['mobile_number'])) {
             $mobileConditions = ['mobile_number' => $userData['mobile_number']];
-            if ($existing) {
-                $mobileConditions[$securityUsers->aliasField($securityUsers->getPrimaryKey()) . ' !='] = $existing->id;
+            if ($target) {
+                $mobileConditions[$securityUsers->aliasField($securityUsers->getPrimaryKey()) . ' !='] = $target->id;
             }
             $mobileTakenByAnotherAccount = $securityUsers->exists($mobileConditions);
             if ($mobileTakenByAnotherAccount) {
@@ -7289,11 +7397,12 @@ class InstitutionsController extends AppController
         }
         // POCOR-9793 end
 
-        if ($existing) {
+        if ($target) {
             // Prevent accidental username/password overwrite during update
-            $userData['id'] = $existing->id;
-            unset($userData['username'], $userData['password']);
-            $entity = $securityUsers->patchEntity($existing, $userData);
+            $userData['id'] = $target->id;
+            //POCOR-9867: an update must not rewrite created/created_user_id
+            unset($userData['username'], $userData['password'], $userData['created'], $userData['created_user_id']);
+            $entity = $securityUsers->patchEntity($target, $userData);
         } else {
             // POCOR-9181 [START]
             try {
@@ -7356,6 +7465,24 @@ class InstitutionsController extends AppController
                 500
             );
         }
+    }
+
+    /**
+     * POCOR-9867: the id of the record the wizard says the operator selected, or null for a plain Add.
+     * Each wizard names it differently; Directory posts user_id for every user type.
+     * The value is client-supplied, so saveSecurityUser() still requires the submitted OpenEMIS ID to
+     * belong to that same user before it will update anything.
+     */
+    private function selectedUserIdFromRequest(array $requestData, ?string $primaryKey = null): ?int
+    {
+        foreach (array_filter([$primaryKey, 'user_id']) as $key) {
+            $value = (int)($requestData[$key] ?? 0);
+            if ($value > 0) {
+                return $value;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -8600,11 +8727,22 @@ class InstitutionsController extends AppController
         }
 
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
+        //POCOR-9867: the POCOR-9766 gate below existed only on the Staff flow. Without it, pressing
+        //Back and re-entering an identity that already belongs to someone else created a SECOND
+        //account for that person - and handleIdentities() then silently dropped the identity row
+        //(it skips creation when the number is already registered), so the duplicate was not even
+        //findable by identity afterwards. Stop before the security_users row is created, as Staff does.
+        $selectedUserId = $this->selectedUserIdFromRequest($requestData); //POCOR-9867
+        $identityConflict = $this->identityOwnedByAnotherUser($requestData, $selectedUserId);
+        if ($identityConflict instanceof Response) {
+            return $identityConflict;
+        }
         $userData = $this->extractSecurityUserData($requestData, $userId, false, false, true);
         $studentOpenemisNo = (isset($requestData['student_openemis_no'])) ? $requestData['student_openemis_no'] : null;
         $guardianRelationId = (isset($requestData['guardian_relation_id'])) ? $requestData['guardian_relation_id'] : null;
 //        Log::debug(print_r($userData, true));
-        $securityUserResult = $this->saveSecurityUser($userData);
+        //POCOR-9867: the Guardian/Other wizards post the selected record as user_id
+        $securityUserResult = $this->saveSecurityUser($userData, $selectedUserId); //POCOR-9867
 //        Log::debug(print_r($securityUserResult, true));
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
@@ -8657,11 +8795,22 @@ class InstitutionsController extends AppController
         }
 
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
+        //POCOR-9867: the POCOR-9766 gate below existed only on the Staff flow. Without it, pressing
+        //Back and re-entering an identity that already belongs to someone else created a SECOND
+        //account for that person - and handleIdentities() then silently dropped the identity row
+        //(it skips creation when the number is already registered), so the duplicate was not even
+        //findable by identity afterwards. Stop before the security_users row is created, as Staff does.
+        $selectedUserId = $this->selectedUserIdFromRequest($requestData); //POCOR-9867
+        $identityConflict = $this->identityOwnedByAnotherUser($requestData, $selectedUserId);
+        if ($identityConflict instanceof Response) {
+            return $identityConflict;
+        }
         $userData = $this->extractSecurityUserData($requestData, $userId, false, false, true);
         $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData)) ? $requestData['student_openemis_no'] : null;
         $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData)) ? $requestData['guardian_relation_id'] : null;
 //        Log::debug(print_r($userData, true));
-        $securityUserResult = $this->saveSecurityUser($userData);
+        //POCOR-9867: the Guardian/Other wizards post the selected record as user_id
+        $securityUserResult = $this->saveSecurityUser($userData, $selectedUserId); //POCOR-9867
 //        Log::debug(print_r($securityUserResult, true));
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
@@ -9306,7 +9455,8 @@ class InstitutionsController extends AppController
             'Institution.InstitutionStaffPositionProfile' => __('Staff Career'),//POCOR-6581 //POCOR-6715 //POCOR-6886(changed report name from Staff Absences to Staff Career as per client suggestion)
             'Institution.InstitutionStandardStaffSpecialNeeds' => __('Staff Special Needs'),
             'Institution.InstitutionStandardStaffTrainings' => __('Staff Training'),
-            'Institution.InstitutionStandardStudentAbsences' => __('Student Absences'),//POCOR-6631
+            'Institution.InstitutionStandardStudentAbsences' => __('Student Absences') . ' (' . __('Monthly') . ')',//POCOR-6631 //POCOR-9874: renamed, Student Absences is now the Reports > Institutions report
+            'Report.StudentAbsences' => __('Student Absences'), //POCOR-9874
             'Institution.InstitutionStandardStudentAbsenceType' => __('Student Absence Type'),//POCOR-6632
             'Institution.StudentAttendanceSummary' => __('Student Attendance Summary Report'),//POCOR-6872
             'Institution.StudentHealths' => __('Student Health'),
@@ -9314,7 +9464,16 @@ class InstitutionsController extends AppController
             'Institution.StudentSpecialNeeds' => __('Student Special Needs'),
             'StaffAppraisal.Appraisals' => __('Staff Appraisals'),
             'Institution.InstitutionConsumablesReport' => __('Consumables'), //POCOR-9058
-            'Institution.InstitutionStudentWeeklyAttendance' => __('Students Attendance Weekly'), //POCOR-9611
+            //POCOR-9874: reports from Reports > Institutions, run for the current institution only
+            'Report.Guardians' => __('Guardians'),
+            'Report.InstitutionPositions' => __('Institution Positions'),
+            'Report.InstitutionStaff' => __('Staff'),
+            'Report.StaffAttendances' => __('Staff Attendance'),
+            'Report.StaffLeave' => __('Staff Leave'),
+            'Report.InstitutionStudents' => __('Students'),
+            'Report.InstitutionSubjects' => __('Subjects'),
+            'Report.TeacherClasses' => __('Teacher Classes'),
+            //POCOR-9831: Students Attendance Weekly moved to Reports > Institutions > Student Attendance Weekly Report
         ];
         // End POCOR-6871
         return $options;

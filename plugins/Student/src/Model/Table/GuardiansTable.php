@@ -20,6 +20,11 @@ class GuardiansTable extends ControllerActionTable
 {
     private $editButtonAction = 'GuardianUser';
 
+    // POCOR-9887: onUpdateActionButtons() fires once per index row, and resolving the institution
+    // roles costs 4 queries each time (Institutions::getInstitutionRoles()). Neither the roles nor
+    // the GuardianProfile permission depend on the row, so both are resolved once per request.
+    private $guardianProfileAccess = null;
+
     public function initialize(array $config): void
     {
         $this->setTable('student_guardians');
@@ -564,48 +569,59 @@ class GuardiansTable extends ControllerActionTable
             $newButtons['editRelation']['url'] = $editUrl;
 //            die(print_r( $newButtons['view'], true));
         }
-        if (isset($buttons['edit'])) {
+        if ($this->controller->getName() == 'Students') {
+            //POCOR-9811
+            // Keep the guardian profile inside Institution instead of redirecting to Directory,
+            // since principals/teachers viewing this tab do not have Directory access. Routed to
+            // its own GuardianProfile table/action.
+            //POCOR-9887: visibility follows the "Guardian Profile" view permission, not Guardian Relation edit
+            $profileUrl = [
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
+                'action' => 'GuardianProfile',
+                'view',
+            ];
+            if (is_null($this->guardianProfileAccess)) {
+                $roles = [];
+                $rolesEvent = $this->controller->dispatchEvent('Controller.Buttons.onUpdateRoles', null, $this);
+                if ($rolesEvent->getResult()) {
+                    $roles = $rolesEvent->getResult();
+                }
+                $this->guardianProfileAccess = $this->controller->AccessControl->check($profileUrl, $roles);
+            }
+            if (isset($buttons['view']) && $this->guardianProfileAccess) {
+                $profileParams = $params;
+                $profileParams['id'] = $entity->_matchingData['Users']->id;
+                $profileUrl[] = $this->paramsEncode($profileParams);
+                $newButtons['viewProfile'] = $buttons['view'];
+                $newButtons['viewProfile']['label'] = '<i class="fa fa-eye"></i>' . __('View Profile');
+                $newButtons['viewProfile']['url'] = $profileUrl;
+            }
+        } elseif (isset($buttons['edit'])) {
             $newButtons['viewProfile'] = $buttons['edit'];
             $newButtons['viewProfile']['label'] = '<i class="fa fa-pencil"></i>' . __('View Profile');
 
-            if ($this->controller->getName() == 'Students') {
-                //POCOR-9811
-                // Keep the guardian profile inside Institution instead of redirecting to Directory,
-                // since principals/teachers viewing this tab do not have Directory access. Routed to
-                // its own GuardianProfile table/action.
-                $profileParams = $params;
-                $profileParams['id'] = $entity->_matchingData['Users']->id;
-                $encodedProfileParams = $this->paramsEncode($profileParams);
-                $newButtons['viewProfile']['url'] = [
-                    'plugin' => $this->controller->getPlugin(),
-                    'controller' => $this->controller->getName(),
-                    'action' => 'GuardianProfile',
-                    'view',
-                    $encodedProfileParams,
-                ];
-            } else {
-                $profileParams = ['id' => $entity->_matchingData['Users']->id];
-                $encodedProfileParams = $this->paramsEncode($profileParams);
-                $editUrl = $buttons['view']['url'];
-                $editUrl['plugin'] = 'Directory';
-                $editUrl['controller'] = 'Directories';
-                $editUrl['action'] = 'Directories';
-                $editUrl['1'] = $encodedProfileParams;
-                $editUrl['0'] = 'view';
-                if (isset($editUrl['?'])) {
-                    unset($editUrl['?']);
-                }
-                if (isset($editUrl['2'])) {
-                    unset($editUrl['2']);
-                }
-                if (isset($editUrl['3'])) {
-                    unset($editUrl['3']);
-                }
-                if (isset($editUrl['queryString'])) {
-                    unset($editUrl['queryString']);
-                }
-                $newButtons['viewProfile']['url'] = $editUrl;
+            $profileParams = ['id' => $entity->_matchingData['Users']->id];
+            $encodedProfileParams = $this->paramsEncode($profileParams);
+            $editUrl = $buttons['view']['url'];
+            $editUrl['plugin'] = 'Directory';
+            $editUrl['controller'] = 'Directories';
+            $editUrl['action'] = 'Directories';
+            $editUrl['1'] = $encodedProfileParams;
+            $editUrl['0'] = 'view';
+            if (isset($editUrl['?'])) {
+                unset($editUrl['?']);
             }
+            if (isset($editUrl['2'])) {
+                unset($editUrl['2']);
+            }
+            if (isset($editUrl['3'])) {
+                unset($editUrl['3']);
+            }
+            if (isset($editUrl['queryString'])) {
+                unset($editUrl['queryString']);
+            }
+            $newButtons['viewProfile']['url'] = $editUrl;
 //            die(print_r( $newButtons['view'], true));
         }
 

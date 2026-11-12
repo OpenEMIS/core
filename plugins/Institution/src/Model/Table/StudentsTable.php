@@ -860,6 +860,15 @@ class StudentsTable extends ControllerActionTable
         $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
+        // POCOR-9829: CakePHP 5's query builder throws (rather than degrading
+        // to a no-op comparison, as CakePHP 4 did) when a plain `field => value`
+        // condition is given a null value. A null $institutionId/$periodId here
+        // (e.g. missing/expired institution session context) used to surface as
+        // a blanket 404 via AppExceptionRenderer; use the `IS`/`IS NOT` operator
+        // syntax so a null scope safely matches no class instead of crashing.
+        $periodKey = $Classes->aliasField('academic_period_id') . ($periodId === null ? ' IS' : '');
+        $institutionKey = $Classes->aliasField('institution_id') . ($institutionId === null ? ' IS' : '');
+
         return $query
             ->select([$Classes->aliasField('name')])
             ->leftJoin(
@@ -874,8 +883,8 @@ class StudentsTable extends ControllerActionTable
                 [$Classes->getAlias() => $Classes->getTable()],
                 [
                     $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id'),
-                    $Classes->aliasField('academic_period_id') => $periodId,
-                    $Classes->aliasField('institution_id') => $institutionId
+                    $periodKey => $periodId,
+                    $institutionKey => $institutionId
                 ]
             );
     }
@@ -963,7 +972,16 @@ class StudentsTable extends ControllerActionTable
 
         $gradeId          = !empty($entity->education_grade_id)    ? (int)$entity->education_grade_id    : null;
         $academicPeriodId = !empty($entity->academic_period_id)    ? (int)$entity->academic_period_id    : null;
-        $institutionId    = method_exists($this, 'getInstitutionID') ? ($this->getInstitutionID() ?: null) : null;
+        //POCOR-9876: was `method_exists($this, 'getInstitutionID') ? ... : null`, which is ALWAYS null here -
+        //getInstitutionID() is a Controller-only method and the ControllerAction.QueryString behaviour version is
+        //proxied via __call(), so method_exists() never sees it. Passing null meant (a) the excluded-roles check
+        //fell into the Directory branch instead of the institution branch, and (b) isStudentCreationAllowed() used
+        //the global order=1 fallback instead of this institution's entry grades - so Save could reject a grade the
+        //Education Grade dropdown had just offered. The entity being saved is an institution_students row, so read
+        //institution_id from it (same pattern as checkStudentRecords()), falling back to the session scope.
+        $institutionId = !empty($entity->institution_id)
+            ? (int)$entity->institution_id
+            : ((int)$this->request->getSession()->read('Institution.Institutions.id') ?: null);
         if (!$this->isStudentCreationAllowed($gradeId, $institutionId, $academicPeriodId)) { //POCOR-9385: check vs institution's entry grade for this period
             $gradeName = '';
             if (!empty($gradeId)) {
@@ -2423,14 +2441,20 @@ class StudentsTable extends ControllerActionTable
     // Function use by the mini dashboard (For Institution Students)(POCOR-8721 start - for query optimization)
     public function getNumberOfStudentsByAge($params = [])
     {
-        $academicPeriod = $this->request->getQueryParams()['academic_period_id'];
-        $institutionId = $this->getInstitutionID();
+        $academicPeriod = (int)$this->request->getQueryParams()['academic_period_id'];
+        $institutionId = (int)$this->getInstitutionID();
         $connection = ConnectionManager::get('default');
+        // POCOR-9845: exclude inactive (status=0) users, matching the Students listing
+        // and the other dashboard student-count charts - client-confirmed dashboards
+        // should agree with the listing, not the other way around.
+        // Cast to int: both values come from the query string (not purely
+        // server-derived), and this SQL concatenates them directly.
         $sql = "SELECT FLOOR(DATEDIFF(CURRENT_DATE, u.date_of_birth) / 365.25) AS age,
                     COUNT(DISTINCT s.student_id) AS student_count
                     FROM security_users u
                     INNER JOIN  institution_students s ON s.student_id = u.id
                     WHERE  s.institution_id = " . $institutionId . " AND academic_period_id = " . $academicPeriod . "
+                    AND u.status = 1
                     GROUP BY  age ORDER BY age";
 
         $ageCounts = $connection->execute($sql)->fetchAll('assoc');
@@ -2515,7 +2539,15 @@ class StudentsTable extends ControllerActionTable
                 }
 
                 foreach ($genderOptions as $genderId => $genderName) {
-                    $queryCondition = array_merge(['Genders.id' => $genderId, 'AcademicPeriods.id' => $periodId], $_conditions);
+                    // POCOR-9845: exclude inactive (status=0) users, matching the same
+                    // filter indexBeforeQuery() already applies to the Students listing
+                    // (added under POCOR-9410) - client-confirmed these dashboard counts
+                    // should agree with the listing, not the other way around.
+                    $queryCondition = array_merge([
+                        'Genders.id' => $genderId,
+                        'AcademicPeriods.id' => $periodId,
+                        $this->Users->aliasField('status') => 1
+                    ], $_conditions);
 
                     $studentsByYear = $this
                         ->find('list', [
@@ -2570,7 +2602,11 @@ class StudentsTable extends ControllerActionTable
         $studentsByGradeConditions = [
             $this->aliasField('academic_period_id') => $currentYearId,
             $this->aliasField('education_grade_id') . ' IS NOT NULL',
-            'Genders.name IS NOT NULL'
+            'Genders.name IS NOT NULL',
+            // POCOR-9845: exclude inactive (status=0) users, matching the Students
+            // listing and getNumberOfStudentsByYear() - client-confirmed dashboards
+            // should agree with the listing, not the other way around.
+            $this->Users->aliasField('status') => 1
         ];
         $studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
         $query = $this->find();
@@ -2663,7 +2699,11 @@ class StudentsTable extends ControllerActionTable
         $studentsByGradeConditions = [
             $this->aliasField('academic_period_id') => $currentYearId,
             $this->aliasField('education_grade_id') . ' IS NOT NULL',
-            'Genders.name IS NOT NULL'
+            'Genders.name IS NOT NULL',
+            // POCOR-9845: exclude inactive (status=0) users, matching the Students
+            // listing and getNumberOfStudentsByYear() - client-confirmed dashboards
+            // should agree with the listing, not the other way around.
+            $this->Users->aliasField('status') => 1
         ];
         $studentsByGradeConditions = array_merge($studentsByGradeConditions, $_conditions);
         $query = $this->find();

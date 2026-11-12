@@ -44,6 +44,7 @@ class TeacherClassesTable extends AppTable
         ]);
 
         $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity'); //POCOR-9823
         $this->addBehavior('Excel', [
             'pages'      => false,
             'autoFields' => false
@@ -68,6 +69,8 @@ class TeacherClassesTable extends AppTable
         $areaId           = $requestData->area_education_id ?? null;
         $selectedArea     = $areaId;
         $gradeId          = $requestData->education_grade_id ?? 0;
+        $superAdmin       = $requestData->super_admin ?? null; //POCOR-9823
+        $userId           = $requestData->user_id ?? null; //POCOR-9823
 
         $where = [
             $this->aliasField('staff_id') . ' != 0'
@@ -160,6 +163,11 @@ class TeacherClassesTable extends AppTable
             ->group([
                 $this->aliasField('id')
             ]);
+
+        //POCOR-9823
+        if (!$superAdmin) {
+            $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
+        }
             
     }
     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)

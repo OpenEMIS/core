@@ -219,7 +219,10 @@ class OpenEmisBehavior extends Behavior
         //Log::debug('[TEMP-LOG] OpenEmisBehavior indexAfterAction END');
     }
 
-    public function viewAfterAction(EventInterface $event, Entity|bool $entity, ArrayObject $extra)
+    //POCOR-9863: null added to the union - ViewBehavior initialises $entity to false when the record
+    //does not exist, but leaves it null when a viewBeforeQuery listener legitimately filters the row
+    //out. Same class of fix as editAfterAction (POCOR-4477) and deleteAfterAction (POCOR-9257).
+    public function viewAfterAction(EventInterface $event, Entity|bool|null $entity, ArrayObject $extra)
     {
         if (!$entity) {
             $this->_table->Alert->warning('general.notExists');
@@ -248,7 +251,7 @@ class OpenEmisBehavior extends Behavior
         }
     }
 
-    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, ?Entity $entity, ArrayObject $extra) //POCOR-4477: nullable entity, same fix as deleteAfterAction (POCOR-9257) - editBeforeQuery can legitimately filter the row out
     {
         if (!$entity) {
             $this->_table->Alert->warning('general.notExists');
@@ -290,6 +293,35 @@ class OpenEmisBehavior extends Behavior
                 }
             }
         }
+    }
+
+    /**
+     * POCOR-9872: on a view page the encoded pass param is the record's own primary key; carrying it
+     * to the index page made every row's View/Edit link reuse that stale id. Keep only the remaining
+     */
+    private function stripRecordKeysFromUrl(array $url)
+    {
+        if (!isset($url[1]) || !is_string($url[1])) {
+            return $url;
+        }
+        $model = $this->table();
+        try {
+            $params = $model->paramsDecode($url[1]);
+        } catch (\Exception $e) {
+            return $url;
+        }
+        if (!is_array($params)) {
+            return $url;
+        }
+        foreach ((array)$model->getPrimaryKey() as $key) {
+            unset($params[$key]);
+        }
+        if (empty($params)) {
+            unset($url[1]);
+        } else {
+            $url[1] = $model->paramsEncode($params);
+        }
+        return $url;
     }
 
     private function initializeButtons(ArrayObject $extra)
@@ -348,8 +380,16 @@ class OpenEmisBehavior extends Behavior
             }
         } elseif ($action == 'add' || $action == 'edit') {
             $toolbarButtons['back']['url'] = $model->url($backAction, 'QUERY');
-            if ($action == 'edit' && $model->actions('index')) {
+            if ($model->actions('index')) {
+                // POCOR-9819: carry pass parameters back to the index page too, not
+                // just ?query=string ones - 'edit' already did this below; 'add'
+                // pages reached via a pass-parameter id (eg Directory > Student >
+                // Languages > Add, where security_user_id is encoded into the URL
+                // path, not passed as a query string) silently dropped that id on
+                // Cancel, since 'QUERY' mode only carries real query-string params.
                 $toolbarButtons['back']['url'] = $model->url($backAction);
+            }
+            if ($action == 'edit' && $model->actions('index')) {
                 $toolbarButtons['list']['url'] = $model->url('index', 'QUERY');
                 $toolbarButtons['list']['type'] = 'button';
                 $toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';
@@ -359,6 +399,12 @@ class OpenEmisBehavior extends Behavior
         } elseif ($action == 'view') {
             // edit button
             $toolbarButtons['back']['url'] = $model->url($backAction, 'QUERY');
+            if ($model->actions('index')) {
+                // POCOR-9819: same fix as add/edit above - back-from-view (eg
+                // reached after an edit-save redirect lands on view first) must
+                // carry pass parameters forward too, not just query-string ones.
+                $toolbarButtons['back']['url'] = $this->stripRecordKeysFromUrl($model->url($backAction));
+            }
             if ($model->actions('edit')) {
                 // echo "<pre>";print_r($model->url($backAction, 'QUERY')['action']);die;
                 //POCOR-8549 start

@@ -79,9 +79,12 @@ class AssessmentsTable extends AppTable
         $conditions = [];
         $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
 
-        if (!empty($gradeId) && $gradeId > 0) {
-            $conditions[$this->aliasField('education_grade_id')] = $gradeId;
+        // POCOR-9852: "All Grades" means all grades of the selected programme
+        $reportGradeIds = $this->getReportGradeIds($requestData, $academicPeriodId);
+        if (empty($reportGradeIds)) {
+            return;
         }
+        $conditions[$this->aliasField('education_grade_id IN')] = $reportGradeIds;
 
         $filterInstitutionIds = [];
         if (is_object($institutionId) && isset($institutionId->_ids)) {
@@ -120,6 +123,7 @@ class AssessmentsTable extends AppTable
             ->where($conditions)
             ->distinct(['student_id', 'institution_class_id'])
             ->enableHydration(false)
+            ->all()
             ->toList();
 
         $studentIds = array_column($students, 'student_id');
@@ -131,25 +135,10 @@ class AssessmentsTable extends AppTable
         $AssessmentItemsGradingTypesTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemsGradingTypes');
         $AssessmentItemsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems');
 
-        $assessmentsQuery = $AssessmentsTable->find()->where(['academic_period_id' => $academicPeriodId]);
-
-        if ($gradeId != 0) {
-            $assessmentsQuery->where(['education_grade_id' => $gradeId]);
-        } else {
-            $gradeIds = $institutionStudentsTable->find()
-                ->distinct()
-                ->select(['education_grade_id'])
-                ->where(['academic_period_id' => $academicPeriodId])
-                ->enableHydration(false)
-                ->extract('education_grade_id')
-                ->toArray();
-
-            if (!empty($gradeIds)) {
-                $assessmentsQuery->where(['education_grade_id IN' => $gradeIds]);
-            } else {
-                return;
-            }
-        }
+        $assessmentsQuery = $AssessmentsTable->find()->where([
+            'academic_period_id' => $academicPeriodId,
+            'education_grade_id IN' => $reportGradeIds
+        ]);
 
         $assessments = $assessmentsQuery->orderDesc('id')->all();
 
@@ -355,29 +344,15 @@ class AssessmentsTable extends AppTable
         $AssessmentItemsGradingTypesTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemsGradingTypes');
         $AssessmentItemsTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems');
 
-        // Build assessments query
-        $assessmentsQuery = $AssessmentsTable->find()->where(['academic_period_id' => $academicPeriodId]);
-
-        // Case 1: Specific grade
-        if ($requestData->education_grade_id != 0) {
-            $assessmentsQuery->where(['education_grade_id' => $requestData->education_grade_id]);
-        } else {
-            // Case 2: All grades based on student enrollment
-            $gradeIds = $institutionStudentsTable->find()
-                ->distinct()
-                ->select(['education_grade_id'])
-                ->where(['academic_period_id' => $academicPeriodId])
-                ->enableHydration(false)
-                ->all()
-                ->extract('education_grade_id')
-                ->toArray();
-
-            if (!empty($gradeIds)) {
-                $assessmentsQuery->where(['education_grade_id IN' => $gradeIds]);
-            } else {
-                return; // No grades found for the period
-            }
+        // Build assessments query for the selected grade, or all grades of the selected programme
+        $reportGradeIds = $this->getReportGradeIds($requestData, $academicPeriodId);
+        if (empty($reportGradeIds)) {
+            return; // No grades found for the period
         }
+        $assessmentsQuery = $AssessmentsTable->find()->where([
+            'academic_period_id' => $academicPeriodId,
+            'education_grade_id IN' => $reportGradeIds
+        ]);
 
         // Fetch all assessments
         $assessments = $assessmentsQuery->orderDesc('id')->all();
@@ -446,6 +421,7 @@ class AssessmentsTable extends AppTable
                             'subject_weight' => 'AssessmentItems.weight',
                         ])
                         ->enableHydration(false)
+                        ->all()
                         ->toArray();
             }
         } else {
@@ -527,6 +503,40 @@ class AssessmentsTable extends AppTable
         $originalField->exchangeArray($fields);
     }
 
+    /**
+     * POCOR-9852: grade ids the report covers. A specific grade returns just that grade,
+     * "All Grades" (0) returns the grades of the selected programme, matching the grade
+     * dropdown in PerformanceTable. Without a programme it falls back to every grade
+     * with students enrolled in the academic period.
+     */
+    private function getReportGradeIds($requestData, $academicPeriodId)
+    {
+        $gradeId = $requestData->education_grade_id ?? null;
+        if (!empty($gradeId) && $gradeId > 0) {
+            return [(int)$gradeId];
+        }
+
+        $programmeId = $requestData->education_programme_id ?? null;
+        if (!empty($programmeId) && $programmeId > 0) {
+            return TableRegistry::getTableLocator()->get('Education.EducationGrades')->find()
+                ->select(['id'])
+                ->where(['education_programme_id' => $programmeId])
+                ->enableHydration(false)
+                ->all()
+                ->extract('id')
+                ->toList();
+        }
+
+        return TableRegistry::getTableLocator()->get('InstitutionClassStudents')->find()
+            ->distinct()
+            ->select(['education_grade_id'])
+            ->where(['academic_period_id' => $academicPeriodId])
+            ->enableHydration(false)
+            ->all()
+            ->extract('education_grade_id')
+            ->toList();
+    }
+
     public function onExcelRenderSubject(EventInterface $event, Entity $entity, array $attr)
     {
         $subjectId = $attr['subjectId'];
@@ -546,8 +556,13 @@ class AssessmentsTable extends AppTable
                 $mark = $result['marks'] ?? null;
 
                 if (!in_array($mark, ['EXEMPT', 'UNASSIGN']) && is_numeric($mark)) {
-                    $this->assessmentPeriodWeightedMark += ((float)$mark * (float)$attr['assessmentPeriodWeight']);
-                    $this->assessmentPeriodWeights[] = $attr['assessmentPeriodWeight'];
+                    // POCOR-9759: use the weight frozen when this mark was saved
+                    // (see AssessmentItemResultsTable::getAssessmentItemResultsReport())
+                    // instead of the column header's live assessmentPeriodWeight, so
+                    // the total doesn't change when the period's weight is edited later.
+                    $appliedWeight = $result['applied_weight'] ?? $attr['assessmentPeriodWeight'];
+                    $this->assessmentPeriodWeightedMark += ((float)$mark * (float)$appliedWeight);
+                    $this->assessmentPeriodWeights[] = $appliedWeight;
                 }
 
                 return is_numeric($mark) ? number_format($mark, 2) : $mark;
@@ -651,6 +666,7 @@ class AssessmentsTable extends AppTable
         ];
       
         $results = $SubjectStudents->find('StudentResults', $options)
+            ->all()
             ->toArray();
         $student_results = [];
         $student_results = [];

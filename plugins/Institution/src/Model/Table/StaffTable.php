@@ -2018,6 +2018,97 @@ class StaffTable extends ControllerActionTable
         $this->Session->write('Staff.Staff.id', $entity->staff_id);
         $this->Session->write('Staff.Staff.name', $entity->user->name);
         $this->setupTabElements($entity);
+
+        // POCOR-4477: last thing in this hook - see applyFieldConfigurations()
+        // below. This table has no CustomField.Record behavior attached, so
+        // (unlike StaffUserTable) there's no later priority-100 listener to
+        // worry about clobbering this.
+        $this->applyFieldConfigurations('Staff');
+    }
+
+    /**
+     * POCOR-4477 Phase 2: applies admin-configured visibility/order (Fields
+     * Configurations) to the real Staff Edit "Position" tab (this table
+     * drives that tab; StaffUserTable drives View and the "Overview" edit
+     * tab - see its own copy of this method for details on why the
+     * approach reads current field order dynamically instead of building
+     * on a hardcoded array). The Add Staff page does not go through this
+     * table's lifecycle at all (custom Angular wizard + AJAX save), so
+     * there is deliberately no add-side wiring here.
+     *
+     * Reordering happens WITHIN each section only (see
+     * reorderWithinSections()) - this table's Position tab has no section
+     * headers today, so this is currently a no-op safeguard, but keeps the
+     * same guarantee as InstitutionsTable/StaffUserTable/StudentUserTable
+     * if headers are ever added here.
+     */
+    private function applyFieldConfigurations(string $module): void
+    {
+        $currentOrder = $this->fields;
+        uasort($currentOrder, function ($a, $b) {
+            return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+        });
+        $baseOrder = array_keys($currentOrder);
+
+        $fieldConfigTable = TableRegistry::getTableLocator()->get('Configuration.ConfigFieldsConfigurations');
+        $configs = $fieldConfigTable->find()
+            ->where(['module' => $module])
+            ->order([$fieldConfigTable->aliasField('order') => 'ASC'])
+            ->all();
+
+        $adminOrder = [];
+        $rank = 0;
+        foreach ($configs as $config) {
+            if (!in_array($config->field_name, $baseOrder, true)) {
+                continue;
+            }
+            $adminOrder[$config->field_name] = $rank++;
+
+            if (empty($config->is_mandatory) && empty($config->visible)) {
+                $this->field($config->field_name, ['visible' => false]);
+            }
+        }
+
+        $this->setFieldOrder($this->reorderWithinSections($baseOrder, $adminOrder));
+    }
+
+    /**
+     * POCOR-4477: reorders $baseOrder to match $adminOrder (field_name =>
+     * rank, lower = earlier), but only WITHIN each contiguous run between
+     * section-header entries (fields with 'type' => 'section') - never
+     * moves a configurable field across a section boundary. Non-configurable
+     * fields within a run keep their original relative position (same
+     * "slot substitution" as before, just scoped per-run).
+     */
+    private function reorderWithinSections(array $baseOrder, array $adminOrder): array
+    {
+        $result = [];
+        $currentRun = [];
+
+        $flush = function () use (&$result, &$currentRun, $adminOrder) {
+            $configurable = array_values(array_filter($currentRun, function ($name) use ($adminOrder) {
+                return isset($adminOrder[$name]);
+            }));
+            usort($configurable, function ($a, $b) use ($adminOrder) {
+                return $adminOrder[$a] <=> $adminOrder[$b];
+            });
+            foreach ($currentRun as $name) {
+                $result[] = isset($adminOrder[$name]) ? array_shift($configurable) : $name;
+            }
+            $currentRun = [];
+        };
+
+        foreach ($baseOrder as $name) {
+            if (($this->fields[$name]['type'] ?? null) === 'section') {
+                $flush();
+                $result[] = $name;
+            } else {
+                $currentRun[] = $name;
+            }
+        }
+        $flush();
+
+        return $result;
     }
 
     public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)

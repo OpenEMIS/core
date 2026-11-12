@@ -388,6 +388,15 @@ class HtmlFieldHelper extends Helper
         if ($action == 'index' || $action == 'view') {
             $fieldName = isset($attr['fieldName']) ? $attr['fieldName'] : $attr['field'];
             $value = Hash::get($data, $fieldName, 0);
+            // Text-type slider: show the matching label instead of the raw stored value
+            if (!empty($attr['ticks']) && !empty($attr['ticksLabels']) && $value !== '' && $value !== null) {
+                foreach ($attr['ticks'] as $tickIndex => $tickValue) {
+                    if ((float)$tickValue === (float)$value && isset($attr['ticksLabels'][$tickIndex])) {
+                        $value = $attr['ticksLabels'][$tickIndex];
+                        break;
+                    }
+                }
+            }
         } else {
             if (!isset($attr['min'])) {
                 $attr['min'] = 0;
@@ -1034,7 +1043,8 @@ class HtmlFieldHelper extends Helper
                 $fieldName = $attr['fieldName'];
             }
 
-            $value = $this->_View->element('ControllerAction.autocomplete', ['attr' => $attr, 'options' => $options]);
+            // POCOR-9771: pass the entity so the element can render the stored value on edit
+            $value = $this->_View->element('ControllerAction.autocomplete', ['attr' => $attr, 'options' => $options, 'entity' => $data]);
             $fieldName = $attr['model'] . '.' . $attr['field'];
             $this->Form->unlockField($fieldName);
         }

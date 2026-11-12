@@ -17,7 +17,18 @@ class CreateUsersComponent extends Component
 {
     public function getUniqueOpenemisId()
     {
-        $openemisId = TableRegistry::getTableLocator()->get('User.Users')->getUniqueOpenemisId();
+        //POCOR-9867: getUniqueOpenemisId() now throws rather than returning an unreserved id when it
+        //cannot reserve one. Surface that as a readable error instead of letting it become a 500 the
+        //wizard ignores - it would otherwise carry on with no OpenEMIS ID at all.
+        try {
+            $openemisId = TableRegistry::getTableLocator()->get('User.Users')->getUniqueOpenemisId();
+        } catch (\Throwable $e) {
+            \Cake\Log\Log::error('POCOR-9867: OpenEMIS ID reservation failed: ' . $e->getMessage());
+
+            return json_encode([
+                'error' => __('Could not allocate an OpenEMIS ID. Please try again; if this persists, contact the administrator.'),
+            ]);
+        }
         $openemis = ['openemis_no' => $openemisId];
         return json_encode($openemis);
     }

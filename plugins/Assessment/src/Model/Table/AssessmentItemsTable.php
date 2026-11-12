@@ -572,6 +572,7 @@ class AssessmentItemsTable extends AppTable
             ])
             ->order(['EducationSubjects.order'])
             ->enableHydration(false)
+            ->all()
             ->toArray();
         return $subjectList;
     }
@@ -593,6 +594,7 @@ class AssessmentItemsTable extends AppTable
             ])
             ->order(['EducationSubjects.order'])
             ->enableHydration(false)
+            ->all()
             ->toArray();
         return $subjectList;
     }

@@ -147,9 +147,12 @@ class StudentsGraduationSummaryTable extends AppTable
                 'AcademicPeriods.id = ' . $this->aliasField('academic_period_id')
             ])
 
+            // POCOR-9845: exclude inactive (status=0) users, matching the Students
+            // listing and the dashboard student-count charts.
             ->where(array_merge($conditions, [
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 'StudentStatuses.code' => 'CURRENT',
+                'Users.status' => 1,
             ]))
             ->group(['Institutions.id', 'EducationProgrammes.id']);
 

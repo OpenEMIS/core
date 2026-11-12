@@ -158,6 +158,9 @@ class InstitutionStudentsTable extends AppTable
             }
         }
         //POCOR-8416[END]
+        // POCOR-9845: exclude inactive (status=0) users, matching the Students
+        // listing and the dashboard student-count charts.
+        $query->where([$this->Users->aliasField('status') => 1]);
         if (!empty($filterInstitutionIds)) {
             $query->where([$this->aliasField('institution_id') . ' IN' => $filterInstitutionIds]);
         }

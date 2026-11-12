@@ -30,6 +30,7 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
             'autoFields' => false
         ]);
         $this->addBehavior('Report.ReportList');
+        $this->addBehavior('Report.InstitutionSecurity'); //POCOR-9823
     }
 
     public function beforeAction(EventInterface $event)
@@ -47,6 +48,8 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         $institution_id = $requestData->institution_id;
         $institution_status_id = $requestData->institution_status_id;
         $academic_period_id = $requestData->academic_period_id;
+        $superAdmin = $requestData->super_admin; //POCOR-9823
+        $userId = $requestData->user_id; //POCOR-9823
         $AreaLvlT = TableRegistry::getTableLocator()->get('Area.AreaLevels'); 
 	    $AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
         $AreaT = TableRegistry::getTableLocator()->get('Area.Areas');                
@@ -248,6 +251,11 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
             ->from(['institutions' => 'institutions'])
             ->join($join)
             ->where($where);
+
+        //POCOR-9823
+        if (!$superAdmin) {
+            $query->find('byAccess', ['user_id' => $userId, 'institution_field_alias' => 'institutions.id']);
+        }
     }
     
 

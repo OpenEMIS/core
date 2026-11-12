@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\SecurityUsers;
 use App\Models\ScannedAttendance;
+use App\Helpers\Utf8Sanitizer;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\ScannedAttendanceRequest;
@@ -25,6 +26,21 @@ use App\Http\Requests\ScannedAttendanceRequest;
  */
 class ScannedRepository extends Controller
 {
+    /**
+     * POCOR-9847: columns to pull from the related SecurityUsers row wherever it's
+     * eager-loaded here. Excludes photo_content (longblob raw binary image bytes) --
+     * that column is not valid UTF-8, and json_encode()-ing it is what was throwing
+     * "Malformed UTF-8 characters" and breaking the /scanned endpoints.
+     */
+    private const SCANNED_SECURITY_USER_COLUMNS = [
+        'id', 'openemis_no', 'username', 'first_name', 'middle_name',
+        'third_name', 'last_name', 'preferred_name', 'email',
+        'mobile_number', 'address', 'postal_code', 'address_area_id',
+        'birthplace_area_id', 'gender_id', 'date_of_birth',
+        'nationality_id', 'identity_type_id', 'identity_number',
+        'status', 'photo_name', 'is_student', 'is_staff', 'is_guardian',
+    ];
+
      /**
      * Save scanned user data to the database.
      * POCOR-8666
@@ -171,7 +187,7 @@ class ScannedRepository extends Controller
             $userListingRecord = $query->get()->toArray();
 
             $resp['data'] = $userListingRecord;
-            return $resp;
+            return Utf8Sanitizer::clean($resp);
 
         } catch (\Exception $e) {
             Log::error(
@@ -198,15 +214,12 @@ class ScannedRepository extends Controller
             if (!empty($params['openemis_no'])) {
                 $query->where('openemis_no', $params['openemis_no']);
             }
-            
-            $scanUser = $query->get();
-            
-            if ($scanUser->isEmpty()) {
-                return $this->sendErrorResponse('No scanned data found.');
-            }
-            
-            return $scanUser;
-            
+            // POCOR-9840: export for  the Scanned page lists 
+            $this->applyListingFilters($query, $params);
+
+            // POCOR-9840: an empty result is still exported (headings only), not an error
+            return $query->orderBy('datetime')->get();
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to export Scanned User Data',
@@ -224,23 +237,11 @@ class ScannedRepository extends Controller
     {
         try {
             $params = $request->all();
-            $dateTo = !empty($params['date_to']) ? Carbon::parse($params['date_to'])->endOfDay() : null;
-            $dateFrom = !empty($params['date_from']) ? Carbon::parse($params['date_from'])->startOfDay() : null;
-
-            if ($dateFrom && $dateTo && $dateFrom->gt($dateTo)) {
-                [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
-            }
-            $userListingRecord = ScannedAttendance::with('securityUser');
-            if ($dateFrom && $dateTo) {
-                $userListingRecord = $userListingRecord->whereBetween('datetime', [
-                    $dateFrom->format('Y-m-d H:i:s'),
-                    $dateTo->format('Y-m-d H:i:s')
-                ]);
-            } elseif ($dateFrom) {
-                $userListingRecord = $userListingRecord->whereDate('datetime', '>=', $dateFrom->format('Y-m-d'));
-            } elseif ($dateTo) {
-                $userListingRecord = $userListingRecord->whereDate('datetime', '<=', $dateTo->format('Y-m-d'));
-            }
+            // POCOR-9847: never load photo_content (LONGBLOB) for the listing
+            $userListingRecord = ScannedAttendance::with(['securityUser' => function ($query) {
+                $query->select(self::SCANNED_SECURITY_USER_COLUMNS);
+            }]);
+            $this->applyListingFilters($userListingRecord, $params);
 
             if (isset($params['order'])) {
                 $orderBy = $params['order_by'] ?? 'ASC';
@@ -258,7 +259,10 @@ class ScannedRepository extends Controller
                 ];
             }
 
-            return $resp;
+            // POCOR-9847: safety net -- any remaining malformed-UTF-8 bytes in free-text
+            // columns (access/location/security_user name fields) get stripped here so
+            // json_encode() downstream never throws, even for rows not yet repaired.
+            return Utf8Sanitizer::clean($resp);
 
         } catch (\Exception $e) {
             Log::error('Failed to fetch list from DB', [
@@ -270,16 +274,73 @@ class ScannedRepository extends Controller
         }
     }
 
+    /**
+     * POCOR-9840
+     * Filters shared by the Scanned listing and its export:
+     * - date_from / date_to: scan date range 
+     *   student of that institution on the scan date
+     */
+    private function applyListingFilters($query, array $params)
+    {
+        $dateTo = !empty($params['date_to']) ? Carbon::parse($params['date_to'])->endOfDay() : null;
+        $dateFrom = !empty($params['date_from']) ? Carbon::parse($params['date_from'])->startOfDay() : null;
+
+        if ($dateFrom && $dateTo && $dateFrom->gt($dateTo)) {
+            [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+        }
+        if ($dateFrom && $dateTo) {
+            $query->whereBetween('datetime', [
+                $dateFrom->format('Y-m-d H:i:s'),
+                $dateTo->format('Y-m-d H:i:s')
+            ]);
+        } elseif ($dateFrom) {
+            $query->whereDate('datetime', '>=', $dateFrom->format('Y-m-d'));
+        } elseif ($dateTo) {
+            $query->whereDate('datetime', '<=', $dateTo->format('Y-m-d'));
+        }
+
+        if (!empty($params['institution_id']) && is_numeric($params['institution_id'])) {
+            $institutionId = (int) $params['institution_id'];
+            $query->whereExists(function ($users) use ($institutionId) {
+                $users->select(DB::raw(1))
+                    ->from('security_users')
+                    ->whereColumn('security_users.openemis_no', 'institution_scanned.openemis_no')
+                    ->where(function ($enrolment) use ($institutionId) {
+                        $enrolment->whereExists(function ($students) use ($institutionId) {
+                            $students->select(DB::raw(1))
+                                ->from('institution_students')
+                                ->whereColumn('institution_students.student_id', 'security_users.id')
+                                ->where('institution_students.institution_id', $institutionId)
+                                ->whereRaw('institution_students.start_date <= DATE(institution_scanned.datetime)')
+                                ->whereRaw('institution_students.end_date >= DATE(institution_scanned.datetime)');
+                        })->orWhereExists(function ($staff) use ($institutionId) {
+                            $staff->select(DB::raw(1))
+                                ->from('institution_staff')
+                                ->whereColumn('institution_staff.staff_id', 'security_users.id')
+                                ->where('institution_staff.institution_id', $institutionId)
+                                ->whereRaw('institution_staff.start_date <= DATE(institution_scanned.datetime)')
+                                ->whereRaw('(institution_staff.end_date IS NULL OR institution_staff.end_date >= DATE(institution_scanned.datetime))');
+                        });
+                    });
+            });
+        }
+
+        return $query;
+    }
+
     public function scanUserDetails($scannedId)
     {
         try {
-            $userDetails = ScannedAttendance::with('securityUser')->where('id', $scannedId)->first();
-            return $userDetails;
+            $userDetails = ScannedAttendance::with(['securityUser' => function ($query) {
+                $query->select(self::SCANNED_SECURITY_USER_COLUMNS);
+            }])->where('id', $scannedId)->first();
+
+            return $userDetails ? Utf8Sanitizer::clean($userDetails->toArray()) : $userDetails;
         } catch (\Exception $e) {
             Log::error('Failed to fetch Scanned User Data from db', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'parameters' => $params ?? [] 
+                'scanned_id' => $scannedId,
             ]);
             return $this->sendErrorResponse('Failed to fetch Scanned User Data from db');
         }

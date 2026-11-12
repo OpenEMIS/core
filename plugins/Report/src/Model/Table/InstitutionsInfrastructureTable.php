@@ -511,24 +511,28 @@ class InstitutionInfrastructuresTable extends AppTable
                 }
                 if(!empty($customFieldData)) {
                     foreach($customFieldData as $data) {
+                        // POCOR-9857: custom_field_id is an int; Entity::set()/offsetSet() requires a
+                        // string field name or it throws "Cannot set an empty field" (same bug fixed in
+                        // StaffLeaveReportTable).
+                        $customFieldKey = (string)$data->custom_field_id;
                         if(!empty($data->text_value)) {
-                            $row[$data->custom_field_id] = $data->text_value;
+                            $row[$customFieldKey] = $data->text_value;
                         }
                         if(!empty($data->number_value)) {
-                            $row[$data->custom_field_id] = $data->number_value;
+                            $row[$customFieldKey] = $data->number_value;
                         }
                         if(!empty($data->decimal_value)) {
-                            $row[$data->custom_field_id] = $data->decimal_value;
+                            $row[$customFieldKey] = $data->decimal_value;
                         }
                         if(!empty($data->textarea_value)) {
-                            $row[$data->custom_field_id] = $data->textarea_value;
+                            $row[$customFieldKey] = $data->textarea_value;
                         }
                         if(!empty($data->date_value)) {
-                            $row[$data->custom_field_id] = $data->date_value;
+                            $row[$customFieldKey] = $data->date_value;
 
                         }
                         if(!empty($data->time_value)) {
-                            $row[$data->custom_field_id] = $data->time_value;
+                            $row[$customFieldKey] = $data->time_value;
 
                         }
                     }

@@ -55,22 +55,23 @@ class CustomReportBehavior extends Behavior
             }
 
             // return sql or array
+            //POCOR-9812: model definitions put their text into the SQL as written - run them guarded
             if ($returnSql) {
                 $result = $query->sql();
+                // the CSV export runs this text through the mysql client: make sure it is one statement
+                $this->runReadOnly(function (\PDO $pdo) use ($result) {
+                    $pdo->prepare($result);
+                });
             } else {
-                $result = $query->toArray();
+                $result = $this->runReadOnly(function () use ($query) {
+                    return $query->toArray();
+                });
             }
 
         } else if (isset($jsonArray['sql'])) {
             $stmtParameters = isset($jsonArray['parameters']) ? $jsonArray['parameters'] : [];
-            $query = $this->_sql($params, $jsonArray['sql'], $stmtParameters);
-
-            // return sql or array
-            if ($returnSql) {
-                $result = $query->__get('queryString');
-            } else {
-                $result = $query->fetchAll('assoc');
-            }
+            // returns the final SQL text when $returnSql, else the rows
+            $result = $this->_sql($params, $jsonArray['sql'], $stmtParameters, $returnSql);
         }
 
         //To prevent memory leak
@@ -135,8 +136,45 @@ class CustomReportBehavior extends Behavior
             $query->where($this->_processConditions($conditionData, $params));
         }
 
-        return $query->count() > 0;
+        //POCOR-9812: conditions come from the report definition - run guarded
+        return $this->runReadOnly(function () use ($query) {
+            return $query->count() > 0;
+        });
     }
+
+    //POCOR-9812: start - database-level guard for custom report SQL
+    /**
+     * Runs a custom report query so that it can only read data, whatever got past validation
+     * (report definitions are user-entered, and filter values are pasted into raw SQL):
+     * - PDO emulated prepares are switched off, so statements are prepared by MySQL itself and a
+     *   query string holding more than one statement ("SELECT 1; DROP ...") is rejected;
+     * - it runs inside a READ ONLY transaction, so MySQL refuses any change to table data.
+     * The connection's previous prepare mode is restored afterwards.
+     */
+    private function runReadOnly(callable $callback)
+    {
+        $connection = ConnectionManager::get('default');
+        $driver = $connection->getDriver();
+        $driver->connect();
+        $pdo = $driver->getConnection();
+
+        $emulate = $pdo->getAttribute(\PDO::ATTR_EMULATE_PREPARES);
+        // never nest: START TRANSACTION would silently commit a caller's open transaction
+        $ownTransaction = !$connection->inTransaction() && !$pdo->inTransaction();
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+        try {
+            if ($ownTransaction) {
+                $pdo->exec('START TRANSACTION READ ONLY');
+            }
+            return $callback($pdo);
+        } finally {
+            if ($ownTransaction) {
+                $pdo->exec('ROLLBACK');
+            }
+            $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, $emulate);
+        }
+    }
+    //POCOR-9812: end
 
     private function extractPlaceholder($str)
     {
@@ -150,7 +188,7 @@ class CustomReportBehavior extends Behavior
         return $value;
     }
 
-    private function _sql(array $params, $sqlStmt, $stmtParameters)
+    private function _sql(array $params, $sqlStmt, $stmtParameters, $returnSql = false)
     {
         foreach ($stmtParameters as $field) {
             if (array_key_exists($field, $params)) {
@@ -164,9 +202,19 @@ class CustomReportBehavior extends Behavior
             }
         }
 
-        $connection = ConnectionManager::get('default');
-        $results = $connection->query($sqlStmt);
-        return $results;
+        //POCOR-9812: was $connection->query($sqlStmt), which runs every statement in the string.
+        // Prepared natively it must be a single statement; executed read-only it cannot change data.
+        return $this->runReadOnly(function (\PDO $pdo) use ($sqlStmt, $returnSql) {
+            $statement = $pdo->prepare($sqlStmt);
+            if ($returnSql) {
+                // CSV export: the caller runs the text itself, it only needed checking
+                return $sqlStmt;
+            }
+            $statement->execute();
+            $rows = $statement->fetchAll(\PDO::FETCH_ASSOC);
+            $statement->closeCursor();
+            return $rows;
+        });
     }
 
     // private function _get(array $params, array $values)
@@ -329,7 +377,9 @@ class CustomReportBehavior extends Behavior
                     }
 
                     // add $options["super_admin"] to finders since they do not have access to auth component
-                    $conditions["super_admin"] = $this->_table->Auth->user('super_admin');
+                    //POCOR-9812: Auth is not set when ReportShell builds the file - use the requester's flag passed in $params
+                    $conditions["super_admin"] = $params['super_admin']
+                        ?? (isset($this->_table->Auth) ? $this->_table->Auth->user('super_admin') : 0);
 
                     $query->find($finder, $conditions);
                 } else {

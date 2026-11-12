@@ -53,6 +53,7 @@ class AssessmentItemsGradingTypesTable extends AppTable {
                 'type' => 'AssessmentGradingTypes.result_type'
             ])
             ->where([$this->aliasField('assessment_id') => $assessmentId])
+            ->all()
             ->toArray();
         return $gradeTypes;
     }

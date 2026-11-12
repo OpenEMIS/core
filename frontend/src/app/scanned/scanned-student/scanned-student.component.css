@@ -25,3 +25,45 @@
 ::ng-deep .kdx.kdx-ag-grid-wrapper{
     margin-top: 42px !important;
 }
+
+/* POCOR-9851: date field tooltips, matching the toolbar (ngbTooltip) tooltip.
+   Drawn on the datepicker because .btn has overflow: hidden, and shown under
+   the calendar button (50px wide, right-aligned) only while it is hovered */
+::ng-deep .kdx-datepicker[data-tooltip]::after,
+::ng-deep .kdx-datepicker[data-tooltip]::before {
+    position: absolute;
+    right: 25px;
+    transform: translateX(50%);
+    z-index: 1070;
+    opacity: 0.9;
+    pointer-events: none;
+    display: none;
+}
+
+::ng-deep .kdx-datepicker[data-tooltip]::after {
+    content: attr(data-tooltip);
+    top: calc(100% + 0.4rem);
+    max-width: 200px;
+    padding: 0.25rem 0.5rem;
+    color: #fff;
+    background-color: #000;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+    white-space: nowrap;
+}
+
+::ng-deep .kdx-datepicker[data-tooltip]::before {
+    content: "";
+    top: 100%;
+    border-style: solid;
+    border-width: 0 0.4rem 0.4rem;
+    border-color: transparent transparent #000;
+}
+
+::ng-deep .kdx-datepicker[data-tooltip]:has(.btn-input:hover)::after,
+::ng-deep .kdx-datepicker[data-tooltip]:has(.btn-input:hover)::before {
+    display: block;
+}

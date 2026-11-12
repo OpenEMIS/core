@@ -419,11 +419,12 @@ class InstitutionGradesTable extends ControllerActionTable
                         }
                     }
 
+                    // POCOR-9882 'override' stops OpenEmisBehavior::addAfterSave from also adding the generic success alert
                     if ($error && $gradeIsSelected) {
-                        $model->Alert->error($this->aliasField('failedSavingGrades'));
+                        $model->Alert->error($this->aliasField('failedSavingGrades'), ['reset' => 'override']);
                         return false;
                     } elseif (!$gradeIsSelected) {
-                        $model->Alert->error($this->aliasField('noGradeSelected'));
+                        $model->Alert->error($this->aliasField('noGradeSelected'), ['reset' => 'override']);
                         return false;
                     } else {
                         foreach ($gradeEntities as $grade) {
@@ -457,11 +458,11 @@ class InstitutionGradesTable extends ControllerActionTable
                     }
 
                 } else {
-                    $model->Alert->error($this->aliasField('noGradeSelected'));
+                    $model->Alert->error($this->aliasField('noGradeSelected'), ['reset' => 'override']);
                     return false;
                 }
             } else {
-                $model->Alert->error($this->aliasField('noGradeSelected'));
+                $model->Alert->error($this->aliasField('noGradeSelected'), ['reset' => 'override']);
                 return false;
             }
         };

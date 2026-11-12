@@ -46,7 +46,7 @@ function InstitutionStudentAttendancesSvc(
         EXCUSED: {
             code: "EXCUSED",
             icon: "fa fa-circle-o",
-            color: "#CC5C5C",
+            color: "#E67E22", //POCOR-9886: orange to distinguish from unexcused (red)
         },
         NoScheduledClicked: {
             code: "NoScheduledClicked",
@@ -298,10 +298,11 @@ function InstitutionStudentAttendancesSvc(
         }).ajax({ success: success, defer: true });
     }
 
-    function getClassOptions(institutionId, academicPeriodId) {
-        const key = getCacheKey(institutionId, academicPeriodId);
+    // Classes of the institution/period, optionally limited to those running the given
+    // education grade (multi-grade classes are returned for each of their grades)
+    function getClassOptions(institutionId, academicPeriodId, educationGradeId) {
+        const key = getCacheKey(institutionId, academicPeriodId, educationGradeId);
         if (cache.classes[key]) {
-            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.classes[key]);
         }
 
@@ -315,16 +316,21 @@ function InstitutionStudentAttendancesSvc(
             }
         };
 
-        return InstitutionClasses.find("classesByInstitutionAndAcademicPeriod", {
+        var params = {
             institution_id: institutionId,
             academic_period_id: academicPeriodId,
-        }).ajax({ success: success, defer: true });
+        };
+        if (educationGradeId) {
+            params.education_grade_id = educationGradeId;
+        }
+        return InstitutionClasses.find("classesByInstitutionAndAcademicPeriod", params)
+            .ajax({ success: success, defer: true });
     }
 
-    function getEducationGradeOptions(institutionId, academicPeriodId, classId) {
-        const key = getCacheKey(institutionId, academicPeriodId, classId);
+    // All education grades that have classes in the institution for the academic period
+    function getEducationGradeOptions(institutionId, academicPeriodId) {
+        const key = getCacheKey(institutionId, academicPeriodId);
         if (cache.grades[key]) {
-            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.grades[key]);
         }
 
@@ -338,10 +344,9 @@ function InstitutionStudentAttendancesSvc(
             }
         };
 
-        return InstitutionClasses.find("gradesByInstitutionAndAcademicPeriodAndInstitutionClass", {
+        return InstitutionClasses.find("gradesByInstitutionAndAcademicPeriod", {
             institution_id: institutionId,
             academic_period_id: academicPeriodId,
-            institution_class_id: classId,
         }).ajax({ success: success, defer: true });
     }
 
@@ -587,6 +592,17 @@ function InstitutionStudentAttendancesSvc(
 
         const isSubjectBased = context.attendance_by === "subject";
 
+        // POCOR-9892: only "Absence - Excused" offers a reason to pick in the UI
+        // (see getEditAttendanceElement()'s EXCUSED-only reason <select>) - this
+        // used to default to the first configured reason regardless of type,
+        // silently saving a reason on Late/Unexcused marks that was never shown
+        // or selectable. Resolve by code (not a hardcoded id) to match the same
+        // lookup already used in the response handler further down, and to stay
+        // correct if absence_types is ever reordered or extended.
+        const absenceTypeObj = (context.absenceTypes || []).find(
+            function (obj) { return obj.id == Number(data.absence_type_id); }
+        );
+        const isExcused = absenceTypeObj && absenceTypeObj.code === "EXCUSED";
         const defaultReasonId = context.studentAbsenceReasons[0]['id'];
         const studentAbsenceData = {
             student_id: Number(data.student_id),
@@ -594,9 +610,11 @@ function InstitutionStudentAttendancesSvc(
             academic_period_id: Number(data.academic_period_id),
             institution_class_id: Number(data.institution_class_id),
             absence_type_id: Number(data.absence_type_id),
-            student_absence_reason_id: data.student_absence_reason_id != null
-                ? Number(data.student_absence_reason_id)
-                : defaultReasonId,
+            student_absence_reason_id: !isExcused
+                ? null
+                : (data.student_absence_reason_id != null
+                    ? Number(data.student_absence_reason_id)
+                    : defaultReasonId),
             comment: data.comment,
             period: isSubjectBased ? 0 : Number(context.period),
             date: context.date,
@@ -1194,8 +1212,17 @@ function InstitutionStudentAttendancesSvc(
                         // console.log('Step 19: Checking api...', api ? 'EXISTS' : 'UNDEFINED');
 
                         // POCOR-9572: Refresh cells to show updated values
+                        // POCOR-9890: force-refresh the whole row. A plain refreshCells() only
+                        // redraws cells whose own value changed, so the Reason/Comment cell kept
+                        // its old layout (e.g. Excused reason select + comment) while the row
+                        // height changed, which broke the layout.
                         // console.log('Step 20: Calling refreshCells()...');
-                        api.refreshCells();
+                        var rowNode = api.getRowNode(String(data.student_id));
+                        if (rowNode) {
+                            api.refreshCells({ rowNodes: [rowNode], force: true });
+                        } else {
+                            api.refreshCells();
+                        }
                         // console.log('Step 21: Cells refreshed successfully');
 
                         // POCOR-9572: Reset row heights so they adjust to content

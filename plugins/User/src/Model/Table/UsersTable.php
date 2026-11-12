@@ -730,7 +730,6 @@ class UsersTable extends AppTable
     {
         $prefix = $this->getOpenemisIdPrefix();
         $connection = $this->getConnection();
-        $openemisTemps = TableRegistry::getTableLocator()->get('User.OpenemisTemps');
         $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 
         $usersTableSql = $connection->quoteIdentifier($this->getTable());
@@ -739,10 +738,19 @@ class UsersTable extends AppTable
         $pattern = $this->getNumericOpenemisRegexp($prefix);
         $maxExpr = $this->getNumericOpenemisCastExpression($usersTableSql, $openemisNoSql, $prefix);
 
-        $selectSql = 'SELECT COALESCE(' . $maxExpr . ', 0) + 1 AS next_openemis_no'
-            . ' FROM ' . $usersTableSql
-            . ' WHERE ' . $usersTableSql . '.' . $openemisNoSql . ' IS NOT NULL'
-            . ' AND ' . $usersTableSql . '.' . $openemisNoSql . ' REGEXP :pattern';
+        //POCOR-9867: seed from BOTH tables. Reservations are never purged, and every allocation -
+        //including abandoned wizards - now writes one, so MAX(reservations) runs permanently ahead of
+        //MAX(security_users). Seeding from users alone made every caller re-walk the whole accumulated
+        //backlog one failed INSERT at a time, and fall out of the loop below once it exceeded 100.
+        $reservedMaxExpr = $this->getNumericOpenemisCastExpression($tempTableSql, $openemisNoSql, $prefix);
+        $selectSql = 'SELECT GREATEST('
+            . ' (SELECT COALESCE(' . $maxExpr . ', 0) FROM ' . $usersTableSql
+            . '  WHERE ' . $usersTableSql . '.' . $openemisNoSql . ' IS NOT NULL'
+            . '  AND ' . $usersTableSql . '.' . $openemisNoSql . ' REGEXP :pattern),'
+            . ' (SELECT COALESCE(' . $reservedMaxExpr . ', 0) FROM ' . $tempTableSql
+            . '  WHERE ' . $tempTableSql . '.' . $openemisNoSql . ' IS NOT NULL'
+            . '  AND ' . $tempTableSql . '.' . $openemisNoSql . ' REGEXP :pattern)'
+            . ') + 1 AS next_openemis_no';
 
         $row = $connection->execute($selectSql, ['pattern' => $pattern])->fetch('assoc');
         $nextSuffix = isset($row['next_openemis_no']) ? (string)$row['next_openemis_no'] : '1';
@@ -751,43 +759,53 @@ class UsersTable extends AppTable
         while ($attempts < 100) {
             $newOpenemisNo = $prefix . $nextSuffix;
 
-            if (!$this->exists([$this->aliasField('openemis_no') => $newOpenemisNo])
-                && !$openemisTemps->exists(['openemis_no' => $newOpenemisNo])) {
-                if ($attempts === 0) {
-                    $insertSql = 'INSERT INTO ' . $tempTableSql . ' (' . $openemisNoSql . ', ip_address, created)'
-                        . ' SELECT CAST(COALESCE(' . $maxExpr . ', 0) + 1 AS CHAR), :ip_address, NOW()'
-                        . ' FROM ' . $usersTableSql
-                        . ' WHERE ' . $usersTableSql . '.' . $openemisNoSql . ' IS NOT NULL'
-                        . ' AND ' . $usersTableSql . '.' . $openemisNoSql . ' REGEXP :pattern';
-
-                    try {
-                        $connection->execute($insertSql, [
-                            'ip_address' => $ipAddress,
-                            'pattern' => $pattern,
-                        ]);
-                    } catch (\Exception $exception) {
-                        $openemisTemp = $openemisTemps->newEntity([
-                            'openemis_no' => $newOpenemisNo,
-                            'ip_address' => $ipAddress,
-                        ]);
-                        $openemisTemps->save($openemisTemp);
-                    }
-                } else {
+            //POCOR-9867: the old code reserved the number WITHOUT the configured prefix while the
+            //guard looked for the prefixed value, so the reservation was invisible and the same id
+            //went out twice. Reserve the prefixed value in one INSERT and let its UNIQUE index pick
+            //the winner - that also closes the check-then-act race the two exists() calls left open.
+            if (!$this->exists([$this->aliasField('openemis_no') => $newOpenemisNo])) {
+                try {
                     $connection->execute(
                         'INSERT INTO ' . $tempTableSql . ' (' . $openemisNoSql . ', ip_address, created)'
                         . ' VALUES (:openemis_no, :ip_address, NOW())',
                         ['openemis_no' => $newOpenemisNo, 'ip_address' => $ipAddress]
                     );
-                }
 
-                return $newOpenemisNo;
+                    return $newOpenemisNo;
+                } catch (\PDOException $exception) {
+                    //POCOR-9867: ONLY a duplicate key means someone else holds this number. A lock
+                    //timeout, lost connection, strict-mode rejection or missing table must not be
+                    //silently treated as a collision - that burned all 100 attempts and then returned
+                    //an unreserved id, reintroducing the duplicate this method exists to prevent.
+                    if (!$this->isDuplicateKeyException($exception)) {
+                        throw $exception;
+                    }
+                    // lost the reservation to a concurrent request - try the next number
+                }
             }
 
             $nextSuffix = $this->incrementNumericString($nextSuffix);
             $attempts++;
         }
 
-        return $prefix . $nextSuffix;
+        //POCOR-9867: never hand back a number that was not reserved. Returning one here was how a
+        //duplicate escaped: the caller believes it owns the id and the next caller computes the same one.
+        throw new \RuntimeException(sprintf(
+            'Unable to reserve a unique OpenEMIS ID after %d attempts (prefix "%s", last candidate "%s").',
+            $attempts,
+            $prefix,
+            $prefix . $nextSuffix
+        ));
+    }
+
+    /**
+     * POCOR-9867: true only for a UNIQUE/PRIMARY KEY violation.
+     */
+    protected function isDuplicateKeyException(\PDOException $exception): bool
+    {
+        //SQLSTATE 23000 is every integrity violation (foreign key, NOT NULL, ...), so it is too
+        //broad to mean 'someone else holds this number'. Only the driver's 1062 does.
+        return isset($exception->errorInfo[1]) && (int)$exception->errorInfo[1] === 1062;
     }
 
     /**

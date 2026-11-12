@@ -80,6 +80,21 @@ document.addEventListener('DOMContentLoaded', function() {
             ]);
         }
         // POCOR-8951 end
+
+        // POCOR-4477 start
+        if ($this->request->getParam('action') === 'FieldsConfigurations') {
+            echo $this->Form->control('module', [
+                'class' => 'form-control chosenSelect',
+                'label' => false,
+                'type' => 'select',
+                'options' => $fieldConfigModules ?? [],
+                'default' => $selectedFieldConfigModule ?? 'Institution',
+                'url' => $baseUrl,
+                'data-named-key' => 'module',
+                'data-named-group' => 'type',
+            ]);
+        }
+        // POCOR-4477 end
         ?>
     </div>
 </div>

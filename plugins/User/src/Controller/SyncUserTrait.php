@@ -18,8 +18,9 @@ trait SyncUserTrait
             return $this->redirect($this->referer());
         }
 
-        $pass          = $this->request->getAttribute('params')['pass'] ?? [];
-        $decoded       = !empty($pass[0]) ? $this->ControllerAction->paramsDecode($pass[0]) : [];
+        $pass = $this->request->getAttribute('params')['pass'] ?? [];
+        $encoded = ($pass[0] ?? null) === 'execute' ? ($pass[1] ?? null) : ($pass[0] ?? null);
+        $decoded = !empty($encoded) ? $this->ControllerAction->paramsDecode($encoded) : [];
         $userId        = $decoded['user_id'] ?? null;
         $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
 
