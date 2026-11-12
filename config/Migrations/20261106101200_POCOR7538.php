@@ -6,13 +6,13 @@ class POCOR7538 extends AbstractMigration
     public function up()
     {
         // Backup tables
-        $this->execute('CREATE TABLE IF NOT EXISTS `zz_7538_security_functions` LIKE `security_functions`');
+        $this->execute('CREATE TABLE IF NOT EXISTS `z_7538_security_functions` LIKE `security_functions`');
         // INSERT IGNORE: safe to re-run, and a re-run keeps the original pre-migration copy
-        $this->execute('INSERT IGNORE INTO `zz_7538_security_functions` SELECT * FROM `security_functions`');
-        $this->execute('CREATE TABLE IF NOT EXISTS `zz_7538_security_roles` LIKE `security_roles`');
-        $this->execute('INSERT IGNORE INTO `zz_7538_security_roles` SELECT * FROM `security_roles`');
-        $this->execute('CREATE TABLE IF NOT EXISTS `zz_7538_security_role_functions` LIKE `security_role_functions`');
-        $this->execute('INSERT IGNORE INTO `zz_7538_security_role_functions` SELECT * FROM `security_role_functions`');
+        $this->execute('INSERT IGNORE INTO `z_7538_security_functions` SELECT * FROM `security_functions`');
+        $this->execute('CREATE TABLE IF NOT EXISTS `z_7538_security_roles` LIKE `security_roles`');
+        $this->execute('INSERT IGNORE INTO `z_7538_security_roles` SELECT * FROM `security_roles`');
+        $this->execute('CREATE TABLE IF NOT EXISTS `z_7538_security_role_functions` LIKE `security_role_functions`');
+        $this->execute('INSERT IGNORE INTO `z_7538_security_role_functions` SELECT * FROM `security_role_functions`');
 
         $existing = $this->fetchRow("
             SELECT COUNT(*) AS total
@@ -22,6 +22,12 @@ class POCOR7538 extends AbstractMigration
               AND `category` = 'Academic'
               AND `name` IN ('Classes', 'Subjects')
             ");
+
+        // Classes/Subjects already exist: POCOR7538 has already run on this server (e.g. the
+        // earlier 20260929100000 version), so leave everything as it is - no insert, no update.
+        if ((int)$existing['total'] > 0) {
+            return;
+        }
 
         if ((int)$existing['total'] === 0) {
             $row = $this->fetchRow("
@@ -205,9 +211,13 @@ class POCOR7538 extends AbstractMigration
               AND `name` IN ('Classes', 'Subjects')
         ");
 
+        // zz_ is the original pre-7538 copy on servers where the earlier POCOR7538
+        // (20260929100000) ran; use it if present, otherwise this migration's z_ copy
+        $backup = $this->hasTable('zz_7538_security_functions') ? 'zz_7538_security_functions' : 'z_7538_security_functions';
+
         $this->execute("
             UPDATE `security_functions` sf
-            JOIN `zz_7538_security_functions` bak ON bak.id = sf.id
+            JOIN `$backup` bak ON bak.id = sf.id
             SET sf.visible = bak.visible, sf._view = bak._view, sf._edit = bak._edit, sf._add = bak._add, sf._delete = bak._delete, sf._execute = bak._execute
             WHERE sf.module = 'Institutions' AND sf.category = 'Academic'
               AND sf.name IN ('All Classes', 'My Classes', 'All Subjects', 'My Subjects')
@@ -222,6 +232,9 @@ class POCOR7538 extends AbstractMigration
         }
 
         // Remove backup tables
+        $this->execute('DROP TABLE IF EXISTS `z_7538_security_functions`');
+        $this->execute('DROP TABLE IF EXISTS `z_7538_security_roles`');
+        $this->execute('DROP TABLE IF EXISTS `z_7538_security_role_functions`');
         $this->execute('DROP TABLE IF EXISTS `zz_7538_security_functions`');
         $this->execute('DROP TABLE IF EXISTS `zz_7538_security_roles`');
         $this->execute('DROP TABLE IF EXISTS `zz_7538_security_role_functions`');
