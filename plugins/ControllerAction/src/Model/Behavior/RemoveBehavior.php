@@ -179,7 +179,11 @@ class RemoveBehavior extends Behavior
             // left the id unresolved and broke delete (POCOR-9825).
             $modelNameArray = ['institution_classes'];//POCOR-8333
             if(in_array($model->getTable(), $modelNameArray)){//POCOR-8333 starts
-                $ids = empty($model->paramsPass(1)) ? [] : $model->paramsDecode($model->paramsPass(1));
+                // POCOR-7538: the Classes Delete button puts the id at pass segment 1 only when the
+                // index URL carried an encoded segment of its own; when it didn't (e.g. after changing
+                // a filter) the id is at segment 0 and the lookup crashed on `InstitutionClasses.id = NULL`.
+                $classIdParam = !empty($model->paramsPass(1)) ? $model->paramsPass(1) : $model->paramsPass(0);
+                $ids = empty($classIdParam) ? [] : $model->paramsDecode($classIdParam);
             }else{ // POCOR-8333 ends
                 $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
             }
@@ -194,7 +198,10 @@ class RemoveBehavior extends Behavior
                 }
             }
             $idKeys = $model->getIdKeys($model, $ids);
-            if ($model->exists($idKeys)) {
+            // POCOR-7538: no resolvable id -> "record does not exist" instead of a fatal
+            // `<alias>.id = NULL` query error (shown to users as a 404 page).
+            $hasIdKeys = !empty($idKeys) && !in_array(null, $idKeys, true);
+            if ($hasIdKeys && $model->exists($idKeys)) {
                 $entity = $model->get($idKeys);
 
                 $query = $model->find();

@@ -98,14 +98,15 @@ class InstitutionClassBehavior extends Behavior
                 }
             }
             $currentUrl = $_SERVER['REQUEST_URI'];
-            // POCOR-7538 points 2.1/3.4-3.6: "Access All Classes" (role-level flag, point
-            // 1.5) shows every class; otherwise only the classes the user teaches -
-            // homeroom, secondary or subject teacher - whatever their role. Page CRUD is
-            // gated by the Classes permission (SecurityAuthorize), not here.
-            if (!$this->hasAccessAllClasses($roles)) {
+            // POCOR-7538 points 2.1/3.4/3.6: "Access All Classes" (role-level flag, point
+            // 1.5) shows every class; otherwise only the classes the user is homeroom or
+            // secondary teacher of, whatever their role. Subject teachers reach their other
+            // classes through the subject-based pages instead. Page CRUD is gated by the
+            // Classes permission (SecurityAuthorize), not here.
+            if (!$this->hasAccessAllClasses($roles, $AccessControl)) {
                 if (strpos($currentUrl, 'ReportCardStatusProgress') === false) {
                     $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
-                    $query->where($InstitutionClasses->getTeacherClassConditions($userId, $this->_table->aliasField('id')));
+                    $query->where($InstitutionClasses->getTeacherClassConditions($userId, $this->_table->aliasField('id'), false));
                 } elseif ($AccessControl->check(['Institutions', 'Classes', $permission], $roles)) {
                     $query = $this->_table->find(); //POCOR-8773
                     $query
@@ -178,8 +179,14 @@ class InstitutionClassBehavior extends Behavior
     }
 
     // POCOR-7538: shared check for the role-level "Access All Classes" flag (point 1.5).
-    private function hasAccessAllClasses($roles)
+    // A super admin has no roles to carry the flag, so is let through explicitly - the
+    // AccessControl->check() this replaced did the same implicitly.
+    private function hasAccessAllClasses($roles, $AccessControl = null)
     {
+        $AccessControl = $AccessControl ?: ($this->_table->AccessControl ?? null);
+        if ($AccessControl && $AccessControl->isAdmin()) {
+            return true;
+        }
         return TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllClasses($roles);
     }
 
@@ -192,7 +199,7 @@ class InstitutionClassBehavior extends Behavior
                 if (!$this->checkAllClassesPermission($action)) {
                     if ($this->checkMyClassesPermission($action)) {
                         $userId = $this->_table->Auth->user('id');
-                        if (!$this->checkUserHasClassPermission($entity, $userId, true)) {
+                        if (!$this->checkUserHasClassPermission($entity, $userId)) {
                             $urlParams = $this->_table->ControllerAction->url('index');
                             $event->stopPropagation();
                             $this->_table->Alert->error('security.noAccess');
@@ -222,18 +229,8 @@ class InstitutionClassBehavior extends Behavior
         }
     }
 
-    // POCOR-7538 point 3.4/3.5: $includeSubjectTeachers also lets a subject teacher of
-    // the class through (viewing); edit/delete stay with homeroom/secondary teachers.
-    private function checkUserHasClassPermission(Entity $entity, $userId, $includeSubjectTeachers = false)
+    private function checkUserHasClassPermission(Entity $entity, $userId)
     {
-        if ($includeSubjectTeachers) {
-            $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
-            return $InstitutionClasses->find()
-                ->where([$InstitutionClasses->aliasField('id') => $entity->id])
-                ->where($InstitutionClasses->getTeacherClassConditions($userId, $InstitutionClasses->aliasField('id')))
-                ->count() > 0;
-        }
-
         if ($entity->staff_id == $userId) {
             return true;
         }

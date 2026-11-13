@@ -6,10 +6,13 @@ class POCOR7538 extends AbstractMigration
     public function up()
     {
         // Backup tables
-        $this->execute('CREATE TABLE IF NOT EXISTS `zz_7538_security_functions` LIKE `security_functions`');
-        $this->execute('INSERT INTO `zz_7538_security_functions` SELECT * FROM `security_functions`');
-        $this->execute('CREATE TABLE IF NOT EXISTS `zz_7538_security_roles` LIKE `security_roles`');
-        $this->execute('INSERT INTO `zz_7538_security_roles` SELECT * FROM `security_roles`');
+        $this->execute('CREATE TABLE IF NOT EXISTS `z_7538_security_functions` LIKE `security_functions`');
+        // INSERT IGNORE: safe to re-run, and a re-run keeps the original pre-migration copy
+        $this->execute('INSERT IGNORE INTO `z_7538_security_functions` SELECT * FROM `security_functions`');
+        $this->execute('CREATE TABLE IF NOT EXISTS `z_7538_security_roles` LIKE `security_roles`');
+        $this->execute('INSERT IGNORE INTO `z_7538_security_roles` SELECT * FROM `security_roles`');
+        $this->execute('CREATE TABLE IF NOT EXISTS `z_7538_security_role_functions` LIKE `security_role_functions`');
+        $this->execute('INSERT IGNORE INTO `z_7538_security_role_functions` SELECT * FROM `security_role_functions`');
 
         $existing = $this->fetchRow("
             SELECT COUNT(*) AS total
@@ -19,6 +22,12 @@ class POCOR7538 extends AbstractMigration
               AND `category` = 'Academic'
               AND `name` IN ('Classes', 'Subjects')
             ");
+
+        // Classes/Subjects already exist: POCOR7538 has already run on this server (e.g. the
+        // earlier 20260929100000 version), so leave everything as it is - no insert, no update.
+        if ((int)$existing['total'] > 0) {
+            return;
+        }
 
         if ((int)$existing['total'] === 0) {
             $row = $this->fetchRow("
@@ -118,19 +127,97 @@ class POCOR7538 extends AbstractMigration
             WHERE sf.module = 'Institutions' AND sf.category = 'Academic'
               AND sf.name = 'All Subjects' AND srf._view = 1
         ");
+
+        // Migrate: carry each role's existing All/My Classes and All/My Subjects grants over
+        // to the new Classes/Subjects permissions ("if permissions were enabled for my
+        // classes or my subjects, it should follow the same for classes or subjects").
+        // Edit/Add/Delete/Execute moved to the new rows and Classes.index/Subjects.index was
+        // stripped from All Classes/All Subjects above, so without this roles lose page
+        // access (e.g. Principal) or Edit/Add/Delete (e.g. teachers) until re-ticked.
+        // All Classes/All Subjects are sources too, so roles that only had those keep page
+        // access. Only ever raises a tick, never lowers one.
+        $map = [
+            'Classes' => ['All Classes', 'My Classes'],
+            'Subjects' => ['All Subjects', 'My Subjects'],
+        ];
+        foreach ($map as $new => $old) {
+            $row = $this->fetchRow("
+                SELECT `id` FROM `security_functions`
+                WHERE `module` = 'Institutions' AND `category` = 'Academic' AND `name` = '$new'
+                LIMIT 1
+            ");
+            if (empty($row)) {
+                continue;
+            }
+            $newId = (int)$row['id'];
+            $oldNames = "'" . implode("', '", $old) . "'";
+
+            // per role: a tick on any of the old permissions
+            $grants = "
+                SELECT `srf`.`security_role_id`,
+                       MAX(IFNULL(`srf`.`_view`, 0)) AS `v`, MAX(IFNULL(`srf`.`_edit`, 0)) AS `e`,
+                       MAX(IFNULL(`srf`.`_add`, 0)) AS `a`, MAX(IFNULL(`srf`.`_delete`, 0)) AS `d`,
+                       MAX(IFNULL(`srf`.`_execute`, 0)) AS `x`
+                FROM `security_role_functions` `srf`
+                JOIN `security_functions` `sf` ON `sf`.`id` = `srf`.`security_function_id`
+                WHERE `sf`.`module` = 'Institutions' AND `sf`.`category` = 'Academic'
+                  AND `sf`.`name` IN ($oldNames)
+                GROUP BY `srf`.`security_role_id`
+                HAVING GREATEST(`v`, `e`, `a`, `d`, `x`) = 1
+            ";
+
+            // roles that already have a row for the new permission: only raise ticks
+            $this->execute("
+                UPDATE `security_role_functions` `srf`
+                JOIN ($grants) `g` ON `g`.`security_role_id` = `srf`.`security_role_id`
+                SET `srf`.`_view` = GREATEST(IFNULL(`srf`.`_view`, 0), `g`.`v`),
+                    `srf`.`_edit` = GREATEST(IFNULL(`srf`.`_edit`, 0), `g`.`e`),
+                    `srf`.`_add` = GREATEST(IFNULL(`srf`.`_add`, 0), `g`.`a`),
+                    `srf`.`_delete` = GREATEST(IFNULL(`srf`.`_delete`, 0), `g`.`d`),
+                    `srf`.`_execute` = GREATEST(IFNULL(`srf`.`_execute`, 0), `g`.`x`),
+                    `srf`.`modified_user_id` = 1,
+                    `srf`.`modified` = NOW()
+                WHERE `srf`.`security_function_id` = $newId
+            ");
+
+            // roles with no row yet: insert one
+            $this->execute("
+                INSERT INTO `security_role_functions`
+                    (`_view`, `_edit`, `_add`, `_delete`, `_execute`, `security_role_id`, `security_function_id`, `created_user_id`, `created`)
+                SELECT `g`.`v`, `g`.`e`, `g`.`a`, `g`.`d`, `g`.`x`, `g`.`security_role_id`, $newId, 1, NOW()
+                FROM ($grants) `g`
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM (SELECT `security_role_id`, `security_function_id` FROM `security_role_functions`) `existing`
+                    WHERE `existing`.`security_role_id` = `g`.`security_role_id`
+                      AND `existing`.`security_function_id` = $newId
+                )
+            ");
+        }
     }
 
     public function down()
     {
+        // role grants on the new Classes/Subjects permissions go with them
+        $this->execute("
+            DELETE `srf` FROM `security_role_functions` `srf`
+            JOIN `security_functions` `sf` ON `sf`.`id` = `srf`.`security_function_id`
+            WHERE `sf`.`controller` = 'Institutions' AND `sf`.`module` = 'Institutions' AND `sf`.`category` = 'Academic'
+              AND `sf`.`name` IN ('Classes', 'Subjects')
+        ");
+
         $this->execute("
             DELETE FROM `security_functions`
             WHERE `controller` = 'Institutions' AND `module` = 'Institutions' AND `category` = 'Academic'
               AND `name` IN ('Classes', 'Subjects')
         ");
 
+        // zz_ is the original pre-7538 copy on servers where the earlier POCOR7538
+        // (20260929100000) ran; use it if present, otherwise this migration's z_ copy
+        $backup = $this->hasTable('zz_7538_security_functions') ? 'zz_7538_security_functions' : 'z_7538_security_functions';
+
         $this->execute("
             UPDATE `security_functions` sf
-            JOIN `zz_7538_security_functions` bak ON bak.id = sf.id
+            JOIN `$backup` bak ON bak.id = sf.id
             SET sf.visible = bak.visible, sf._view = bak._view, sf._edit = bak._edit, sf._add = bak._add, sf._delete = bak._delete, sf._execute = bak._execute
             WHERE sf.module = 'Institutions' AND sf.category = 'Academic'
               AND sf.name IN ('All Classes', 'My Classes', 'All Subjects', 'My Subjects')
@@ -145,7 +232,11 @@ class POCOR7538 extends AbstractMigration
         }
 
         // Remove backup tables
+        $this->execute('DROP TABLE IF EXISTS `z_7538_security_functions`');
+        $this->execute('DROP TABLE IF EXISTS `z_7538_security_roles`');
+        $this->execute('DROP TABLE IF EXISTS `z_7538_security_role_functions`');
         $this->execute('DROP TABLE IF EXISTS `zz_7538_security_functions`');
         $this->execute('DROP TABLE IF EXISTS `zz_7538_security_roles`');
+        $this->execute('DROP TABLE IF EXISTS `zz_7538_security_role_functions`');
     }
 }
