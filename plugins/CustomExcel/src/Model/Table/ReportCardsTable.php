@@ -1096,14 +1096,73 @@ class ReportCardsTable extends AppTable
                     $entity->homeroom = $entity->staff->name;
                 }
 
-                if (!empty($entity->classes_secondary_staff) && !empty($entity->classes_secondary_staff[0]->secondary_staff)) {
-                    $entity->secondary = $entity->classes_secondary_staff[0]->secondary_staff->name;
+                // POCOR-9915: print all secondary teachers (not just the first), ordered by security_roles.order
+                if (!empty($entity->classes_secondary_staff)) {
+                    $entity->secondary = $this->getSecondaryTeacherNames($entity);
                 }
             }
 
             //POCOR-7033[END]
             return $entity;
         }
+    }
+
+    /**
+     * POCOR-9915: comma-separated names of all secondary teachers of a class,
+     * sorted by the staff's security role order in the institution (highest role first),
+     * then by name. Staff without a role are listed last.
+     */
+    private function getSecondaryTeacherNames($classEntity)
+    {
+        $staffNames = [];
+        foreach ($classEntity->classes_secondary_staff as $row) {
+            if (!empty($row->secondary_staff)) {
+                $staffNames[$row->secondary_staff_id] = $row->secondary_staff->name;
+            }
+        }
+        if (empty($staffNames)) {
+            return null;
+        }
+
+        $roleOrders = [];
+        $InstitutionStaff = self::getDynamicTableInstance('Institution.Staff');
+        $rows = $InstitutionStaff->find()
+            ->select([
+                'staff_id' => $InstitutionStaff->aliasField('staff_id'),
+                'role_order' => 'MIN(SecurityRoles.order)'
+            ])
+            ->innerJoin(['SecurityGroupUsers' => 'security_group_users'], [
+                'SecurityGroupUsers.id = ' . $InstitutionStaff->aliasField('security_group_user_id')
+            ])
+            ->innerJoin(['SecurityRoles' => 'security_roles'], [
+                'SecurityRoles.id = SecurityGroupUsers.security_role_id'
+            ])
+            ->where([
+                $InstitutionStaff->aliasField('institution_id') => $classEntity->institution_id,
+                $InstitutionStaff->aliasField('staff_id IN') => array_keys($staffNames)
+            ])
+            ->group([$InstitutionStaff->aliasField('staff_id')])
+            ->enableHydration(false)
+            ->toArray();
+        foreach ($rows as $r) {
+            $roleOrders[$r['staff_id']] = (int)$r['role_order'];
+        }
+
+        $staffIds = array_keys($staffNames);
+        usort($staffIds, function ($a, $b) use ($roleOrders, $staffNames) {
+            $orderA = isset($roleOrders[$a]) ? $roleOrders[$a] : PHP_INT_MAX;
+            $orderB = isset($roleOrders[$b]) ? $roleOrders[$b] : PHP_INT_MAX;
+            if ($orderA !== $orderB) {
+                return $orderA <=> $orderB;
+            }
+            return strcasecmp($staffNames[$a], $staffNames[$b]);
+        });
+
+        $names = [];
+        foreach ($staffIds as $id) {
+            $names[] = $staffNames[$id];
+        }
+        return implode(', ', $names);
     }
 
     public function onExcelTemplateInitialiseInstitutionSubjectStudents(EventInterface $event, array $params, ArrayObject $extra)
