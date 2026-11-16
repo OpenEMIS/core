@@ -167,13 +167,15 @@ class StudentClassesTable extends ControllerActionTable
         }
 
         $conditions = [];
-        /*POCOR-6267 starts*/
-        if ($this->request->getParam('controller') == 'GuardianNavs' || 
-            (empty($userData['System']['User']['roles']) && !empty($studentId))) {
-            // Set the condition for student_id if applicable
-            $conditions[$this->aliasField('student_id IS')] = $studentId; //POCOR-8640
+        // POCOR-9919: Personal (Profiles) and Guardian pages must always be limited to one student,
+        // regardless of whether the logged-in user has security roles. Institutions > Students and
+        // Directory pages filter student_id in their own controllers (beforePaginate).
+        // Always apply the filter here: if the student id cannot be resolved, 'IS NULL' returns
+        // no rows instead of every student's records (null-safe key kept from POCOR-8640).
+        $controller = $this->request->getParam('controller');
+        if (in_array($controller, ['Profiles', 'GuardianNavs'])) {
+            $conditions[$this->aliasField('student_id IS')] = !empty($studentId) ? $studentId : null;
         }
-        /*POCOR-6267 ends*/
 
         $query->contain([
             'InstitutionClasses',
