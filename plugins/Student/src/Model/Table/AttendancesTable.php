@@ -24,6 +24,7 @@ class AttendancesTable extends ControllerActionTable
 {
     private $absenceList = [];
     private $absenceReasonList = [];
+    private $periodNameCache = []; // POCOR-9911: class|year|grade|date => [period id => configured name]
 
     public function initialize(array $config): void
     {
@@ -203,15 +204,62 @@ class AttendancesTable extends ControllerActionTable
             return '';
         }
         // POCOR-9025 end
-        return __('Period {0}', $entity->period);
+        return $this->getPeriodName($entity); // POCOR-9911
 
 //        return $this->getShortComment($entity->comment);
     }
 
     public function onExcelGetPeriodName(EventInterface $event, Entity $entity)
     {
-        return __('Period {0}', $entity->period);
+        // POCOR-9911: same rule as the index page - subject-based rows have no period
+        if (is_numeric($entity->subject_id) && $entity->subject_id > 0) {
+            return '';
+        }
+        return $this->getPeriodName($entity); // POCOR-9911
 //        return $this->getShortComment($entity->comment);
+    }
+
+    /**
+     * POCOR-9911: Resolve the configured period name (Administration > Attendance) for a marked record,
+     * using the same source as the Institution > Attendance > Students period selector.
+     * Falls back to "Period N" when no configured name is found.
+     */
+    private function getPeriodName(Entity $entity): string
+    {
+        $period = $entity->period;
+        $fallback = __('Period {0}', $period);
+        if (empty($period) || empty($entity->institution_class_id) || empty($entity->date)) {
+            return $fallback;
+        }
+
+        $date = $entity->date instanceof \DateTimeInterface
+            ? $entity->date->format('Y-m-d')
+            : date('Y-m-d', strtotime((string)$entity->date));
+        $gradeId = $entity->education_grade_id;
+        $key = implode('|', [$entity->institution_class_id, $entity->academic_period_id, $gradeId, $date]);
+
+        if (!array_key_exists($key, $this->periodNameCache)) {
+            $map = [];
+            try {
+                $options = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes')
+                    ->getAttendancePerDayOptionsByClass(
+                        $entity->institution_class_id,
+                        $entity->academic_period_id,
+                        $date,
+                        $gradeId
+                    );
+                foreach ((array)$options as $option) {
+                    if (isset($option['id']) && !isset($map[(string)$option['id']])) {
+                        $map[(string)$option['id']] = $option['name'];
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Cake\Log\Log::write('error', 'POCOR-9911: unable to resolve period names: ' . $e->getMessage());
+            }
+            $this->periodNameCache[$key] = $map;
+        }
+
+        return $this->periodNameCache[$key][(string)$period] ?? $fallback;
     }
 
 
@@ -279,7 +327,8 @@ class AttendancesTable extends ControllerActionTable
                 'subject_name' => 'Subjects.name',
                 $this->aliasField('academic_period_id'),
                 $this->aliasField('institution_id'),
-                $this->aliasField('institution_class_id')
+                $this->aliasField('institution_class_id'),
+                $this->aliasField('education_grade_id') // POCOR-9911: needed to resolve configured period names
             ])
             ->innerJoin(
                 ['InstitutionStudents' => 'institution_students'],

@@ -31,7 +31,7 @@ class StudentAttendancesTable extends ControllerActionTable
     private $allDayOptions = [];
     private $selectedDate;
     private $_absenceData = [];
-
+    private $_periodNameMap = []; // POCOR-9911: period id => configured period name for Excel export
     public function initialize(array $config): void
     {
         $this->setTable('institution_class_students');
@@ -1258,6 +1258,33 @@ class StudentAttendancesTable extends ControllerActionTable
         $options['subject_id'] = $sheet['subjectId']; //POCOR-8874
         $options['attendance_by'] = $sheet['attendance_by']; //POCOR-8874
 
+        // POCOR-9911 start: resolve configured period names (same source as the Attendance page period dropdown)
+        // Only needed for the daily export by period; the label must never break the export itself.
+        $this->_periodNameMap = [];
+        if ($attendanceBy != 'subject' && $sheet['dayId'] != -1 && !empty($sheet['classId'])) {
+            try {
+                $periodOptions = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes')
+                    ->getAttendancePerDayOptionsByClass(
+                        $sheet['classId'],
+                        $sheet['academicPeriodId'],
+                        $sheet['dayId'],
+                        $sheet['educationGradeId'],
+                        $sheet['weekStartDay'],
+                        $sheet['weekEndDay']
+                    );
+                foreach ((array)$periodOptions as $periodOption) {
+                    $key = isset($periodOption['id']) ? (string)$periodOption['id'] : null;
+                    if ($key !== null && !isset($this->_periodNameMap[$key])) {
+                        $this->_periodNameMap[$key] = $periodOption['name'];
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::write('error', 'POCOR-9911: unable to resolve period names for attendance export: ' . $e->getMessage());
+                $this->_periodNameMap = [];
+            }
+        }
+        // POCOR-9911 end
+
         // POCOR-9572: Execute query once and cache results for all onExcelGet* methods
         $query = $this->findClassStudentsWithAbsence($sheet['query'], $options);
         $this->_absenceDataCache = [];
@@ -1308,8 +1335,15 @@ class StudentAttendancesTable extends ControllerActionTable
             if (empty($row->marked_date)) {
                 return '';
             }
-            $period = $row->period ?? 1;
-            return 'Period ' . $period;
+            // POCOR-9911: use the marked-record period (exists for present AND absent students).
+            // Absence details ($row->period) is NULL for present students, so it must not drive the label.
+            $period = $row->marked_period ?? $row->period ?? 1;
+            // POCOR-9911: show the configured period name instead of the hard-coded "Period N"
+            // (names are admin-configured data, so they are not passed through __() again)
+            if (isset($this->_periodNameMap[(string)$period])) {
+                return $this->_periodNameMap[(string)$period];
+            }
+            return __('Period') . ' ' . $period;
         }
         return ''; // attendance not marked
     }
