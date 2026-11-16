@@ -1,3 +1,8 @@
+### 5.25.0 - 2026-11-13
+- Implemented: Hide the My Classes and My Subjects permissions and add new Classes and Subjects permissions
+- Bug Fixed: Core>Institution>Attendance>Student >Export report: Actual names of periods are not displayed correctly  in the downloaded report. 
+- Bug Fixed: Core>Administration>System configuration : Limit be implemented on principals ability to create new students to only preschool level 1 & 2 and infant 1 only
+
 ### 5.24.0 - 2026-11-11
 - Implemented: Develop absence placeholders for student report cards 
 - Implemented: Develop changes to Administration > Performance > Assessments > Assessments Periods > Edit: The field period weight is not editable

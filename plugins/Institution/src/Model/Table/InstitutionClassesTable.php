@@ -2267,6 +2267,28 @@ class InstitutionClassesTable extends ControllerActionTable
             // page's own Edit permission ($_edit in the template) gates marking instead.
             if (!$this->getRolePermissionAccessForAllClasses($staffId, $institutionId)) {
                 $query->where($this->getTeacherClassConditions($staffId, $this->aliasField('id')));
+
+                // POCOR-7538 point 3.4: Period (whole-class) attendance is for the class's
+                // homeroom/secondary teachers; a subject teacher of the class only takes
+                // attendance by Subject. The Attendance page reads can_mark_period to decide
+                // which "Attendance By" options to offer for the selected class.
+                $periodClassIds = $this->find()
+                    ->select([$this->aliasField('id')])
+                    ->where([
+                        $this->aliasField('institution_id') => $institutionId,
+                        $this->aliasField('academic_period_id') => $academicPeriodId
+                    ])
+                    ->where($this->getTeacherClassConditions($staffId, $this->aliasField('id'), false))
+                    ->enableHydration(false)
+                    ->all()
+                    ->extract('id')
+                    ->toList();
+                $query->formatResults(function ($results) use ($periodClassIds) {
+                    return $results->map(function ($row) use ($periodClassIds) {
+                        $row['can_mark_period'] = in_array($row['id'], $periodClassIds) ? 1 : 0;
+                        return $row;
+                    });
+                });
             }
         }
 
