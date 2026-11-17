@@ -135,7 +135,14 @@ function InstitutionsResultsController($q,
 
             var promise;
 
-             $scope.editPermission = result[0].is_editable;
+            // POCOR-7538: with no subjects for this class (e.g. no Assessment Items
+            // configured), result[0].is_editable threw and every user - System
+            // Administrator included - got "An unexpected error has been encountered".
+            if (!angular.isArray(result) || result.length === 0) {
+                result = [];
+                AlertSvc.warning($scope, 'There are no subjects available for this class.');
+            }
+            $scope.editPermission = result.length > 0 ? result[0].is_editable : 0;
             $scope.subjects = result;
             //POCOR-7785: Initialize filtered subjects with all subjects for search functionality
             $scope.filteredSubjects = angular.copy(result);
