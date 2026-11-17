@@ -2396,6 +2396,36 @@ class ReportCardsTable extends AppTable
                     ])
                     ->group(['staff_id'])//POCOR-7478
                     ->toArray();
+
+                // POCOR-9922: no current (non-ended) teacher assigned to this subject -
+                // fall back to the most recent PAST teacher instead of leaving it blank.
+                // Same "past teacher" definition InstitutionSubjectsTable::getPastTeachers()
+                // already uses: institution_subject_staff.end_date is set and in the past.
+                // "Most recent" = whoever's assignment ended last (ORDER BY end_date DESC).
+                if (empty($StudentSubjectStaffData)) {
+                    $StudentSubjectStaffData = $StudentSubjectStaff->find()
+                        ->select([
+                            'staff_id' => $StudentSubjectStaff->aliasField('staff_id'),
+                            'institution_subject_id' => $StudentSubjectStaff->aliasField('institution_subject_id'),
+                            'first_name' => 'SecurityUsers.first_name',
+                            'last_name' => 'SecurityUsers.last_name',
+                            'preferred_name' => 'SecurityUsers.preferred_name',
+                            'gender_id' => 'SecurityUsers.gender_id',
+                        ])
+                        ->innerJoin(['SecurityUsers' => 'security_users'], [
+                            'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
+                        ])
+                        ->where([
+                            $StudentSubjectStaff->aliasField('institution_subject_id') => $value['institution_subject_id'],
+                            $StudentSubjectStaff->aliasField('institution_id') => $params['institution_id'],
+                            $StudentSubjectStaff->aliasField('end_date IS NOT') => null,
+                            $StudentSubjectStaff->aliasField('end_date <') => date('Y-m-d')
+                        ])
+                        ->order([$StudentSubjectStaff->aliasField('end_date') => 'DESC'])
+                        ->limit(1)
+                        ->toArray();
+                }
+
                 $name = [];
                 $preferredName = [];
                 $gender = [];
