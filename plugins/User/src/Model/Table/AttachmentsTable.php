@@ -6,6 +6,7 @@ use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Core\Configure;
 use Cake\Event\EventInterface;
+use Cake\Http\Exception\NotFoundException;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -15,6 +16,28 @@ use Laminas\Diactoros\UploadedFile;
 
 class AttachmentsTable extends ControllerActionTable
 {
+    //POCOR-9904: start
+    // Only types the browser renders natively are served inline. Anything else (html, svg, office files...)
+    // stays download-only: serving user-uploaded markup inline from our origin would be stored XSS.
+    private const INLINE_VIEWABLE_TYPES = [
+        'pdf'  => 'application/pdf',
+        'png'  => 'image/png',
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif'  => 'image/gif',
+    ];
+
+    // The "View Attachment" permission only exists under Institutions > Staff and Institutions > Students.
+    private const VIEW_ATTACHMENT_CONTROLLERS = ['Staff', 'Students'];
+    //POCOR-9904: end
+
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.viewAttachment'] = 'viewAttachment'; //POCOR-9904
+        return $events;
+    }
+
     public function initialize(array $config): void
     {
         $this->setTable('user_attachments');
@@ -255,6 +278,17 @@ class AttachmentsTable extends ControllerActionTable
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
+        $this->applySharedRolesFilter($query); //POCOR-9904: shared with viewAttachment
+
+        $query->contain(['SecurityRoles']);
+    }
+
+    /**
+     * Restrict the query to attachments shared with one of the current user's roles
+     * (or shared with everyone, or created by the current user). Super admins see everything.
+     */
+    private function applySharedRolesFilter(Query $query): void
+    {
         //if not super admin then get the security role for filtering purpose
         if (!$this->AccessControl->isAdmin()) {
             $AttachmentsRoles = TableRegistry::getTableLocator()->get('User.AttachmentsRoles');
@@ -287,8 +321,6 @@ class AttachmentsTable extends ControllerActionTable
                 ])
                 ->distinct();
         }
-
-        $query->contain(['SecurityRoles']);
     }
 
     //START:POCOR-5067
@@ -550,7 +582,116 @@ class AttachmentsTable extends ControllerActionTable
             //POCOR-9584: end
         }
 
+        //POCOR-9904: start - "View Attachment" opens a PDF/image in a new browser tab instead of downloading it.
+        if ($this->canViewAttachmentInline($entity->file_name)) {
+            $viewAttachmentButton = [
+                'label' => '<i class="fa fa-eye"></i>' . __('View Attachment'),
+                'attr' => ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false, 'target' => '_blank'],
+                // Fully-qualified for the same reason as the download URL above (POCOR-9584).
+                'url' => [
+                    'plugin'     => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
+                    'action'     => $this->getAlias(),
+                    0            => 'viewAttachment',
+                    1            => $this->paramsEncode(['id' => $entity->id]),
+                ],
+            ];
+
+            // Place it right after "View" so the menu reads View, View Attachment, Edit, Delete, Download.
+            $ordered = [];
+            foreach ($buttons as $key => $button) {
+                $ordered[$key] = $button;
+                if ($key === 'view') {
+                    $ordered['viewAttachment'] = $viewAttachmentButton;
+                }
+            }
+            if (!isset($ordered['viewAttachment'])) {
+                $ordered = ['viewAttachment' => $viewAttachmentButton] + $ordered;
+            }
+            $buttons = $ordered;
+        }
+        //POCOR-9904: end
+
         return $buttons;
+    }
+
+    /******************************************************************************************************************
+     **
+     ** POCOR-9904: view attachment inline (PDF / image) in the browser
+     **
+     ******************************************************************************************************************/
+    private function canViewAttachmentInline($fileName): bool
+    {
+        $controllerName = $this->controller->getName();
+        return in_array($controllerName, self::VIEW_ATTACHMENT_CONTROLLERS, true)
+            && $this->getInlineMimeType($fileName) !== null
+            && $this->AccessControl->check([$controllerName, $this->getAlias(), 'viewAttachment']);
+    }
+
+    private function getInlineMimeType($fileName): ?string
+    {
+        if (empty($fileName)) {
+            return null;
+        }
+        $extension = strtolower((string)pathinfo((string)$fileName, PATHINFO_EXTENSION));
+        return self::INLINE_VIEWABLE_TYPES[$extension] ?? null;
+    }
+
+    public function viewAttachment(EventInterface $event, ArrayObject $extra)
+    {
+        // Access to this action itself is enforced by SecurityAuthorize ({Controller}.Attachments.viewAttachment);
+        // this guard only keeps it from being reached through Directories/Profiles, which share this table.
+        if (!in_array($this->controller->getName(), self::VIEW_ATTACHMENT_CONTROLLERS, true)) {
+            throw new NotFoundException();
+        }
+
+        // Same param handling as DownloadBehavior::download (POCOR-9584): only the id is ever used.
+        $passParam1 = $this->paramsPass(1);
+        $ids = !empty($passParam1) ? $this->paramsDecode($passParam1) : $this->paramsDecode($this->paramsPass(0));
+        $id = is_array($ids) && isset($ids['id']) ? $ids['id'] : null;
+        if (empty($id) || !is_numeric($id)) {
+            throw new NotFoundException();
+        }
+
+        // Respect the role-based "Shared" setting, exactly like the attachments list does.
+        $query = $this->find()
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('file_name'),
+                $this->aliasField('file_content'),
+            ])
+            ->where([$this->aliasField('id') => $id]);
+        $this->applySharedRolesFilter($query);
+        $entity = $query->first();
+
+        $mimeType = $entity ? $this->getInlineMimeType($entity->file_name) : null;
+        if (empty($entity) || $mimeType === null || $entity->file_content === null) {
+            throw new NotFoundException();
+        }
+
+        $content = $entity->file_content;
+        if (is_resource($content)) {
+            $content = stream_get_contents($content);
+        }
+
+        $fileName = basename((string)$entity->file_name);
+        $asciiFileName = str_replace(['"', '\\', "\r", "\n"], '', $fileName);
+
+        $response = $this->controller->getResponse()
+            ->withType($mimeType)
+            ->withHeader(
+                'Content-Disposition',
+                'inline; filename="' . $asciiFileName . '"; filename*=UTF-8\'\'' . rawurlencode($fileName)
+            )
+            ->withHeader('X-Content-Type-Options', 'nosniff')
+            ->withHeader('Cache-Control', 'private, no-store')
+            ->withStringBody((string)$content);
+
+        $this->controller->disableAutoRender();
+        $this->controller->setResponse($response);
+        $event->stopPropagation();
+
+        return $response;
     }
 
 
