@@ -47,6 +47,17 @@ class ReportCardSubjectsTable extends ControllerActionTable
                             ->first();
 
         $educationGradeId = $reportCardData->education_grade_id ?? null; //POCOR-9681
+
+        // POCOR-7538 points 3.4/3.5/3.7: the Comments subject tabs follow the same rule as
+        // the Subjects page - "Access All Subjects" (role flag) or the existing "All Comments"
+        // permission shows every subject of the class; otherwise only subjects the user
+        // teaches, plus every subject of a class they are homeroom/secondary teacher of.
+        // Previously a user holding the Homeroom Teacher role got every subject tab on any
+        // class, including classes where they only teach one subject.
+        if ($options['user']['super_admin'] != 1 && !$this->canSeeAllCommentSubjects($staffId, $classId)) {
+            $query->where($InstitutionClasses->getTeacherSubjectConditions($staffId, $InstitutionSubjects->aliasField('id')));
+        }
+
         return $query
                 ->select([
                     'education_subject_id' => $this->aliasField('education_subject_id'),
@@ -77,5 +88,36 @@ class ReportCardSubjectsTable extends ControllerActionTable
                 // ->orWhere([$orWhere])
                 //->group([$InstitutionSubjects->aliasField('name')]) //POCOR-9032
                 ->order([$this->EducationSubjects->aliasField('order')]);
+    }
+
+    // POCOR-7538: true when one of the user's roles in the class's institution has the
+    // "Access All Subjects" flag or Report Cards > All Comments view.
+    private function canSeeAllCommentSubjects($staffId, $classId)
+    {
+        $class = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->find()
+            ->select(['institution_id'])
+            ->where(['id' => $classId])
+            ->enableHydration(false)
+            ->first();
+        if (empty($class)) {
+            return false;
+        }
+        $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($staffId, $class['institution_id']);
+        if (empty($roles)) {
+            return false;
+        }
+        if (TableRegistry::getTableLocator()->get('Security.SecurityRoles')->hasAccessAllSubjects($roles)) {
+            return true;
+        }
+        $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        return $SecurityRoleFunctions->find()
+            ->innerJoin(['sf' => 'security_functions'], ['sf.id = ' . $SecurityRoleFunctions->aliasField('security_function_id')])
+            ->where([
+                'sf.name' => 'All Comments',
+                'sf.category' => 'Report Cards',
+                $SecurityRoleFunctions->aliasField('security_role_id IN') => array_values($roles),
+                $SecurityRoleFunctions->aliasField('_view') => 1,
+            ])
+            ->count() > 0;
     }
 }
