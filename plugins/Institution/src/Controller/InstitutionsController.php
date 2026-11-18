@@ -1703,7 +1703,14 @@ class InstitutionsController extends AppController
             $archiveUrl['controller'] = 'Institutions';
             $archiveUrl['action'] = 'InstitutionStudentAbsencesArchived';
             $archiveUrl[] = $this->ControllerAction->paramsEncode(['institution_id' => $institutionId]);
-            $_archive = $_excel = 1;
+            $_archive = 1;
+            // POCOR-9924: Export follows the Execute permission on Institutions > Students > Attendance.
+            // Scoped to this institution's roles, matching how SecurityAuthorize checks the excel request.
+            $roles = [];
+            if (!$this->AccessControl->isAdmin()) {
+                $roles = $this->Institutions->getInstitutionRoles($this->Auth->user('id'), $institutionId);
+            }
+            $_excel = $this->AccessControl->check(['Institutions', 'StudentAttendances', 'excel'], $roles);
 
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
             $this->Navigation->addCrumb($crumbTitle);
