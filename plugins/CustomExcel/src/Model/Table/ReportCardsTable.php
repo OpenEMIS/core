@@ -2373,7 +2373,14 @@ class ReportCardsTable extends AppTable
             $Staff = self::getDynamicTableInstance('institution_staff'); //POCOR-7157
             $endAssignment = self::getDynamicTableInstance('staff_statuses')->findByCode('END_OF_ASSIGNMENT')->first()->id; //POCOR-7157 pass this in where clause
             $StudentSubjectStaff = self::getDynamicTableInstance('institution_subject_staff');
+
+            // First pass: current (non-ended) teacher per subject. Subjects with none are
+            // collected for a single batched fallback lookup below, instead of one fallback
+            // query per empty subject.
+            $currentTeacherDataBySubject = [];
+            $subjectIdsNeedingFallback = [];
             foreach ($AssessmentItemData as $value) {
+                $subjectId = $value['institution_subject_id'];
                 $StudentSubjectStaffData = $StudentSubjectStaff->find()
                     ->select([
                         'staff_id' => $StudentSubjectStaff->aliasField('staff_id'),
@@ -2389,7 +2396,24 @@ class ReportCardsTable extends AppTable
                         'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
                     ])
                     ->where([
-                        $StudentSubjectStaff->aliasField('institution_subject_id') => $value['institution_subject_id'],
+                        $StudentSubjectStaff->aliasField('institution_subject_id') => $subjectId,
+                        // Client requirement (POCOR-9922): if there is a current teacher, show
+                        // the current teacher; if not, show the past teacher - never both. A
+                        // teacher only counts as "current" here if NEITHER signal says
+                        // otherwise: their own subject assignment hasn't been explicitly ended
+                        // (its own end_date), AND their institution employment hasn't ended.
+                        // Checking staff_status_id alone let an explicitly-reassigned teacher
+                        // (subject end_date set to a past date) still show up as "current"
+                        // whenever that same person also happens to have a second, unrelated
+                        // institution_staff row that's still active - confirmed live: a staff
+                        // member with two overlapping employment stints at one institution
+                        // (one ended today, one from years earlier never closed) passed this
+                        // check via the still-open stint even though their subject assignment
+                        // had just been explicitly ended.
+                        'OR' => [
+                            $StudentSubjectStaff->aliasField('end_date') . ' IS NULL',
+                            $StudentSubjectStaff->aliasField('end_date >=') => date('Y-m-d')
+                        ],
                         $Staff->aliasField('staff_status_id IS NOT') => $endAssignment,
                         $Staff->aliasField('institution_id') => $params['institution_id']
 
@@ -2397,33 +2421,76 @@ class ReportCardsTable extends AppTable
                     ->group(['staff_id'])//POCOR-7478
                     ->toArray();
 
-                // POCOR-9922: no current (non-ended) teacher assigned to this subject -
-                // fall back to the most recent PAST teacher instead of leaving it blank.
-                // Same "past teacher" definition InstitutionSubjectsTable::getPastTeachers()
-                // already uses: institution_subject_staff.end_date is set and in the past.
-                // "Most recent" = whoever's assignment ended last (ORDER BY end_date DESC).
                 if (empty($StudentSubjectStaffData)) {
-                    $StudentSubjectStaffData = $StudentSubjectStaff->find()
-                        ->select([
-                            'staff_id' => $StudentSubjectStaff->aliasField('staff_id'),
-                            'institution_subject_id' => $StudentSubjectStaff->aliasField('institution_subject_id'),
-                            'first_name' => 'SecurityUsers.first_name',
-                            'last_name' => 'SecurityUsers.last_name',
-                            'preferred_name' => 'SecurityUsers.preferred_name',
-                            'gender_id' => 'SecurityUsers.gender_id',
-                        ])
-                        ->innerJoin(['SecurityUsers' => 'security_users'], [
-                            'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
-                        ])
-                        ->where([
-                            $StudentSubjectStaff->aliasField('institution_subject_id') => $value['institution_subject_id'],
-                            $StudentSubjectStaff->aliasField('institution_id') => $params['institution_id'],
-                            $StudentSubjectStaff->aliasField('end_date IS NOT') => null,
-                            $StudentSubjectStaff->aliasField('end_date <') => date('Y-m-d')
-                        ])
-                        ->order([$StudentSubjectStaff->aliasField('end_date') => 'DESC'])
-                        ->limit(1)
-                        ->toArray();
+                    $subjectIdsNeedingFallback[] = $subjectId;
+                } else {
+                    $currentTeacherDataBySubject[$subjectId] = $StudentSubjectStaffData;
+                }
+            }
+
+            // Code review fix (POCOR-9922): no current (non-ended) teacher assigned to a
+            // subject - fall back to the most recent PAST teacher instead of leaving it
+            // blank. The original fallback required institution_subject_staff.end_date to
+            // be set, same as InstitutionSubjectsTable::getPastTeachers() - but the common
+            // real case is a teacher leaving the institution (staff_status_id goes to
+            // END_OF_ASSIGNMENT, which is why the loop above found nothing) while nobody
+            // closes out the subject-level assignment's own end_date, leaving it NULL.
+            // Confirmed via the demo DB: of 3 assignments whose staff employment had ended,
+            // 2 had a NULL end_date and were invisible to the old fallback. No need to
+            // re-check staff_status_id here - the loop above already proved no currently-
+            // employed teacher exists for any of these subjects, so any matching row is
+            // already a "past" candidate by elimination. COALESCE(end_date, start_date)
+            // picks the best available "most recent" signal instead of requiring end_date.
+            // Batched into one query for every empty subject instead of one query each.
+            $fallbackBySubject = [];
+            if (!empty($subjectIdsNeedingFallback)) {
+                $fallbackRows = $StudentSubjectStaff->find()
+                    ->select([
+                        'staff_id' => $StudentSubjectStaff->aliasField('staff_id'),
+                        'institution_subject_id' => $StudentSubjectStaff->aliasField('institution_subject_id'),
+                        'first_name' => 'SecurityUsers.first_name',
+                        'last_name' => 'SecurityUsers.last_name',
+                        'preferred_name' => 'SecurityUsers.preferred_name',
+                        'gender_id' => 'SecurityUsers.gender_id',
+                        'end_date' => $StudentSubjectStaff->aliasField('end_date'),
+                        'start_date' => $StudentSubjectStaff->aliasField('start_date'),
+                    ])
+                    ->innerJoin([$Staff->getAlias() => $Staff->getTable()],
+                        [$Staff->aliasField('staff_id = ') . $StudentSubjectStaff->aliasField('staff_id')])
+                    ->innerJoin(['SecurityUsers' => 'security_users'], [
+                        'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
+                    ])
+                    ->where([
+                        $StudentSubjectStaff->aliasField('institution_subject_id IN') => $subjectIdsNeedingFallback,
+                        $Staff->aliasField('institution_id') => $params['institution_id'],
+                    ])
+                    // group by both, not just staff_id: the institution_staff join above can
+                    // duplicate rows (same institution_staff dedup need as the primary query's
+                    // own ->group(['staff_id'])), but grouping on staff_id alone here would
+                    // wrongly collapse a staff member's rows across *different* subjects since
+                    // this query spans every subject needing a fallback, not just one.
+                    ->group([$StudentSubjectStaff->aliasField('staff_id'), $StudentSubjectStaff->aliasField('institution_subject_id')])
+                    ->toArray();
+
+                foreach ($fallbackRows as $row) {
+                    $subjectId = $row->institution_subject_id;
+                    $sortKey = $row->end_date ?: $row->start_date;
+                    if (!isset($fallbackBySubject[$subjectId]) || $sortKey > $fallbackBySubject[$subjectId]['sortKey']) {
+                        $fallbackBySubject[$subjectId] = ['row' => $row, 'sortKey' => $sortKey];
+                    }
+                }
+            }
+
+            // Second pass: build the entity in the original order - current teacher where
+            // found, else the batched fallback pick, else blank (genuinely never assigned).
+            foreach ($AssessmentItemData as $value) {
+                $subjectId = $value['institution_subject_id'];
+                if (isset($currentTeacherDataBySubject[$subjectId])) {
+                    $StudentSubjectStaffData = $currentTeacherDataBySubject[$subjectId];
+                } elseif (isset($fallbackBySubject[$subjectId])) {
+                    $StudentSubjectStaffData = [$fallbackBySubject[$subjectId]['row']];
+                } else {
+                    $StudentSubjectStaffData = [];
                 }
 
                 $name = [];
