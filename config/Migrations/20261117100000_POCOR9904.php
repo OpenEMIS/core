@@ -6,18 +6,8 @@ use Migrations\AbstractMigration;
 class POCOR9904 extends AbstractMigration
 {
     // POCOR-9904: new "View Attachment" permission under Institutions > Staff - General and
-    // Institutions > Students - General. It grants the Attachments.viewAttachment action, which opens a
-    // PDF/image attachment inline in a new browser tab (separate from the existing Download permission,
-    // which stays on the Attachments row's Execute column).
-    //
-    // No role is granted the new permission here; administrators enable it per role under
-    // Administration > Security > Roles > Permissions. Super admins do not need it.
-    //
-    // Ordering scope: the permission grid (SecurityFunctionsTable::findPermissions) filters by module,
-    // sorts by `order`, and groups rows by category, so only the order *within a module + category*
-    // matters. Do not narrow further by controller: a category mixes controllers (e.g. "Students - General"
-    // holds Students, StudentComments and StudentHistories), and leaving History unshifted would tie it
-    // with the new row.
+    // Institutions > Students - General.
+   
 
     private const NAME = 'View Attachment';
     private const MODULE = 'Institutions';
@@ -37,7 +27,6 @@ class POCOR9904 extends AbstractMigration
             $controller = $target['controller'];
             $category = $target['category'];
 
-            // Safe to re-run: skip if this permission already exists (also skips the order shift below).
             $existing = $this->fetchRow("
                 SELECT `id` FROM `security_functions`
                 WHERE `name` = '" . self::NAME . "'

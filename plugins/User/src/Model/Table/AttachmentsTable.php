@@ -578,6 +578,14 @@ class AttachmentsTable extends ControllerActionTable
 
         //POCOR-9904: start - "View Attachment" opens the attachment in a new browser tab instead of downloading it.
         if ($this->canViewAttachmentInline($entity->file_name)) {
+            // Carry the page's context (institution_id, staff_id/student_id...) along with the attachment id.
+            // StaffController/StudentsController::beforeFilter() redirect to Institutions when institution_id
+            // can't be found; with only {id} in the URL it then fell back to the session, which is empty on
+            // servers -> "Table class for alias `Institutions` could not be found". viewAttachment() only
+            // ever reads `id` from this payload.
+            $context = $this->getQueryString();
+            $viewAttachmentParams = array_merge(is_array($context) ? $context : [], ['id' => $entity->id]);
+
             $viewAttachmentButton = [
                 'label' => '<i class="fa fa-eye"></i>' . __('View Attachment'),
                 'attr' => ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false, 'target' => '_blank'],
@@ -587,7 +595,7 @@ class AttachmentsTable extends ControllerActionTable
                     'controller' => $this->controller->getName(),
                     'action'     => $this->getAlias(),
                     0            => 'viewAttachment',
-                    1            => $this->paramsEncode(['id' => $entity->id]),
+                    1            => $this->paramsEncode($viewAttachmentParams),
                 ],
             ];
 
