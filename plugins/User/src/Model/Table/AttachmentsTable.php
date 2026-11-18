@@ -3,10 +3,12 @@
 namespace User\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
+use App\Service\AttachmentPreviewService;
 use ArrayObject;
 use Cake\Core\Configure;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\NotFoundException;
+use Cake\Log\Log;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -17,15 +19,7 @@ use Laminas\Diactoros\UploadedFile;
 class AttachmentsTable extends ControllerActionTable
 {
     //POCOR-9904: start
-    // Only types the browser renders natively are served inline. Anything else (html, svg, office files...)
-    // stays download-only: serving user-uploaded markup inline from our origin would be stored XSS.
-    private const INLINE_VIEWABLE_TYPES = [
-        'pdf'  => 'application/pdf',
-        'png'  => 'image/png',
-        'jpg'  => 'image/jpeg',
-        'jpeg' => 'image/jpeg',
-        'gif'  => 'image/gif',
-    ];
+    // Which file types can be previewed, and how, lives in App\Service\AttachmentPreviewService.
 
     // The "View Attachment" permission only exists under Institutions > Staff and Institutions > Students.
     private const VIEW_ATTACHMENT_CONTROLLERS = ['Staff', 'Students'];
@@ -582,7 +576,7 @@ class AttachmentsTable extends ControllerActionTable
             //POCOR-9584: end
         }
 
-        //POCOR-9904: start - "View Attachment" opens a PDF/image in a new browser tab instead of downloading it.
+        //POCOR-9904: start - "View Attachment" opens the attachment in a new browser tab instead of downloading it.
         if ($this->canViewAttachmentInline($entity->file_name)) {
             $viewAttachmentButton = [
                 'label' => '<i class="fa fa-eye"></i>' . __('View Attachment'),
@@ -617,24 +611,15 @@ class AttachmentsTable extends ControllerActionTable
 
     /******************************************************************************************************************
      **
-     ** POCOR-9904: view attachment inline (PDF / image) in the browser
+     ** POCOR-9904: view attachment in the browser (PDF, images, text, office documents, zip)
      **
      ******************************************************************************************************************/
     private function canViewAttachmentInline($fileName): bool
     {
         $controllerName = $this->controller->getName();
         return in_array($controllerName, self::VIEW_ATTACHMENT_CONTROLLERS, true)
-            && $this->getInlineMimeType($fileName) !== null
+            && AttachmentPreviewService::canPreview($fileName)
             && $this->AccessControl->check([$controllerName, $this->getAlias(), 'viewAttachment']);
-    }
-
-    private function getInlineMimeType($fileName): ?string
-    {
-        if (empty($fileName)) {
-            return null;
-        }
-        $extension = strtolower((string)pathinfo((string)$fileName, PATHINFO_EXTENSION));
-        return self::INLINE_VIEWABLE_TYPES[$extension] ?? null;
     }
 
     public function viewAttachment(EventInterface $event, ArrayObject $extra)
@@ -664,8 +649,7 @@ class AttachmentsTable extends ControllerActionTable
         $this->applySharedRolesFilter($query);
         $entity = $query->first();
 
-        $mimeType = $entity ? $this->getInlineMimeType($entity->file_name) : null;
-        if (empty($entity) || $mimeType === null || $entity->file_content === null) {
+        if (empty($entity) || $entity->file_content === null || AttachmentPreviewService::getMode($entity->file_name) === null) {
             throw new NotFoundException();
         }
 
@@ -674,18 +658,34 @@ class AttachmentsTable extends ControllerActionTable
             $content = stream_get_contents($content);
         }
 
-        $fileName = basename((string)$entity->file_name);
+        try {
+            $preview = AttachmentPreviewService::build(basename((string)$entity->file_name), (string)$content);
+        } catch (\Throwable $e) {
+            // e.g. LibreOffice missing, conversion failed/timed out, corrupt zip: send the user back to the
+            // list with a message; the attachment is still available through Download.
+            Log::error('POCOR-9904 attachment preview failed for user_attachments.id=' . $id . ': ' . $e->getMessage());
+            $this->Alert->error(__('This attachment could not be displayed. Please use Download instead.'), ['type' => 'text', 'reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('index', 'QUERY'));
+        }
+
+        $fileName = $preview['fileName'];
         $asciiFileName = str_replace(['"', '\\', "\r", "\n"], '', $fileName);
 
         $response = $this->controller->getResponse()
-            ->withType($mimeType)
+            ->withHeader('Content-Type', $preview['type'])
             ->withHeader(
                 'Content-Disposition',
                 'inline; filename="' . $asciiFileName . '"; filename*=UTF-8\'\'' . rawurlencode($fileName)
             )
             ->withHeader('X-Content-Type-Options', 'nosniff')
             ->withHeader('Cache-Control', 'private, no-store')
-            ->withStringBody((string)$content);
+            ->withStringBody($preview['body']);
+
+        if ($preview['html']) {
+            // Generated listing page: allow its inline styles only, nothing else.
+            $response = $response->withHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'");
+        }
 
         $this->controller->disableAutoRender();
         $this->controller->setResponse($response);
