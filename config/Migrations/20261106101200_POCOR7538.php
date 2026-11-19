@@ -152,13 +152,16 @@ class POCOR7538 extends AbstractMigration
             $newId = (int)$row['id'];
             $oldNames = "'" . implode("', '", $old) . "'";
 
-            // per role: a tick on any of the old permissions
+            // per role: a tick on any of the old permissions. JOIN security_roles skips
+            // orphaned security_role_functions rows of deleted roles (e.g. TO-MET roles 18/19),
+            // which would otherwise fail the insert below on secur_role_funct_fk_sec_rol_id.
             $grants = "
                 SELECT `srf`.`security_role_id`,
                        MAX(IFNULL(`srf`.`_view`, 0)) AS `v`, MAX(IFNULL(`srf`.`_edit`, 0)) AS `e`,
                        MAX(IFNULL(`srf`.`_add`, 0)) AS `a`, MAX(IFNULL(`srf`.`_delete`, 0)) AS `d`,
                        MAX(IFNULL(`srf`.`_execute`, 0)) AS `x`
                 FROM `security_role_functions` `srf`
+                JOIN `security_roles` `sr` ON `sr`.`id` = `srf`.`security_role_id`
                 JOIN `security_functions` `sf` ON `sf`.`id` = `srf`.`security_function_id`
                 WHERE `sf`.`module` = 'Institutions' AND `sf`.`category` = 'Academic'
                   AND `sf`.`name` IN ($oldNames)
