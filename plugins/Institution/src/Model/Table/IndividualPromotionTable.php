@@ -214,20 +214,33 @@ class IndividualPromotionTable extends ControllerActionTable
 
     public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
+        // POCOR-9926: Cancel used to get only the encoded query string as its url, so the
+        // browser resolved it relative to the app root (e.g. /coreeyJ...) and Apache gave a 404.
+        // Send it back to the student's page, same as the toolbar back button.
+        $cancelUrl = $this->getStudentViewUrl();
         switch ($this->action) {
             case 'add':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Next');
-                $buttons[1]['url'] = $encodedQueryString;
+                $buttons[1]['url'] = $cancelUrl;
                 break;
 
             case 'reconfirm':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
                 $buttons[1]['url'] = $this->url('add');
-                $buttons[2]['url'] = $encodedQueryString;
+                $buttons[2]['url'] = $cancelUrl;
                 break;
         }
+    }
+
+    private function getStudentViewUrl()
+    {
+        return [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StudentUser',
+            '0' => 'view',
+            '1' => $this->paramsEncode($this->getQueryString())
+        ];
     }
 
     public function onUpdateFieldStudentId(EventInterface $event, array $attr, $action, ServerRequest $request)
