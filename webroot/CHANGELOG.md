@@ -1,3 +1,15 @@
+### 5.26.0 - 2026-11-19
+- Implemented: Develop a function and permission to view PDF files
+- Bug Fixed: Core>Personal > Students > Academic > Classes : Excessive Records Displayed Under Student Classes
+- Bug Fixed: Institutions > Performances > Report Cards : If there are no teacher assigned to the subject, use the latest past teacher.
+- Bug Fixed: Administration > Security > Roles > Permissions : Introduce an Execute function for the Institutions > Attendance page > Export button
+- Bug Fixed: Institutions > Students : Inconsistent counts across corresponding pages
+- Bug Fixed: Institutions > Report Card > Templates : System only display 1 secondary teacher
+- Bug Fixed: Staff > General > Account : Remove Duties showing up as Roles in the accounts tab
+- Bug Fixed: Administrations > System Configurations > Add New Students : Configuration is applied across whole system and not individual programmes
+- Bug Fixed: Core>Institutions>Students>Promote : On clicking Cancel at  promote  a student page  404 error is seen
+- Bug Fixed: Administration > Updates : User sees 404 not found on updates page.
+
 ### 5.25.0 - 2026-11-13
 - Implemented: Hide the My Classes and My Subjects permissions and add new Classes and Subjects permissions
 - Bug Fixed: Core>Institution>Attendance>Student >Export report: Actual names of periods are not displayed correctly  in the downloaded report. 
