@@ -102,7 +102,9 @@ class SystemUpdatesTable extends ControllerActionTable
             $jsonResponse = json_decode($response, true);
             $data = array_reverse($jsonResponse['data']);
             foreach ($data as $item) {
-                if ($item['id'] > $maxId) {
+                // POCOR-9927: skip versions already stored under a different local id
+                // (e.g. inserted by VersionShell on deploy) to avoid a duplicate entry error on system_updates.version
+                if ($item['id'] > $maxId && !$this->exists([$this->aliasField('version') => $item['version']])) {
                     $entity = $this->newEntity([
                         'id' => $item['id'],
                         'version' => $item['version'],
@@ -222,11 +224,20 @@ class SystemUpdatesTable extends ControllerActionTable
             $host = $this->request->getEnv('HTTP_HOST');
             $subject = 'Core Upgrade Request - ' . $host;
 
-            $email = new Mailer('openemis');//POCOR-8783
-            $email
-                ->setTo($emails) 
-                ->setSubject($subject) 
-                ->deliver($subject); 
+            // POCOR-9927: show a proper message instead of an error page when the email cannot be sent
+            // (e.g. SMTP misconfiguration); versions stay Pending since the request was not delivered
+            try {
+                $email = new Mailer('openemis');//POCOR-8783
+                $email
+                    ->setTo($emails)
+                    ->setSubject($subject)
+                    ->deliver($subject);
+            } catch (\Throwable $ex) {
+                Log::write('error', __METHOD__ . ': Unable to send update request email: ' . $ex->getMessage());
+                $this->Alert->show('Unable to send the update request. Please contact your administrator to check the email settings.', 'error');
+                $mainEvent->stopPropagation();
+                return $this->controller->redirect(['action' => 'Updates', 'index']);
+            }
 
             $this->updateAll(['date_approved' => Time::now(), 'approved_by' => $this->Auth->user('id'), 'status' => 2], ['status' => 1]);
             $this->Alert->show('Your update request has been submitted.', 'success');
