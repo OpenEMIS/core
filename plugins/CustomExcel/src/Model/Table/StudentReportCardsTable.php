@@ -1705,11 +1705,17 @@ class StudentReportCardsTable extends AppTable
                 return $entity;
             }
 
-            $Staff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff'); 
-            $endAssignment = TableRegistry::getTableLocator()->get('Staff.StaffStatuses')->findByCode('END_OF_ASSIGNMENT')->first()->id; 
+            $Staff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+            $endAssignment = TableRegistry::getTableLocator()->get('Staff.StaffStatuses')->findByCode('END_OF_ASSIGNMENT')->first()->id;
             $StudentSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
 
+            // First pass: current (non-ended) teacher per subject. Subjects with none are
+            // collected for a single batched fallback lookup below (POCOR-9922), instead of
+            // one fallback query per empty subject.
+            $currentTeacherDataBySubject = [];
+            $subjectIdsNeedingFallback = [];
             foreach ($AssessmentItemData as $value) {
+                $subjectId = $value['institution_subject_id'];
                 $StudentSubjectStaffData = $StudentSubjectStaff->find()
                     ->select([
                         'staff_id' => $StudentSubjectStaff->aliasField('staff_id'),
@@ -1725,12 +1731,91 @@ class StudentReportCardsTable extends AppTable
                         'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
                     ])
                     ->where([
-                        $StudentSubjectStaff->aliasField('institution_subject_id') => $value['institution_subject_id'],
+                        $StudentSubjectStaff->aliasField('institution_subject_id') => $subjectId,
+                        // Client requirement (POCOR-9922): if there is a current teacher, show
+                        // the current teacher; if not, show the past teacher - never both. See
+                        // the matching comment in ReportCardsTable::onExcelTemplateInitialise
+                        // SubjectTeacher for the full explanation - staff_status_id alone missed
+                        // the case where the subject assignment itself was explicitly ended but
+                        // the same person also has a second, unrelated institution_staff row
+                        // that's still active.
+                        'OR' => [
+                            $StudentSubjectStaff->aliasField('end_date') . ' IS NULL',
+                            $StudentSubjectStaff->aliasField('end_date >=') => date('Y-m-d')
+                        ],
                         $Staff->aliasField('staff_status_id IS NOT') => $endAssignment,
                         $Staff->aliasField('institution_id') => $params['institution_id']
                     ])
                     ->group(['staff_id'])
                     ->toArray();
+
+                if (empty($StudentSubjectStaffData)) {
+                    $subjectIdsNeedingFallback[] = $subjectId;
+                } else {
+                    $currentTeacherDataBySubject[$subjectId] = $StudentSubjectStaffData;
+                }
+            }
+
+            // POCOR-9922: same fix as ReportCardsTable::onExcelTemplateInitialiseSubjectTeacher
+            // - fall back to the most recent PAST teacher when no current one is assigned,
+            // using COALESCE(end_date, start_date) rather than requiring end_date to be set
+            // (commonly NULL even after the staff's own employment has ended). No need to
+            // re-check staff_status_id - the loop above already proved no currently-employed
+            // teacher exists for any of these subjects. Batched into one query.
+            $fallbackBySubject = [];
+            if (!empty($subjectIdsNeedingFallback)) {
+                $fallbackRows = $StudentSubjectStaff->find()
+                    ->select([
+                        'staff_id' => $StudentSubjectStaff->aliasField('staff_id'),
+                        'institution_subject_id' => $StudentSubjectStaff->aliasField('institution_subject_id'),
+                        'first_name' => 'SecurityUsers.first_name',
+                        'last_name' => 'SecurityUsers.last_name',
+                        'preferred_name' => 'SecurityUsers.preferred_name',
+                        'gender_id' => 'SecurityUsers.gender_id',
+                        // Code review fix (POCOR-9922): selecting the raw end_date/start_date
+                        // columns here violates ONLY_FULL_GROUP_BY - institution_subject_staff's
+                        // only key is its own id, so neither column is functionally dependent on
+                        // the (staff_id, institution_subject_id) group. A single aggregate also
+                        // avoids mixing end_date from one row with start_date from another if a
+                        // teacher ever has two stints on the same subject.
+                        'sort_key' => 'MAX(COALESCE(' . $StudentSubjectStaff->aliasField('end_date') . ', ' . $StudentSubjectStaff->aliasField('start_date') . '))',
+                    ])
+                    ->innerJoin([$Staff->getAlias() => $Staff->getTable()],
+                        [$Staff->aliasField('staff_id = ') . $StudentSubjectStaff->aliasField('staff_id')])
+                    ->innerJoin(['SecurityUsers' => 'security_users'], [
+                        'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
+                    ])
+                    ->where([
+                        $StudentSubjectStaff->aliasField('institution_subject_id IN') => $subjectIdsNeedingFallback,
+                        $Staff->aliasField('institution_id') => $params['institution_id'],
+                    ])
+                    // group by both, not just staff_id: the institution_staff join above can
+                    // duplicate rows (same dedup need as the primary query's own
+                    // ->group(['staff_id'])), but grouping on staff_id alone here would wrongly
+                    // collapse a staff member's rows across *different* subjects since this
+                    // query spans every subject needing a fallback, not just one.
+                    ->group([$StudentSubjectStaff->aliasField('staff_id'), $StudentSubjectStaff->aliasField('institution_subject_id')])
+                    ->toArray();
+
+                foreach ($fallbackRows as $row) {
+                    $subjectId = $row->institution_subject_id;
+                    $sortKey = $row->sort_key;
+                    if (!isset($fallbackBySubject[$subjectId]) || $sortKey > $fallbackBySubject[$subjectId]['sortKey']) {
+                        $fallbackBySubject[$subjectId] = ['row' => $row, 'sortKey' => $sortKey];
+                    }
+                }
+            }
+
+            foreach ($AssessmentItemData as $value) {
+                $subjectId = $value['institution_subject_id'];
+                if (isset($currentTeacherDataBySubject[$subjectId])) {
+                    $StudentSubjectStaffData = $currentTeacherDataBySubject[$subjectId];
+                } elseif (isset($fallbackBySubject[$subjectId])) {
+                    $StudentSubjectStaffData = [$fallbackBySubject[$subjectId]['row']];
+                } else {
+                    $StudentSubjectStaffData = [];
+                }
+
                 $name = [];
                 foreach ($StudentSubjectStaffData as $data) {
                     if (isset($data->gender_id)) {
