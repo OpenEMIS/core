@@ -2,17 +2,13 @@
 namespace System\Model\Table;
 
 use ArrayObject;
-use InvalidArgumentException;
 use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Mailer\Email;
 use Cake\I18n\Time;
 use Cake\Http\Client;
 use Cake\Log\Log;
-use Cake\Http\ServerRequest;
-use Cake\Http\Response;
 use Cake\Mailer\Mailer;
 use App\Model\Table\ControllerActionTable;
 
@@ -60,9 +56,9 @@ class SystemUpdatesTable extends ControllerActionTable
             ->order([$this->aliasField('id') => 'desc'])
             ->first();
 
-        $maxId = $latestVersion->id;
-        
-        if ($latestVersion->status == 2) {
+        $maxId = $latestVersion->id ?? 0;
+
+        if (!is_null($latestVersion) && $latestVersion->status == 2) {
             $this->updateAll(
                 [
                     'date_approved' => $latestVersion->date_approved,
@@ -77,76 +73,10 @@ class SystemUpdatesTable extends ControllerActionTable
 
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $domain = $ConfigItems->value('version_api_domain');
-        $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
-
-        $http = new Client();
-
-        // New Code [START]
-        $response = $http->get($api);
-        $response = $response->getBody()->getContents();
-        // New Code [END]
-
-        //Old Code[START]
-        // $response = $http->get($api);
-        //Old Code[END]
-
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $supportEmails = $ConfigItems->value('version_support_emails');
-        $emails = explode(',', $supportEmails);
-        $request = new ServerRequest();
-        $get_response = new Response();
-        $host = $request->getUri()->getHost();
-        $subject = 'Core Upgrade Request Failed - ' . $host;
-        if ($get_response->getStatusCode() == 200) {
-            // $jsonResponse = json_decode($response->body(), true);
-            $jsonResponse = json_decode($response, true);
-            $data = array_reverse($jsonResponse['data']);
-            foreach ($data as $item) {
-                if ($item['id'] > $maxId) {
-                    $entity = $this->newEntity([
-                        'id' => $item['id'],
-                        'version' => $item['version'],
-                        'date_released' => $item['date_released'],
-                        'status' => 1, //POCOR-8891
-                        'created' => Time::now(),
-                    ]);
-                    $result = $this->save($entity);
-                    if ($result == false) {
-                        try {
-                            Log::write('error', $entity->toArray());
-                            Log::write('error', $entity->errors());
-                            $email = new Email('openemis');
-                            $email->setTo($emails)->subject($subject)->send('Unable to update system versions');
-                        } catch (InvalidArgumentException $ex) {
-                            Log::write('error', __METHOD__ . ': ' . $ex->getMessage());
-                        }
-                    }
-                }
-            }
-
-            $version = trim(file_get_contents(WWW_ROOT . 'version'));
-            $entity = $this->find()->where(['version' => $version])->first();
-            if (!is_null($entity)) {
-                $this->updateAll(
-                    [
-                        'date_approved' => null, //POCOR-8940
-                        'approved_by' => 0, //POCOR-8940
-                        'status' => 1
-                    ], [
-                        'id <=' => $entity->id,
-                        'status' => 1
-                    ]
-                );
-            }
-        } else {
-            try {
-                Log::write('error', 'Unable to retrieve system versions (Status Code: ' . $response->getStatusCode() . ')');
-                $email = new Email('openemis');
-                $email->setTo($emails)->setSubject($subject)->send('Unable to retrieve system versions.');
-            } catch (InvalidArgumentException $ex) {
-                Log::write('error', __METHOD__ . ': ' . $ex->getMessage());
-            }
-        }
+        // POCOR-9927: the remote version check must never break the page. On servers
+        // that cannot reach version_api_domain (DNS/firewall/proxy/SSL) or that get a
+        // non-JSON reply, the uncaught exception was rendered as a 404.
+        $this->syncVersionsFromApi($domain, $maxId);
 
         $changelogUrl = $domain . '/CHANGELOG.md';
         $changelogBtn = $this->getButtonTemplate();
@@ -176,6 +106,91 @@ class SystemUpdatesTable extends ControllerActionTable
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
 		// End POCOR-5188
+    }
+
+    /**
+     * POCOR-9927: Pull the latest released versions from version_api_domain and store
+     * any new ones as pending. Every failure (unreachable host, timeout, non-200,
+     * non-JSON reply) is logged and reported as a warning; the page always renders
+     * with the versions already stored locally.
+     */
+    private function syncVersionsFromApi($domain, $maxId)
+    {
+        $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
+        $failMessage = __('Unable to retrieve the latest versions. The list below may not be up to date.');
+
+        try {
+            $http = new Client(['timeout' => 15]);
+            $response = $http->get($api);
+        } catch (\Throwable $ex) {
+            Log::write('error', __METHOD__ . ': Unable to retrieve system versions from ' . $api . ': ' . $ex->getMessage());
+            $this->Alert->show($failMessage, 'warning');
+            return;
+        }
+
+        $jsonResponse = $response->isOk() ? json_decode($response->getStringBody(), true) : null;
+        if (!is_array($jsonResponse) || !isset($jsonResponse['data']) || !is_array($jsonResponse['data'])) {
+            Log::write('error', __METHOD__ . ': Unable to retrieve system versions from ' . $api . ' (Status Code: ' . $response->getStatusCode() . ')');
+            $this->Alert->show($failMessage, 'warning');
+            return;
+        }
+
+        foreach (array_reverse($jsonResponse['data']) as $item) {
+            if (!isset($item['id'], $item['version']) || $item['id'] <= $maxId) {
+                continue;
+            }
+            $entity = $this->newEntity([
+                'id' => $item['id'],
+                'version' => $item['version'],
+                'date_released' => $item['date_released'] ?? null,
+                'status' => 1, //POCOR-8891
+                'created' => Time::now(),
+            ]);
+            if ($this->save($entity) == false) {
+                Log::write('error', __METHOD__ . ': Unable to save system version ' . $item['version'] . ': ' . json_encode($entity->getErrors()));
+                $this->notifySupport('Core Upgrade Request Failed - ', 'Unable to update system versions');
+            }
+        }
+
+        $versionFile = WWW_ROOT . 'version';
+        $version = is_file($versionFile) ? trim((string)file_get_contents($versionFile)) : '';
+        $entity = $version !== '' ? $this->find()->where(['version' => $version])->first() : null;
+        if (!is_null($entity)) {
+            $this->updateAll(
+                [
+                    'date_approved' => null, //POCOR-8940
+                    'approved_by' => 0, //POCOR-8940
+                    'status' => 1
+                ], [
+                    'id <=' => $entity->id,
+                    'status' => 1
+                ]
+            );
+        }
+    }
+
+    /**
+     * Email version_support_emails. Mail misconfiguration on a server must not break
+     * the page, so failures are only logged. Returns true when the mail was sent.
+     */
+    private function notifySupport($subjectPrefix, $message)
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $supportEmails = $ConfigItems->value('version_support_emails');
+        if (empty($supportEmails)) {
+            return false;
+        }
+        try {
+            $email = new Mailer('openemis');
+            $email
+                ->setTo(array_map('trim', explode(',', $supportEmails)))
+                ->setSubject($subjectPrefix . $this->request->getEnv('HTTP_HOST'))
+                ->deliver($message);
+            return true;
+        } catch (\Throwable $ex) {
+            Log::write('error', __METHOD__ . ': ' . $ex->getMessage());
+            return false;
+        }
     }
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
@@ -217,16 +232,15 @@ class SystemUpdatesTable extends ControllerActionTable
         }
 
         if ($this->request->is(['post', 'put'])) {
-            $emails = explode(',', $supportEmails);
+            $subject = 'Core Upgrade Request - ' . $this->request->getEnv('HTTP_HOST');
 
-            $host = $this->request->getEnv('HTTP_HOST');
-            $subject = 'Core Upgrade Request - ' . $host;
-
-            $email = new Mailer('openemis');//POCOR-8783
-            $email
-                ->setTo($emails) 
-                ->setSubject($subject) 
-                ->deliver($subject); 
+            // POCOR-9927: a mail failure used to throw and render as a 404; only mark the
+            // versions approved once support has actually been notified.
+            if (!$this->notifySupport('Core Upgrade Request - ', $subject)) {
+                $this->Alert->show('Unable to send the update request. Please check the email configuration and try again.', 'error');
+                $mainEvent->stopPropagation();
+                return $this->controller->redirect(['action' => 'Updates', 'index']);
+            }
 
             $this->updateAll(['date_approved' => Time::now(), 'approved_by' => $this->Auth->user('id'), 'status' => 2], ['status' => 1]);
             $this->Alert->show('Your update request has been submitted.', 'success');
