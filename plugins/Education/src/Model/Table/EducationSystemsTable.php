@@ -356,6 +356,7 @@ class EducationSystemsTable extends ControllerActionTable
                                             $prog_data_arr[$level_key][$cycle_key][$prog_key]['education_field_of_study_id'] = $prog_val['education_field_of_study_id'];
                                             $prog_data_arr[$level_key][$cycle_key][$prog_key]['education_cycle_id'] = $cycle_result->id;
                                             $prog_data_arr[$level_key][$cycle_key][$prog_key]['education_certification_id'] = $prog_val['education_certification_id'];
+                                            $prog_data_arr[$level_key][$cycle_key][$prog_key]['limit_student_admission_first_grade'] = $prog_val['limit_student_admission_first_grade'] ?? 0; //POCOR-9925
                                             $prog_data_arr[$level_key][$cycle_key][$prog_key]['created_user_id'] = $session->read('Auth.User.id');
                                             $prog_data_arr[$level_key][$cycle_key][$prog_key]['created'] = date("Y-m-d H:i:s");
                                             //insert programmes data

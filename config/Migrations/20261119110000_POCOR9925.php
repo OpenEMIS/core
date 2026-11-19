@@ -14,25 +14,34 @@ use Migrations\AbstractMigration;
  *
  * The old POCOR-9385 config row and its dropdown options are deleted; nothing is carried
  * over. All programmes start as Disabled (column default 0).
+ *
+ * Only the deleted rows are backed up (z_9925_*), so down() re-inserts just those rows and
+ * never overwrites config changes made after this migration ran.
  */
 class POCOR9925 extends AbstractMigration
 {
-    private const CONFIG_BACKUP_TABLES = ['config_items', 'config_item_options'];
+    private const BACKUP_CONFIG_ITEMS = 'z_9925_config_items';
+    private const BACKUP_CONFIG_ITEM_OPTIONS = 'z_9925_config_item_options';
+
+    private const CONFIG_ITEMS_WHERE = "`code` = 'restrict_student_creation'";
+    private const CONFIG_ITEM_OPTIONS_WHERE = "`option_type` = 'student_creation_toggle'";
 
     public function up(): void
     {
-        $this->backupConfigTables();
+        // 1) Back up only the rows that are about to be deleted
+        $this->backupRows('config_items', self::BACKUP_CONFIG_ITEMS, self::CONFIG_ITEMS_WHERE);
+        $this->backupRows('config_item_options', self::BACKUP_CONFIG_ITEM_OPTIONS, self::CONFIG_ITEM_OPTIONS_WHERE);
 
-        // 1) Per-programme toggle
+        // 2) Per-programme toggle
         if (!$this->table('education_programmes')->hasColumn('limit_student_admission_first_grade')) {
             $this->execute("ALTER TABLE `education_programmes`
                 ADD COLUMN `limit_student_admission_first_grade` TINYINT(1) NOT NULL DEFAULT 0
                 COMMENT '1=enabled,0=disabled' AFTER `same_grade_promotion`");
         }
 
-        // 2) Delete the obsolete POCOR-9385 system-wide setting
-        $this->execute("DELETE FROM `config_items` WHERE `code` = 'restrict_student_creation'");
-        $this->execute("DELETE FROM `config_item_options` WHERE `option_type` = 'student_creation_toggle'");
+        // 3) Delete the obsolete POCOR-9385 system-wide setting
+        $this->execute('DELETE FROM `config_items` WHERE ' . self::CONFIG_ITEMS_WHERE);
+        $this->execute('DELETE FROM `config_item_options` WHERE ' . self::CONFIG_ITEM_OPTIONS_WHERE);
     }
 
     public function down(): void
@@ -40,32 +49,24 @@ class POCOR9925 extends AbstractMigration
         if ($this->table('education_programmes')->hasColumn('limit_student_admission_first_grade')) {
             $this->execute('ALTER TABLE `education_programmes` DROP COLUMN `limit_student_admission_first_grade`');
         }
-        $this->restoreConfigTables();
+
+        // Re-insert only the deleted rows; all other config rows are left untouched
+        $this->restoreRows('config_item_options', self::BACKUP_CONFIG_ITEM_OPTIONS);
+        $this->restoreRows('config_items', self::BACKUP_CONFIG_ITEMS);
     }
 
-    private function backupConfigTables(): void
+    private function backupRows(string $table, string $backup, string $where): void
     {
-        foreach (self::CONFIG_BACKUP_TABLES as $table) {
-            $backup = 'z_9925_' . $table;
-            if (!$this->hasTable($backup)) {
-                $this->execute('SET FOREIGN_KEY_CHECKS=0;');
-                $this->execute("CREATE TABLE `{$backup}` LIKE `{$table}`");
-                $this->execute("INSERT INTO `{$backup}` SELECT * FROM `{$table}`");
-                $this->execute('SET FOREIGN_KEY_CHECKS=1;');
-            }
-        }
+        $this->execute("DROP TABLE IF EXISTS `{$backup}`");
+        $this->execute("CREATE TABLE `{$backup}` LIKE `{$table}`");
+        $this->execute("INSERT INTO `{$backup}` SELECT * FROM `{$table}` WHERE {$where}");
     }
 
-    private function restoreConfigTables(): void
+    private function restoreRows(string $table, string $backup): void
     {
-        foreach (self::CONFIG_BACKUP_TABLES as $table) {
-            $backup = 'z_9925_' . $table;
-            if ($this->hasTable($backup)) {
-                $this->execute('SET FOREIGN_KEY_CHECKS=0;');
-                $this->execute("DROP TABLE IF EXISTS `{$table}`");
-                $this->execute("RENAME TABLE `{$backup}` TO `{$table}`");
-                $this->execute('SET FOREIGN_KEY_CHECKS=1;');
-            }
+        if ($this->hasTable($backup)) {
+            $this->execute("INSERT IGNORE INTO `{$table}` SELECT * FROM `{$backup}`");
+            $this->execute("DROP TABLE `{$backup}`");
         }
     }
 }

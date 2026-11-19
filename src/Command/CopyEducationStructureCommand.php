@@ -201,6 +201,7 @@ class CopyEducationStructureCommand extends CopyCommandBase
                             'duration'                    => $prg->duration,
                             'order'                     => $prg->order,
                             'visible'                     => $prg->visible ?? 1,
+                            'limit_student_admission_first_grade' => $prg->limit_student_admission_first_grade ?? 0, //POCOR-9925
                             'created_user_id'             => $userId,
                             'created'                     => $now,
                         ]);
