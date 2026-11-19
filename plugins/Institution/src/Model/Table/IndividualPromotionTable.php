@@ -17,6 +17,10 @@ use Cake\Log\Log;
 
 class IndividualPromotionTable extends ControllerActionTable
 {
+    // POCOR-9913: specific reason savePromotion() refused to save, shown instead of the
+    // generic savingPromotionError when set.
+    private $promotionErrorMessage = null;
+
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         foreach (['effective_date'] as $field) {
@@ -788,6 +792,8 @@ class IndividualPromotionTable extends ControllerActionTable
                     $this->Session->delete($this->getRegistryAlias());
                     $event->stopPropagation();
                     return $this->controller->redirect($extra['redirect']);
+                } elseif (!empty($this->promotionErrorMessage)) {
+                    $this->Alert->error($this->promotionErrorMessage, ['type' => 'string', 'reset' => true]);
                 } else {
                     $this->Alert->error($this->aliasField('savingPromotionError'), ['reset' => true]);
                 }
@@ -885,6 +891,12 @@ class IndividualPromotionTable extends ControllerActionTable
             ])
             ->first();
 
+        // POCOR-9913: no CURRENT enrolment left to promote (e.g. already promoted in another tab).
+        if (empty($existingInstitutionStudent)) {
+            $this->promotionErrorMessage = __('This student no longer has a current enrolment in this grade. Please refresh the student record and try again.');
+            return false;
+        }
+
         $existingInstitutionStudent->student_status_id = $statusToUpdate;
 
         if ($toAcademicPeriodId == $fromAcademicPeriodId)
@@ -895,19 +907,34 @@ class IndividualPromotionTable extends ControllerActionTable
         }
         // End
 
+        // POCOR-9913: unique_institution_students covers (status, student, grade, period,
+        // start_date, end_date, institution). If another row with exactly those values already
+        // exists - a leftover duplicate enrolment already marked with the target status - flipping
+        // this CURRENT row would throw a PDOException (error page). Refuse with a clear message;
+        // the duplicate needs a data fix, and guessing which row to delete here is unsafe.
+        $collidingRecord = $this->find()
+            ->where([
+                $this->aliasField('id <>') => $existingInstitutionStudent->id,
+                $this->aliasField('student_status_id') => $statusToUpdate,
+                $this->aliasField('student_id') => $existingInstitutionStudent->student_id,
+                $this->aliasField('education_grade_id') => $existingInstitutionStudent->education_grade_id,
+                $this->aliasField('academic_period_id') => $existingInstitutionStudent->academic_period_id,
+                $this->aliasField('start_date') => $existingInstitutionStudent->start_date,
+                $this->aliasField('end_date') => $existingInstitutionStudent->end_date,
+                $this->aliasField('institution_id') => $existingInstitutionStudent->institution_id,
+            ])
+            ->first();
+        if (!empty($collidingRecord)) {
+            Log::write('error', 'IndividualPromotion: duplicate institution_students row ' . $collidingRecord->id
+                . ' already has status ' . $statusToUpdate . ' for student ' . $existingInstitutionStudent->student_id
+                . ' (institution ' . $existingInstitutionStudent->institution_id . ', grade ' . $existingInstitutionStudent->education_grade_id
+                . ', period ' . $existingInstitutionStudent->academic_period_id . '); current row ' . $existingInstitutionStudent->id . ' not updated.');
+            $this->promotionErrorMessage = __('This student already has a duplicate enrolment record for this grade and academic period with the selected status. Please contact your administrator to remove the duplicate record before promoting.');
+            return false;
+        }
+
         // InstitutionClassStudents: Insert and update records
         //$classId = $entity->institution_class_id;
-
-        if ($hasNextGrade && !empty($entity->institution_class_id))
-        {
-            $newClassStudent = [];
-            $newClassStudent['student_id'] = $entity->student_id;
-            $newClassStudent['education_grade_id'] = $entity->education_grade_id;
-            $newClassStudent['institution_class_id'] = $entity->institution_class_id;
-            $newClassStudent['student_status_id'] = 1; //POCOR-6349
-            $newClassStudent['institution_id'] = $entity->institution_id;
-            $newClassStudent['academic_period_id'] = $entity->academic_period_id;
-        }
 
         $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $existingClassStudent = $InstitutionClassStudents->find()
@@ -928,6 +955,21 @@ class IndividualPromotionTable extends ControllerActionTable
 //        $this->log($existingInstitutionStudent, 'debug');
 //        $this->log($newInstitutionStudent, 'debug');
 
+        // POCOR-9913: all-or-nothing. Previously a failed insert of the new record left the old
+        // row already committed as PROMOTED with no CURRENT row, and re-adding the student then
+        // produced the duplicate enrolment that makes later promotions collide.
+        return $this->getConnection()->transactional(function () use (
+            $existingInstitutionStudent, $hasNextGrade, $newInstitutionStudent, $existingClassStudent,
+            $InstitutionClassStudents, $entity, $studentStatusUpdates, $studentStatusUpdatesObj
+        ) {
+            $newClassStudent = [
+                'student_id' => $entity->student_id,
+                'education_grade_id' => $entity->education_grade_id,
+                'institution_class_id' => $entity->institution_class_id,
+                'student_status_id' => 1, //POCOR-6349
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id,
+            ];
         if ($this->save($existingInstitutionStudent)) {
             // POCOR-9816: nothing to save when there's no next grade -- $newInstitutionStudent
             // is null in that case, so treat it as already "saved".
@@ -953,7 +995,7 @@ class IndividualPromotionTable extends ControllerActionTable
 
                 return true;
             } else {
-                $this->log($newInstitutionStudent->errors, 'debug');
+                $this->log($newInstitutionStudent->getErrors(), 'debug');
             }
         } else {
             $message = 'failed to update student status';
@@ -961,6 +1003,7 @@ class IndividualPromotionTable extends ControllerActionTable
         }
 
         return false;
+        });
     }
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
