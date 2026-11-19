@@ -2452,8 +2452,13 @@ class ReportCardsTable extends AppTable
                         'last_name' => 'SecurityUsers.last_name',
                         'preferred_name' => 'SecurityUsers.preferred_name',
                         'gender_id' => 'SecurityUsers.gender_id',
-                        'end_date' => $StudentSubjectStaff->aliasField('end_date'),
-                        'start_date' => $StudentSubjectStaff->aliasField('start_date'),
+                        // Code review fix (POCOR-9922): selecting the raw end_date/start_date
+                        // columns here violates ONLY_FULL_GROUP_BY - institution_subject_staff's
+                        // only key is its own id, so neither column is functionally dependent on
+                        // the (staff_id, institution_subject_id) group. A single aggregate also
+                        // avoids mixing end_date from one row with start_date from another if a
+                        // teacher ever has two stints on the same subject.
+                        'sort_key' => 'MAX(COALESCE(' . $StudentSubjectStaff->aliasField('end_date') . ', ' . $StudentSubjectStaff->aliasField('start_date') . '))',
                     ])
                     ->innerJoin([$Staff->getAlias() => $Staff->getTable()],
                         [$Staff->aliasField('staff_id = ') . $StudentSubjectStaff->aliasField('staff_id')])
@@ -2474,7 +2479,7 @@ class ReportCardsTable extends AppTable
 
                 foreach ($fallbackRows as $row) {
                     $subjectId = $row->institution_subject_id;
-                    $sortKey = $row->end_date ?: $row->start_date;
+                    $sortKey = $row->sort_key;
                     if (!isset($fallbackBySubject[$subjectId]) || $sortKey > $fallbackBySubject[$subjectId]['sortKey']) {
                         $fallbackBySubject[$subjectId] = ['row' => $row, 'sortKey' => $sortKey];
                     }
