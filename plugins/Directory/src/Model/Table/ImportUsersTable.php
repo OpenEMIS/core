@@ -553,14 +553,9 @@ class ImportUsersTable extends AppTable
         // them regardless of earlier errors is safe and just means more of the row's real problems
         // get surfaced together instead of one hiding all the rest.
         if ($isStudent) {
-            //POCOR-9385: start — student creation restriction (no institution/grade context)
-            if (!isset($tempRow['institution_code']) || empty($tempRow['institution_code'])) {
-                if (!$this->isStudentCreationAllowed(null)) { //POCOR-9385: no grade = blanket block
-                    $rowInvalidCodeCols['is_student'] = $this->studentCreationBlockMessageNoGrade();
-                    return false;
-                }
-            }
-            //POCOR-9385: end — student creation restriction (no institution/grade context)
+            //POCOR-9925: the POCOR-9385 blanket block for rows without an institution was removed — the
+            //limit is per education programme and such rows enrol the student into no grade. Rows WITH an
+            //institution/grade are still checked in checkNewAdmission() via isStudentCreationAllowed().
 
             list($tempRow, $rowInvalidCodeCols, $admissionHasError) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
             list($tempRow, $rowInvalidCodeCols, $guardianHasError) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);

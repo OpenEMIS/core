@@ -982,7 +982,8 @@ class StudentsTable extends ControllerActionTable
         $institutionId = !empty($entity->institution_id)
             ? (int)$entity->institution_id
             : ((int)$this->request->getSession()->read('Institution.Institutions.id') ?: null);
-        if (!$this->isStudentCreationAllowed($gradeId, $institutionId, $academicPeriodId)) { //POCOR-9385: check vs institution's entry grade for this period
+        //POCOR-9925: the check is now per programme (programme's first grade); institution/period no longer affect it
+        if (!$this->isStudentCreationAllowed($gradeId, $institutionId, $academicPeriodId)) { //POCOR-9925: programme's first grade only
             $gradeName = '';
             if (!empty($gradeId)) {
                 $EducationGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');

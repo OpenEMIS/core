@@ -26,6 +26,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         'education_cycle_id',
         'education_certification_id',
         'same_grade_promotion',
+        'limit_student_admission_first_grade', //POCOR-9925
         'next_programme_option_id',
         'next_programmes'];//POCOR-4746 //POCOR-9485
     private  $arrayNextProgrammes = []; // POCOR-9403
@@ -84,6 +85,8 @@ class EducationProgrammesTable extends ControllerActionTable {
         if ($this->action != 'index') {
             $this->field('academic_period', ['before' => 'code']); // POCOR-9485: show which period this programme belongs to
             $this->field('same_grade_promotion');//POCOR-4746
+            //POCOR-9925: per-programme replacement for the old system-wide "Limit student addition to first grade only"
+            $this->field('limit_student_admission_first_grade', ['after' => 'same_grade_promotion']);
             $this->field('next_programme_option_id', ['before' => 'same_grade_promotion']); // POCOR-9485
             $this->field('next_programmes', ['after' => 'next_programme_option_id',
                 'type' => 'custom_next_programme',
@@ -110,6 +113,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         $this->fields['education_certification_id']['sort'] = ['field' => 'EducationCertifications.name'];
         $this->field('same_grade_promotion',['visible'=>'hidden']);//POCOR-4746
         $this->field('next_programme_option_id', ['visible' => false]); // POCOR-9485: hide from index list
+        $this->field('limit_student_admission_first_grade', ['visible' => false]); //POCOR-9925: hide from index list
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Education Programmes','Education');
 		if(!empty($is_manual_exist)){
@@ -214,6 +218,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         $this->fields['education_field_of_study_id']['type'] = 'select';
         $this->fields['education_certification_id']['type'] = 'select';
         $this->fields['same_grade_promotion']['type'] = 'select';//POCOR-4746
+        $this->fields['limit_student_admission_first_grade']['type'] = 'select';//POCOR-9925
     }
 
     public function onUpdateFieldEducationCycleId(EventInterface $event, array $attr, $action, ServerRequest $request) {
@@ -691,6 +696,24 @@ class EducationProgrammesTable extends ControllerActionTable {
         return $attr;
     }
 
+    //POCOR-9925: Enabled/Disabled toggle. Column is NOT NULL DEFAULT 0, so no "-- Select --" placeholder.
+    public function onUpdateFieldLimitStudentAdmissionFirstGrade(EventInterface $event, array $attr, $action, ServerRequest $request) {
+        $attr['type']   = 'select';
+        $attr['options'] = $this->getEnabledDisabledOptions();
+        $attr['select'] = false;
+        return $attr;
+    }
+
+    //POCOR-9925
+    public function onGetLimitStudentAdmissionFirstGrade(EventInterface $event, Entity $entity) {
+        return $this->getEnabledDisabledOptions()[(int)$entity->limit_student_admission_first_grade] ?? '';
+    }
+
+    //POCOR-9925
+    private function getEnabledDisabledOptions(): array {
+        return [0 => __('Disabled'), 1 => __('Enabled')];
+    }
+
     // POCOR-9485: show the academic period this programme's education system belongs to (readonly)
     public function onUpdateFieldAcademicPeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
@@ -807,6 +830,8 @@ class EducationProgrammesTable extends ControllerActionTable {
             return __('Education Certifications');
         }elseif ($field == 'same_grade_promotion') {
             return __('Same Grade Promotion');
+        }elseif ($field == 'limit_student_admission_first_grade') { //POCOR-9925
+            return __('Limit Student Admission to First Grade');
         }elseif ($field == 'next_programme_option_id') {
             return __('Next Programme Options');
         }elseif ($field == 'next_programmes') {
