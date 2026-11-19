@@ -214,8 +214,7 @@ class IndividualPromotionTable extends ControllerActionTable
 
     public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
-        // POCOR-9926: Cancel used to get only the encoded query string as its url, so the
-        // browser resolved it relative to the app root (e.g. /coreeyJ...) and Apache gave a 404.
+        // POCOR-9926: Cancel used to get only the encoded query string as its url.
         // Send it back to the student's page, same as the toolbar back button.
         $cancelUrl = $this->getStudentViewUrl();
         switch ($this->action) {
