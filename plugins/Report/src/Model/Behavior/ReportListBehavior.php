@@ -506,6 +506,31 @@ class ReportListBehavior extends Behavior {
 		/*POCOR-6439 start : shorting report name as it is throwing error before save*/
 		if($feature == 'Report.StudentAttendanceSummary') {
 			$academicPeriodData = $AcademicPeriod->get($data['Institutions']['academic_period_id']);
+
+			// POCOR-9920 point 2: include the selected region in the filename, matching
+			// the "Institutions" report's own "{Level Name} - {Area Code} - {Area Name}"
+			// format - omitted entirely when no specific region is selected (area_education_id
+			// is the real selected area; area_level_id on its own is just which level that
+			// area belongs to, not a usable filter by itself - see POCOR-9920's getAreaList fix).
+			$areaNameSegment = '';
+			$areaEducationId = $data['Institutions']['area_education_id'] ?? null;
+			if (!empty($areaEducationId) && $areaEducationId > 1) {
+				$Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+				$areaData = $Areas->find()->where(['id' => $areaEducationId])->first();
+				if ($areaData) {
+					$areaLevelName = '';
+					$areaLevelId = $data['Institutions']['area_level_id'] ?? null;
+					if (!empty($areaLevelId) && $areaLevelId > 1) {
+						$AreaAdministrativeLevels = TableRegistry::getTableLocator()->get('Area.AreaAdministrativeLevels');
+						$areaLevelData = $AreaAdministrativeLevels->find()->where(['id' => $areaLevelId])->first();
+						if ($areaLevelData) {
+							$areaLevelName = $areaLevelData->name . ' - ';
+						}
+					}
+					$areaNameSegment = ' - ' . $areaLevelName . $areaData->code . ' - ' . $areaData->name;
+				}
+			}
+
 			$institutionIdValue = $data['Institutions']['institution_id'] ?? null;
 			//POCOR-9865
 			if (is_array($institutionIdValue)) {
@@ -530,7 +555,7 @@ class ReportListBehavior extends Behavior {
 	        }
 	        $reportStartDate = date("Ymd", strtotime($data[$alias]['report_start_date']));
 	        $reportEndDate = date("Ymd", strtotime($data[$alias]['report_end_date']));
-	        $reportName = $alias .':'. $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionCode .' - '. $gradeName.' - '. $reportStartDate .' - '.$reportEndDate;
+	        $reportName = $alias .':'. $featureList[$feature] .' - '. $academicPeriodData->name . $areaNameSegment .' - '. $institutionCode .' - '. $gradeName.' - '. $reportStartDate .' - '.$reportEndDate;
 	        $name = $reportName;
 		}
 		/*POCOR-6439 ends*/

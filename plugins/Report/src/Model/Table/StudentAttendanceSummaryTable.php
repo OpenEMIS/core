@@ -119,15 +119,16 @@ class StudentAttendanceSummaryTable extends AppTable
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
         //POCOR-7794 start //POCOR-7879
+        // POCOR-9920: getAreaList($id, $idArray) takes the selected area's own row id as
+        // $id and an internal recursion accumulator as $idArray - it was being called here
+        // as getAreaList($areaLevelId, $areaId), which passes the area LEVEL (eg. "Region" = 2)
+        // as the area id to recurse from and silently drops the real $areaId (a scalar, not
+        // an array, so getAreaList resets it to []). Whichever unrelated area row happens to
+        // share that numeric id gets used instead, which is why the selected region's own
+        // schools never show up.
         $areaList = [];
-        if ($areaLevelId > 1 && $areaId > 1
-        ) {
-            $areaList = $this->getAreaList($areaLevelId, $areaId);
-        } elseif ($areaLevelId > 1) {
-
-            $areaList = $this->getAreaList($areaLevelId,0);
-        } elseif ($areaId > 1) {
-            $areaList = $this->getAreaList(0,$areaId);
+        if (!empty($areaId) && $areaId > 1) {
+            $areaList = $this->getAreaList($areaId);
         }
         if (!empty($areaList)) {
             $query->where(['Institutions.area_id IN' => $areaList]);
@@ -352,20 +353,42 @@ class StudentAttendanceSummaryTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradeId = $requestData->education_grade_id;
         $institutionTypeId = $requestData->institution_type_id;
+        $areaId = $requestData->area_education_id; // POCOR-9920
 
         $ids ='';
         $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-        $institutionIds = $institutions->find('list', [
+        $hasInstitutionTypeFilter = !empty($institutionTypeId) && $institutionTypeId != 0 && $institutionTypeId != -1;
+        $institutionsQuery = $institutions->find('list', [
                                                     'keyField' => 'id',
                                                     'valueField' => 'id'
-                                                ])
-                        ->where(['institution_type_id' => $institutionTypeId])
-                        ->toArray();
+                                                ]);
+        if ($hasInstitutionTypeFilter) {
+            $institutionsQuery->where(['institution_type_id' => $institutionTypeId]);
+        }
+
+        // POCOR-9920: the grade (sheet) list must respect the same region scoping as the
+        // actual data query in onExcelBeforeQuery() - otherwise "All Institutions" plus a
+        // region filter generates a sheet for every grade that exists anywhere in the
+        // system, most with no matching rows once the data query's own region filter runs.
+        $areaList = [];
+        if (!empty($areaId) && $areaId > 1) {
+            $areaList = $this->getAreaList($areaId);
+            $institutionsQuery->where(['area_id IN' => $areaList]);
+        }
+        $institutionIds = $institutionsQuery->toArray();
 
         $InstitutionGradesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         if (!empty($filterInstitutionIds)) {
             $institutionGradeResults = [];
             foreach ($filterInstitutionIds as $id) {
+                $institutionGradeResults += $InstitutionGradesTable->getGradeOptions($id, $academicPeriodId, true);
+            }
+        } elseif (!empty($areaList) || $hasInstitutionTypeFilter) {
+            // Scoped to a region and/or institution type, but no specific institution(s) picked -
+            // getGradeOptions(0, ...) applies no institution restriction at all, so the
+            // applicable institution ids must be resolved and looped individually instead.
+            $institutionGradeResults = [];
+            foreach ($institutionIds as $id) {
                 $institutionGradeResults += $InstitutionGradesTable->getGradeOptions($id, $academicPeriodId, true);
             }
         } else {
