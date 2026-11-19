@@ -98,28 +98,7 @@ class ConfigItemsTable extends AppTable
             }
         }
         //POCOR-6248 end
-
-        //POCOR-9385: Excluded Security Roles — visible on BOTH view and edit when the toggle is
-        //Enabled. Must be set here (not only in editBeforeAction/onGetValueSelection) because the
-        //view action never calls editBeforeAction, and a field hidden by the default above never
-        //gets its onGet getter invoked to flip visibility on its own.
-        $pass = $this->request->getParam('pass');
-        if (is_array($pass) && !empty($pass)) {
-            $id = $this->paramsDecode($pass[0]);
-            try {
-                $entity = $this->get($id);
-            } catch (RecordNotFoundException $e) {
-                $entity = null;
-            }
-            if (!empty($entity) && $entity->code === 'restrict_student_creation') {
-                $alias = $this->getAlias();
-                $postedValue = $this->request->getData("$alias.value");
-                $currentValue = ($postedValue !== null) ? $postedValue : $entity->value;
-                if ((string)$currentValue === '1') {
-                    $this->ControllerAction->field('value_selection', ['visible' => ['view' => true, 'edit' => true], 'after' => 'value']);
-                }
-            }
-        }
+        //POCOR-9925: POCOR-9385 "restrict_student_creation" handling removed — the setting moved to Education Programmes
     }
 
     public function implementedEvents(): array
@@ -198,34 +177,6 @@ class ConfigItemsTable extends AppTable
                 $this->fields['value_selection']['attr']['after'] = 'value';
             }
             ///POCOR-6248 ends
-
-            //POCOR-9385: render Excluded Security Roles on this SAME edit page as the toggle,
-            //visible only when Value=Enabled — matches the reference design of one combined config item
-            if ($entity->code === 'restrict_student_creation') {
-                $alias = $this->getAlias();
-                $postedValue = $this->request->getData("$alias.value");
-                $currentValue = ($postedValue !== null) ? $postedValue : $entity->value;
-
-                $this->fields['value']['attr']['onChangeReload'] = true; //POCOR-9385: reload to show/hide roles field
-
-                if ((string)$currentValue === '1') {
-                    $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-                    $this->fields['value_selection']['type'] = 'chosenSelect';
-                    $this->fields['value_selection']['options'] = $SecurityRoles->find('list')->toArray();
-                    $this->fields['value_selection']['attr'] = [
-                        'label' => 'Excluded Security Roles',
-                        'after' => 'value',
-                        'required' => true, //POCOR-9909: mandatory when Enabled — renders the asterisk
-                    ];
-                    $this->ControllerAction->field('value_selection', ['visible' => ['view' => true, 'edit' => true], 'after' => 'value']);
-
-                    //POCOR-9909: server-side guard — show a validation message instead of crashing when nothing is selected
-                    $this->getValidator()->notEmptyString('value_selection', __('Please select at least one Excluded Security Role.'));
-                } else {
-                    $this->ControllerAction->field('value_selection', ['visible' => false]);
-                }
-            }
-            //POCOR-9385: end
 
             /**
              * grab validation rules by either record code or record type
@@ -349,49 +300,6 @@ class ConfigItemsTable extends AppTable
         ];
         return $this->controller->redirect($action);
     }
-    
-    //POCOR-9385: pre-populate chosenSelect with saved role entities so CakePHP renders pre-selected checkboxes
-    public function editOnInitialize(EventInterface $event, Entity $entity) //POCOR-9385: 2 args only — ControllerAction fires with [$entity]
-    {
-        if ($entity->code === 'restrict_student_creation' && !empty($entity->value_selection)) {
-            $roleIds = array_filter(explode(',', $entity->value_selection));
-            if (!empty($roleIds)) {
-                $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-                $entity->value_selection = $SecurityRoles->find()->where(['id IN' => $roleIds])->all();
-            }
-        }
-    }
-
-    //POCOR-9385: convert chosenSelect _ids array back to comma-separated string for Excluded Security Roles
-    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
-    {
-        //POCOR-9385: convert _ids array to comma-separated string only for restrict_student_creation's value_selection
-        //Code is not in POST data, so look it up from the request pass param
-        $pass = $this->request->getParam('pass');
-        if (!empty($pass)) {
-            $ids = $this->paramsDecode($pass[0]);
-            $entity = $this->get($ids);
-            if ($entity->code === 'restrict_student_creation') {
-                //POCOR-9385: the field is only rendered when Value=Enabled (see editBeforeAction).
-                //When Disabled, no chosenSelect data is posted — leave value_selection untouched so a
-                //previously-saved role list survives a Disable/Enable round-trip instead of being wiped.
-                $submittedValue = $data['value'] ?? $entity->value;
-                if ((string)$submittedValue === '1') {
-                    //POCOR-9909: with nothing selected, FormHelper's hidden field posts value_selection[_ids] = ''
-                    //(a string, not an array). array_filter('') threw a TypeError on PHP 8, which
-                    //AppExceptionRenderer turns into a redirect to the 404 page. Normalise to an array first.
-                    $selectedIds = $data['value_selection']['_ids'] ?? [];
-                    if (!is_array($selectedIds)) {
-                        $selectedIds = ($selectedIds === '' || $selectedIds === null) ? [] : [$selectedIds];
-                    }
-                    $data['value_selection'] = implode(',', array_filter($selectedIds)); //POCOR-9385: '' when nothing selected
-
-                } else {
-                    unset($data['value_selection']);
-                }
-            }
-        }
-    }
 
     public function viewBeforeAction() {
         $session = $this->request->getSession();
@@ -423,11 +331,6 @@ class ConfigItemsTable extends AppTable
             if (!empty($pass)) {
                 $ids = $this->paramsDecode($pass[0]);
                 $entity = $this->get($ids);
-                //POCOR-9385: student creation toggle — Type/Label/Value all stay visible as their own rows
-                if ($entity->code === 'restrict_student_creation') {
-                    $attr['select'] = false; //POCOR-9385: toggle — remove -- Select -- null option
-                    $attr['onChangeReload'] = true; //POCOR-9385: reload to show/hide Excluded Security Roles field
-                }
                 if ($entity->field_type == 'Dropdown') {
                     //POCOR-7716 start
                     if ($entity->option_type == "admission_options") {
@@ -558,23 +461,8 @@ class ConfigItemsTable extends AppTable
         return $value;
     }
 
-    //POCOR-9385: Excluded Security Roles — view mode, role names instead of raw ids.
-    //Visibility is already decided in beforeAction() from a freshly-fetched entity — don't re-check
-    //$entity->value here: by this point in getViewElements() the 'value' field has already been
-    //rendered earlier in the same loop and onGetValue() has overwritten $entity->value in place
-    //(e.g. '1' -> 'Enabled'), so re-testing it here would silently misfire.
     public function onGetValueSelection(EventInterface $event, Entity $entity)
     {
-        if ($entity->code === 'restrict_student_creation') {
-            $roleIds = array_filter(explode(',', (string)$entity->value_selection));
-            if (empty($roleIds)) {
-                return '';
-            }
-            $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
-            $names = $SecurityRoles->find('list')->where(['id IN' => $roleIds])->toArray();
-            return implode(', ', $names);
-        }
-
         //POCOR-6248 starts
         $this->ControllerAction->field('value_selection', ['visible' => ['view' => true], 'after' => 'value']);
 
@@ -590,37 +478,8 @@ class ConfigItemsTable extends AppTable
         return $value_selection;
     }//POCOR-6248 ends
 
-    //POCOR-9385: label the value_selection row "Excluded Security Roles" (view + index headers);
-    //edit-mode label is set separately in editBeforeAction via $this->fields['value_selection']['attr']['label']
-    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
-    {
-        if ($field === 'value_selection') {
-            $pass = $this->request->getParam('pass');
-            if (!empty($pass)) {
-                $ids = $this->paramsDecode($pass[0]);
-                try {
-                    $entity = $this->get($ids);
-                } catch (RecordNotFoundException $e) {
-                    $entity = null;
-                }
-                if (!empty($entity) && $entity->code === 'restrict_student_creation') {
-                    return __('Excluded Security Roles');
-                }
-            }
-        }
-        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-    }
-
     public function onGetDefaultValue(EventInterface $event, Entity $entity)
     {
-        //POCOR-9385: show human-readable option label for student creation toggle default value
-        if ($entity->code === 'restrict_student_creation') {
-            $ConfigItemOptions = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
-            $option = $ConfigItemOptions->find()
-                ->where(['option_type' => 'student_creation_toggle', 'value' => $entity->default_value])
-                ->first();
-            return $option ? __($option->option) : $entity->default_value;
-        }
         return $this->recordValueForView('default_value', $entity);
     }
 
@@ -796,14 +655,6 @@ class ConfigItemsTable extends AppTable
             }
             return $value;
         }
-    }
-
-    //POCOR-9385: value_selection counterpart to value() — used to read Excluded Security Roles
-    //stored on the restrict_student_creation row's value_selection column
-    public function valueSelection($code)
-    {
-        $entity = $this->findByCode($code)->first();
-        return empty($entity) ? '' : $entity->value_selection;
     }
 
     public function defaultValue($code)

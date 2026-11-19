@@ -3,136 +3,185 @@ namespace Institution\Model\Traits;
 
 use Cake\ORM\TableRegistry;
 
+/**
+ * "Limit Student Admission to First Grade" gate.
+ *
+ * POCOR-9925: the rule is configured PER EDUCATION PROGRAMME
+ * (Administration > Education Structure > Programmes), not system-wide. The programme is
+ * resolved from the grade the student is being added to, so every check needs a grade.
+ * Without a grade (e.g. Directory > Add, which places the student in no programme) there
+ * is nothing to restrict.
+ *
+ * The decision logic only talks to the database through findStudentCreationGrade(),
+ * getFirstGradeLimitedProgrammeIds() and
+ * findVisibleGradesOfProgrammes(), so it can be unit tested without a database.
+ */
 trait StudentCreationCheckTrait
 {
     /**
      * Returns true if the current user may create a new student at the given grade.
-     * Logic: feature disabled → allow. Excluded role → allow. Grade not allowed → block.
-     *
-     * When $institutionId and $academicPeriodId are provided, "first grade" means the
-     * lowest-order grade of the same programme that the institution actually runs for
-     * that period. Without them, falls back to global order=1 check.
+     * Logic: no grade → allow. Programme limit disabled → allow. Applies to ALL users (super admin
+     * included, no bypass). Otherwise the grade must be the programme's first grade (lowest-order visible grade of the
+     * programme — not of the grades the institution offers). Excluded Security Roles are out of
+     * scope for POCOR-9925.
      *
      * @param int|null $gradeId          education_grades.id
-     * @param int|null $institutionId    institution_id for institution-grade context
-     * @param int|null $academicPeriodId academic_period_id for institution-grade context
+     * @param int|null $institutionId    kept for caller compatibility; no longer affects the check //POCOR-9925
+     * @param int|null $academicPeriodId kept for caller compatibility; no longer affects the check //POCOR-9925
      * @return bool
      */
-    private function isStudentCreationAllowed(?int $gradeId, ?int $institutionId = null, ?int $academicPeriodId = null): bool //POCOR-9385: student creation gate
+    private function isStudentCreationAllowed(?int $gradeId, ?int $institutionId = null, ?int $academicPeriodId = null): bool //POCOR-9385 //POCOR-9925
     {
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-
-        // Feature disabled → always allow //POCOR-9385: feature toggle check
-        $restrictStudentCreation = $ConfigItems->value('restrict_student_creation');
-        if ($restrictStudentCreation != 1) {
-            return true;
-        }
-
-        // Super admin bypass //POCOR-9385: super_admin is never restricted
-        if ($this->request->getSession()->read('Auth.User.super_admin') == 1) {
-            return true;
-        }
-
-        // Excluded roles bypass //POCOR-9385: single source of truth, also used by the dropdown filter
-        if ($this->isUserExcludedFromStudentCreationRestriction($institutionId)) {
-            return true;
-        }
-
-        // No grade context → block //POCOR-9385: no grade = block
+        //POCOR-9925: no grade → no programme → the per-programme rule cannot apply
         if (empty($gradeId)) {
-            return false;
+            return true;
         }
 
-        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-        $grade = $EducationGrades->find()
-            ->where([$EducationGrades->aliasField('id') => $gradeId])
-            ->first();
-
-        if (!$grade) {
+        //POCOR-9925: the rule applies to ALL users (super admin included) — no role bypass
+        $grade = $this->findStudentCreationGrade((int)$gradeId);
+        if (empty($grade)) {
             return true; //POCOR-9385: grade not found → allow (safe default)
         }
 
-        //POCOR-9385: when institution+period context is available, validate against the SAME
-        //entry-grade set that getEducationGrade offers in the dropdown (single source of truth in
-        //InstitutionGradesTable::getEntryEducationGradeIds) so the picker can never offer a grade
-        //that Save rejects (no select-then-error).
-        if (!empty($institutionId) && !empty($academicPeriodId)) {
-            $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
-            $entryIds = $InstitutionGrades->getEntryEducationGradeIds((int)$institutionId, (int)$academicPeriodId);
+        $programmeId = (int)$grade['education_programme_id'];
 
-            if (empty($entryIds)) {
-                return true; //POCOR-9385: institution has no grades for this period → allow (safe default)
-            }
-
-            return in_array((int)$gradeId, $entryIds, true); //POCOR-9385: gradeId must be an entry grade offered by the dropdown
+        //POCOR-9925: rule switched off for this programme → allow
+        if (!in_array($programmeId, $this->getFirstGradeLimitedProgrammeIds([$programmeId]), true)) {
+            return true;
         }
 
-        // Fallback: global order=1 check (no institution/period context e.g. import without full row data) //POCOR-9385
-        return (int)$grade->order === 1;
+        //POCOR-9925: only the PROGRAMME's first grade is allowed, regardless of which grades the
+        //institution offers (reporter: "It should only allow Grade 1 since it's the first grade of the
+        //programme"). Same helper as the Add-Student dropdown filter, so the picker never offers a
+        //grade that Save rejects.
+        return in_array((int)$gradeId, $this->getProgrammeFirstGradeIds([$programmeId]), true);
     }
 
     /**
-     * Returns true if the acting user's role is on the "Excluded Security Roles" list for the
-     * restrict_student_creation config item — meaning they may bypass the entry-grade rule.
-     * Shared by isStudentCreationAllowed() (Save) and InstitutionsController::getEducationGrade()
-     * (dropdown filter) so both read the excluded-roles list the exact same way.
+     * POCOR-9925: the first grade (lowest `order` among visible grades) of each given programme.
      *
-     * @param int|null $institutionId institution context; when null/0 (Directory, which has no
-     *                                institution scope at all) the acting user's roles are resolved
-     *                                through the AccessControl component instead //POCOR-9876
-     * @return bool
+     * @param int[] $programmeIds
+     * @return int[] education_grades.id values
      */
-    private function isUserExcludedFromStudentCreationRestriction(?int $institutionId = null): bool //POCOR-9385
+    private function getProgrammeFirstGradeIds(array $programmeIds): array
     {
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $excludedRaw = $ConfigItems->valueSelection('restrict_student_creation'); //POCOR-9385: stored on the same row as the toggle
-
-        if (empty($excludedRaw)) {
-            return false;
+        $programmeIds = self::normaliseIds($programmeIds);
+        if (empty($programmeIds)) {
+            return [];
         }
+        return self::pickFirstGradeIdPerProgramme($this->findVisibleGradesOfProgrammes($programmeIds));
+    }
 
-        $excludedIds = array_filter(explode(',', $excludedRaw));
-        //POCOR-9876: the excluded-role check is about the ACTING (logged-in) user, so always read it from the
-        //session. getUserID() on controllers/tables returns the user_id from the query string (the subject
-        //user, e.g. the student) and is null on AJAX calls such as getEducationGrade, which crashed
-        //getSecurityGroupId() ("Users.id is missing operator with null value") and returned an error page
-        //instead of JSON, so the Education Grade dropdown rendered "undefined" options.
-        $userId = (int)$this->request->getSession()->read('Auth.User.id');
-        if ($userId <= 0) {
-            return false; //POCOR-9876: no logged-in user → not excluded
-        }
-
-        //POCOR-9876: was `$institutionId ?? (method_exists($this, 'getInstitutionID') ? ... : 0)`. That guard was
-        //dead code: getInstitutionID() is a Controller-only method, and behaviour-provided versions
-        //(ControllerAction.QueryString) are proxied through __call() so method_exists() never sees them. Every
-        //caller already resolves the institution itself, so the fallback only ever evaluated to 0.
-        $instId = (int)($institutionId ?? 0);
-
-        if ($instId > 0) {
-            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-            //POCOR-9385: institution roles - getRolesByUserAndGroup() is a find('list'), so these are scalar ids
-            $userRoles = $Institutions->getInstitutionRoles($userId, $instId);
-        } elseif (isset($this->AccessControl)) {
-            //POCOR-9876: getRolesByUser() returns hydrated SecurityGroupUsers ENTITIES, not role ids (unlike
-            //getInstitutionRoles() above). Iterating them raw made `(string)$roleId` render the entity's JSON
-            //(EntityTrait::__toString), which never matched a numeric role id, so the strict in_array() below
-            //silently reported "not excluded" for every user on the Directory path. Extract the id like every
-            //other consumer does (DashboardController::getUserSecurityRoleIds, NavigationComponent).
-            $userRoles = collection($this->AccessControl->getRolesByUser($userId)->toArray())
-                ->extract('security_role_id')
-                ->toArray();
-        } else {
-            //POCOR-9876: no AccessControl component (non controller-driven context) → cannot resolve roles
-            return false;
-        }
-
-        foreach ($userRoles as $roleId) {
-            if (in_array((string)$roleId, $excludedIds, true)) {
-                return true; //POCOR-9385: role excluded — bypass restriction
+    /**
+     * POCOR-9925: pure — from grade rows (id, order, education_programme_id) return, per programme,
+     * the id of the grade with the lowest order. Ties (same order) resolve to the lowest grade id,
+     * so the result never depends on the order rows come back from the database.
+     *
+     * @param array $gradeRows
+     * @return int[]
+     */
+    public static function pickFirstGradeIdPerProgramme(array $gradeRows): array
+    {
+        $firstByProgramme = []; // programme_id => ['id' => grade id, 'order' => order]
+        foreach ($gradeRows as $row) {
+            $programmeId = (int)$row['education_programme_id'];
+            $order = (int)$row['order'];
+            $id = (int)$row['id'];
+            $current = $firstByProgramme[$programmeId] ?? null;
+            if ($current === null
+                || $order < $current['order']
+                || ($order === $current['order'] && $id < $current['id'])) {
+                $firstByProgramme[$programmeId] = ['id' => $id, 'order' => $order];
             }
         }
+        return array_values(array_column($firstByProgramme, 'id'));
+    }
 
-        return false;
+    /**
+     * POCOR-9925: pure — Add-Student grade dropdown filter. Rows of restricted programmes are kept
+     * only if they are that programme's first grade; rows of other programmes are kept untouched.
+     *
+     * @param array $gradeOptions           rows with `education_grade_id` and `_programme_id`
+     * @param int[] $restrictedProgrammeIds programmes with the limit Enabled
+     * @param int[] $firstGradeIds          first grade ids of those programmes
+     * @return array re-indexed rows
+     */
+    public static function filterGradeOptionsToFirstGrade(array $gradeOptions, array $restrictedProgrammeIds, array $firstGradeIds): array
+    {
+        $restrictedProgrammeIds = self::normaliseIds($restrictedProgrammeIds);
+        $firstGradeIds = self::normaliseIds($firstGradeIds);
+        return array_values(array_filter($gradeOptions, function ($row) use ($restrictedProgrammeIds, $firstGradeIds) {
+            return !in_array((int)$row['_programme_id'], $restrictedProgrammeIds, true)
+                || in_array((int)$row['education_grade_id'], $firstGradeIds, true);
+        }));
+    }
+
+    /**
+     * POCOR-9925: the subset of $programmeIds that have "Limit Student Admission to First Grade" Enabled.
+     *
+     * @param int[] $programmeIds
+     * @return int[]
+     */
+    private function getFirstGradeLimitedProgrammeIds(array $programmeIds): array
+    {
+        $programmeIds = self::normaliseIds($programmeIds);
+        if (empty($programmeIds)) {
+            return [];
+        }
+
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+        return array_map('intval', $EducationProgrammes->find()
+            ->select(['id'])
+            ->where([
+                $EducationProgrammes->aliasField('id IN') => $programmeIds,
+                $EducationProgrammes->aliasField('limit_student_admission_first_grade') => 1,
+            ])
+            ->disableHydration()
+            ->all()
+            ->extract('id')
+            ->toList());
+    }
+
+    /**
+     * POCOR-9925: DB lookup — the grade's id, order and programme, or null.
+     */
+    private function findStudentCreationGrade(int $gradeId): ?array
+    {
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $grade = $EducationGrades->find()
+            ->select(['id', 'order', 'education_programme_id'])
+            ->where([$EducationGrades->aliasField('id') => $gradeId])
+            ->disableHydration()
+            ->first();
+        return $grade ?: null;
+    }
+
+    /**
+     * POCOR-9925: DB lookup — visible grades (id, order, education_programme_id) of the programmes.
+     *
+     * @param int[] $programmeIds non-empty
+     * @return array
+     */
+    private function findVisibleGradesOfProgrammes(array $programmeIds): array
+    {
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        return $EducationGrades->find()
+            ->select(['id', 'order', 'education_programme_id'])
+            ->where([
+                $EducationGrades->aliasField('education_programme_id IN') => $programmeIds,
+                $EducationGrades->aliasField('visible') => 1,
+            ])
+            ->disableHydration()
+            ->toArray();
+    }
+
+    /**
+     * @param array $ids
+     * @return int[] unique positive ints
+     */
+    private static function normaliseIds(array $ids): array
+    {
+        return array_values(array_unique(array_filter(array_map('intval', $ids))));
     }
 
     /**
@@ -144,13 +193,5 @@ trait StudentCreationCheckTrait
             __('New students can only be enrolled in the entry grade. %s is not an entry grade for this programme.'), //POCOR-9385: cleaner message
             $gradeName
         );
-    }
-
-    /**
-     * Block message for Directory context (no grade name available).
-     */
-    private function studentCreationBlockMessageNoGrade(): string //POCOR-9385: directory block message
-    {
-        return __('New students can only be enrolled in the entry grade of their education programme.'); //POCOR-9385: cleaner message
     }
 }

@@ -5905,18 +5905,23 @@ class InstitutionsController extends AppController
         }
 
         //POCOR-9385: filter to entry grades when student creation restriction is active — uses the
-        //same isUserExcludedFromStudentCreationRestriction()/getEntryEducationGradeIds() single
+        //same getFirstGradeLimitedProgrammeIds()/getProgrammeFirstGradeIds() single
         //source of truth as the Save check (StudentCreationCheckTrait) so the dropdown can never
         //offer a grade that Save would reject (no select-then-error).
-        $ConfigItems        = \Cake\ORM\TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $restrictionEnabled = ($ConfigItems->value('restrict_student_creation') == 1); //POCOR-9385
-        $isSuperAdmin       = ($this->Auth->user('super_admin') == 1);                 //POCOR-9385
+        //POCOR-9925: the limit is switched on per programme — only grades of programmes that have
+        //"Limit Student Admission to First Grade" Enabled are narrowed to the programme's first grade;
+        //other programmes keep all their grades. Applies to ALL users, super admin included (no bypass).
+        if (!empty($resultArray)) {
+            $restrictedProgrammeIds = $this->getFirstGradeLimitedProgrammeIds(array_column($resultArray, '_programme_id'));
 
-        if ($restrictionEnabled && !$isSuperAdmin && !$this->isUserExcludedFromStudentCreationRestriction((int)$institutionId)) {
-            $entryIds = $institutionGrades->getEntryEducationGradeIds((int)$institutionId, (int)$academicPeriodId);
-            $resultArray = array_values(array_filter($resultArray, function ($row) use ($entryIds) {
-                return in_array((int)$row['education_grade_id'], $entryIds, true);
-            }));
+            if (!empty($restrictedProgrammeIds)) {
+                //POCOR-9925: the programme's first grade, not the lowest grade the institution offers
+                $resultArray = self::filterGradeOptionsToFirstGrade(
+                    $resultArray,
+                    $restrictedProgrammeIds,
+                    $this->getProgrammeFirstGradeIds($restrictedProgrammeIds)
+                );
+            }
         }
 
         //POCOR-9385: strip internal fields before sending response
@@ -7101,7 +7106,7 @@ class InstitutionsController extends AppController
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
 
         //POCOR-9385: student creation restriction check for Angular add form — delegates to the same
-        //isStudentCreationAllowed()/getEntryEducationGradeIds() single source of truth used by the
+        //isStudentCreationAllowed()/getProgrammeFirstGradeIds() single source of truth used by the
         //dropdown filter (getEducationGrade) and the other 3 entry points, so Save can never reject a
         //grade the dropdown just offered.
         if (empty($requestData['is_diff_school'])) { //POCOR-9385: transfers bypass grade restriction
@@ -7112,8 +7117,8 @@ class InstitutionsController extends AppController
             //getInstitutionID($debugString) calls die() when institution_id can't be resolved AND a
             //debug string is passed; passing one here previously killed the whole request (raw
             //"For Developer: ..." text response) on every Directory-triggered student save.
-            //isStudentCreationAllowed() already handles a null $institutionId correctly (falls back
-            //to the global entry-grade rule), so just let it be null here instead of dying.
+            //POCOR-9925: isStudentCreationAllowed() no longer uses $institutionId (the first grade is the
+            //programme's), so a null here is harmless — just let it be null instead of dying.
             $institutionId    = $this->getInstitutionID() ?: null;
 
             if (!$this->isStudentCreationAllowed($gradeId, $institutionId, $academicPeriodId)) {
