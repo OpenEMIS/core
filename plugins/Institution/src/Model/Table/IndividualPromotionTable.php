@@ -933,6 +933,30 @@ class IndividualPromotionTable extends ControllerActionTable
             return false;
         }
 
+        // POCOR-9913: same unique key on the target side - an identical CURRENT row already in the
+        // target grade/period/dates (e.g. from a withdraw + re-add) makes the insert below throw.
+        if ($hasNextGrade) {
+            $collidingTargetRecord = $this->find()
+                ->where([
+                    $this->aliasField('student_status_id') => $newInstitutionStudent->student_status_id,
+                    $this->aliasField('student_id') => $newInstitutionStudent->student_id,
+                    $this->aliasField('education_grade_id') => $newInstitutionStudent->education_grade_id,
+                    $this->aliasField('academic_period_id') => $newInstitutionStudent->academic_period_id,
+                    $this->aliasField('start_date') => $newInstitutionStudent->start_date,
+                    $this->aliasField('end_date') => $newInstitutionStudent->end_date,
+                    $this->aliasField('institution_id') => $newInstitutionStudent->institution_id,
+                ])
+                ->first();
+            if (!empty($collidingTargetRecord)) {
+                Log::write('error', 'IndividualPromotion: target institution_students row ' . $collidingTargetRecord->id
+                    . ' already exists for student ' . $newInstitutionStudent->student_id
+                    . ' (institution ' . $newInstitutionStudent->institution_id . ', grade ' . $newInstitutionStudent->education_grade_id
+                    . ', period ' . $newInstitutionStudent->academic_period_id . '); promotion not saved.');
+                $this->promotionErrorMessage = __('This student is already enrolled in the selected grade and academic period. Please contact your administrator to remove the duplicate record before promoting.');
+                return false;
+            }
+        }
+
         // InstitutionClassStudents: Insert and update records
         //$classId = $entity->institution_class_id;
 
@@ -958,6 +982,26 @@ class IndividualPromotionTable extends ControllerActionTable
         // POCOR-9913: all-or-nothing. Previously a failed insert of the new record left the old
         // row already committed as PROMOTED with no CURRENT row, and re-adding the student then
         // produced the duplicate enrolment that makes later promotions collide.
+        // Savepoints: without them a failed nested save (class/subject listeners, status update -
+        // results that were always ignored) would make commit() throw
+        // NestedTransactionRollbackException; with them it only undoes its own part, as before.
+        $connection = $this->getConnection();
+        $savePointsWereEnabled = $connection->isSavePointsEnabled();
+        $connection->enableSavePoints(true);
+        try {
+            return $this->savePromotionRecords($existingInstitutionStudent, $hasNextGrade, $newInstitutionStudent,
+                $existingClassStudent, $InstitutionClassStudents, $entity, $studentStatusUpdates, $studentStatusUpdatesObj);
+        } finally {
+            if (!$savePointsWereEnabled) {
+                $connection->disableSavePoints();
+            }
+        }
+    }
+
+    // POCOR-9913: the saves of savePromotion(), run as one transaction.
+    private function savePromotionRecords($existingInstitutionStudent, $hasNextGrade, $newInstitutionStudent,
+        $existingClassStudent, $InstitutionClassStudents, $entity, $studentStatusUpdates, $studentStatusUpdatesObj)
+    {
         return $this->getConnection()->transactional(function () use (
             $existingInstitutionStudent, $hasNextGrade, $newInstitutionStudent, $existingClassStudent,
             $InstitutionClassStudents, $entity, $studentStatusUpdates, $studentStatusUpdatesObj
@@ -970,39 +1014,32 @@ class IndividualPromotionTable extends ControllerActionTable
                 'institution_id' => $entity->institution_id,
                 'academic_period_id' => $entity->academic_period_id,
             ];
-        if ($this->save($existingInstitutionStudent)) {
-            // POCOR-9816: nothing to save when there's no next grade -- $newInstitutionStudent
-            // is null in that case, so treat it as already "saved".
-            if (!$hasNextGrade || $this->save($newInstitutionStudent)) {
-                // update old class if exists
-                if (!empty($existingClassStudent)) {
-                    $InstitutionClassStudents->save($existingClassStudent);
+
+            if ($this->save($existingInstitutionStudent)) {
+                // POCOR-9816: nothing to save when there's no next grade -- $newInstitutionStudent
+                // is null in that case, so treat it as already "saved".
+                if (!$hasNextGrade || $this->save($newInstitutionStudent)) {
+                    // update old class if exists
+                    if (!empty($existingClassStudent)) {
+                        $InstitutionClassStudents->save($existingClassStudent);
+                    }
+                    // insert new class if class is selected
+                    if ($hasNextGrade && !empty($entity->institution_class_id)) {
+                        $InstitutionClassStudents->autoInsertClassStudent($newClassStudent);
+                    }
+
+                    // Save record in the studentStatusUpdates
+                    $studentStatusUpdates->save($studentStatusUpdatesObj);
+
+                    return true;
+                } else {
+                    $this->log($newInstitutionStudent->getErrors(), 'debug');
                 }
-                // insert new class if class is selected
-                if ($hasNextGrade && !empty($entity->institution_class_id)) {
-                    $InstitutionClassStudents->autoInsertClassStudent($newClassStudent);
-
-                    //POCOR-7170
-//                    $classId = $entity->institution_class_id;
-//                    $studentClassData = $this->institutionClassStudentData($classId);
-                }
-
-//                $this->log($studentStatusUpdatesObj, 'debug');
-
-
-                // Save record in the studentStatusUpdates
-                $studentStatusUpdates->save($studentStatusUpdatesObj);
-
-                return true;
             } else {
-                $this->log($newInstitutionStudent->getErrors(), 'debug');
+                $this->log('failed to update student status', 'debug');
             }
-        } else {
-            $message = 'failed to update student status';
-            $this->log($message, 'debug');
-        }
 
-        return false;
+            return false;
         });
     }
 
