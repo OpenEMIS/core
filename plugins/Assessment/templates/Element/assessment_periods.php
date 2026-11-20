@@ -16,7 +16,7 @@
                     <?php foreach ($data['education_subjects'] as $i => $item) : ?>
                         <tr>
                             <td><?= $item->code . ' - ' . $item->name ?></td>
-                            <td><?= $assessmentGradingTypeOptions[$item->_joinData->assessment_grading_type_id]; ?></td>
+                            <td><?= $assessmentGradingTypeOptions[$item->_joinData->assessment_grading_type_id ?? null] ?? ''; ?></td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
@@ -55,11 +55,11 @@
                                             echo $this->Form->hidden("$joinDataPrefix.education_subject_id", ['value' => $item['education_subject_id']]);
 
                                             if (isset($item->id)) {
-                                                echo $this->Form->hidden("$joinDataPrefix.id", ['value' => $item['_joinData']['id']]);
+                                                echo $this->Form->hidden("$joinDataPrefix.id", ['value' => $item['_joinData']['id'] ?? null]);
                                                 echo $this->Form->hidden("$joinDataPrefix.assessment_period_id", ['value' => $data['id']]);
                                                 if($ControllerAction['action'] == 'edit') { //POCOR-8520
-                                                    echo $this->Form->hidden("$joinDataPrefix.education_subject_id", ['value' => $item['_joinData']['education_subject_id']]);
-                                                    echo $this->Form->hidden("$joinDataPrefix.assessment_grading_type_id", ['value' => $item['_joinData']['assessment_grading_type_id']]);
+                                                    echo $this->Form->hidden("$joinDataPrefix.education_subject_id", ['value' => $item['_joinData']['education_subject_id'] ?? null]);
+                                                    echo $this->Form->hidden("$joinDataPrefix.assessment_grading_type_id", ['value' => $item['_joinData']['assessment_grading_type_id'] ?? null]);
                                                 }
                                             }
                                         ?>
@@ -80,10 +80,7 @@
                                                 'type' => 'select',
                                                 'label' => false,
                                                 'options' => $assessmentGradingTypeOptions, //POCOR-8520
-                                                // POCOR-9937: a select's value must be the option key (grading type id), not its label;
-                                                // passing the label matched no option, so the browser fell back to the first one
-                                                // and saving the form overwrote the stored grading type.
-                                                'value' => $item['_joinData']['assessment_grading_type_id'],
+                                                'value' => $item['_joinData']['assessment_grading_type_id'] ?? null, // POCOR-9937: value must be the option key (id), not its label
                                                 //'disabled' => 'disabled' //POCOR-7431
                                             ]);
                                         }
