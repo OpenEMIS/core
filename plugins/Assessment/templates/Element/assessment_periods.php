@@ -80,7 +80,10 @@
                                                 'type' => 'select',
                                                 'label' => false,
                                                 'options' => $assessmentGradingTypeOptions, //POCOR-8520
-                                                'value' => $assessmentGradingTypeOptions[$item['_joinData']['assessment_grading_type_id']],//POCOR-8520
+                                                // POCOR-9937: a select's value must be the option key (grading type id), not its label;
+                                                // passing the label matched no option, so the browser fell back to the first one
+                                                // and saving the form overwrote the stored grading type.
+                                                'value' => $item['_joinData']['assessment_grading_type_id'],
                                                 //'disabled' => 'disabled' //POCOR-7431
                                             ]);
                                         }
