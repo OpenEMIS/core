@@ -218,11 +218,13 @@ class WithdrawRequestsTable extends ControllerActionTable
             return null;
         }
 
+        // same URL shape as the Workbench link (StudentTransferOutTable::findWorkbench):
+        // no institutionId path segment, because Workflows::ajaxGetAssignees expects the
+        // action right after 'Institutions' when the next step changes institution owner
         return Router::url([
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'StudentTransferOut',
-            'institutionId' => $this->paramsEncode(['id' => $pendingTransfer->previous_institution_id]),
             'view',
             $this->paramsEncode([
                 'id' => $pendingTransfer->id,
