@@ -128,7 +128,14 @@ class StudentAttendanceSummaryTable extends AppTable
         // schools never show up.
         $areaList = [];
         if (!empty($areaId) && $areaId > 1) {
+            // Code review fix (POCOR-9920): getAreaList() only returns areas BELOW the one
+            // picked, never the picked area itself - schools attached directly to it (eg. a
+            // district with no sub-areas of its own) would otherwise be silently excluded,
+            // and with the list then empty this filter would skip entirely, matching the
+            // original "every school in the country" bug for that case. Same fix already
+            // used by CounsellingsTable.
             $areaList = $this->getAreaList($areaId);
+            $areaList[] = (int)$areaId;
         }
         if (!empty($areaList)) {
             $query->where(['Institutions.area_id IN' => $areaList]);
@@ -372,7 +379,10 @@ class StudentAttendanceSummaryTable extends AppTable
         // system, most with no matching rows once the data query's own region filter runs.
         $areaList = [];
         if (!empty($areaId) && $areaId > 1) {
+            // Code review fix (POCOR-9920): same fix as onExcelBeforeQuery() - include the
+            // picked area itself, not just areas below it.
             $areaList = $this->getAreaList($areaId);
+            $areaList[] = (int)$areaId;
             $institutionsQuery->where(['area_id IN' => $areaList]);
         }
         $institutionIds = $institutionsQuery->toArray();

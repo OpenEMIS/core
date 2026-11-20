@@ -509,9 +509,15 @@ class ReportListBehavior extends Behavior {
 
 			// POCOR-9920 point 2: include the selected region in the filename, matching
 			// the "Institutions" report's own "{Level Name} - {Area Code} - {Area Name}"
-			// format - omitted entirely when no specific region is selected (area_education_id
-			// is the real selected area; area_level_id on its own is just which level that
-			// area belongs to, not a usable filter by itself - see POCOR-9920's getAreaList fix).
+			// format - omitted entirely when no specific region is selected.
+			// Code review fix: the level name must come from the selected area's own
+			// area_level_id (via Area.AreaLevels, the same table the Area Level dropdown
+			// itself uses - InstitutionsTable.php's area_level_id field options) rather than
+			// trusting the submitted area_level_id form field against Area.AreaAdministrativeLevels,
+			// an entirely different table that only happens to share matching ids on this
+			// demo DB - on any install where the two diverge this would silently resolve to
+			// the wrong name or none at all. Looking it up from the area itself also makes
+			// the submitted area_level_id form field unnecessary here.
 			$areaNameSegment = '';
 			$areaEducationId = $data['Institutions']['area_education_id'] ?? null;
 			if (!empty($areaEducationId) && $areaEducationId > 1) {
@@ -519,13 +525,10 @@ class ReportListBehavior extends Behavior {
 				$areaData = $Areas->find()->where(['id' => $areaEducationId])->first();
 				if ($areaData) {
 					$areaLevelName = '';
-					$areaLevelId = $data['Institutions']['area_level_id'] ?? null;
-					if (!empty($areaLevelId) && $areaLevelId > 1) {
-						$AreaAdministrativeLevels = TableRegistry::getTableLocator()->get('Area.AreaAdministrativeLevels');
-						$areaLevelData = $AreaAdministrativeLevels->find()->where(['id' => $areaLevelId])->first();
-						if ($areaLevelData) {
-							$areaLevelName = $areaLevelData->name . ' - ';
-						}
+					$AreaLevels = TableRegistry::getTableLocator()->get('Area.AreaLevels');
+					$areaLevelData = $AreaLevels->find()->where(['id' => $areaData->area_level_id])->first();
+					if ($areaLevelData) {
+						$areaLevelName = $areaLevelData->name . ' - ';
 					}
 					$areaNameSegment = ' - ' . $areaLevelName . $areaData->code . ' - ' . $areaData->name;
 				}
