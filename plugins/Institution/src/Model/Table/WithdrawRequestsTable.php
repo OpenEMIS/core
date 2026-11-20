@@ -11,6 +11,7 @@ use Cake\I18n\Date;
 use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
 use Cake\Http\ServerRequest;
+use Cake\Routing\Router;
 
 class WithdrawRequestsTable extends ControllerActionTable
 {
@@ -102,7 +103,15 @@ class WithdrawRequestsTable extends ControllerActionTable
             $action = $this->url('index');
             $action['action'] = $Students->getAlias();
             $event->stopPropagation();
-            $this->Alert->error($status_can_be_changed['message']);
+            if (!empty($status_can_be_changed['link'])) {
+                // POCOR-9935: let the user open the pending transfer that blocks the withdrawal
+                $message = $this->Alert->getMessage($status_can_be_changed['message'])
+                    . ' <a href="' . h($status_can_be_changed['link']) . '" style="color: #fff; font-weight: bold; text-decoration: underline;">'
+                    . __('Click here to view the pending application') . '</a>';
+                $this->Alert->error($message, ['type' => 'string']);
+            } else {
+                $this->Alert->error($status_can_be_changed['message']);
+            }
             return $this->controller->redirect($action);
         }
     }
@@ -171,11 +180,55 @@ class WithdrawRequestsTable extends ControllerActionTable
             if ($count > 0) {
                 $status_can_be_changed = false;
                 $message = 'StudentWithdraw.hasTransferApplication';
+                $link = $this->getPendingTransferOutLink($StudentTransfersTable, $conditions);
             }
         }
 
-        $can_be_changed = ['can' => $status_can_be_changed, 'message' => $message];
+        $can_be_changed = ['can' => $status_can_be_changed, 'message' => $message, 'link' => $link ?? null];
         return $can_be_changed;
+    }
+
+    /**
+     * POCOR-9935: URL of the pending Student Transfer Out record that blocks the withdrawal,
+     * or null when the outgoing institution is not allowed to see it
+     * (same visibility rule as StudentTransferOutTable::addBeforeAction).
+     * @param \Cake\ORM\Table $StudentTransfersTable
+     * @param array $conditions
+     * @return string|null
+     */
+    private function getPendingTransferOutLink($StudentTransfersTable, array $conditions)
+    {
+        $doneStatus = $StudentTransfersTable::DONE;
+        $pendingTransfer = $StudentTransfersTable->find()
+            ->matching('Statuses.WorkflowStepsParams', function ($q) use ($doneStatus) {
+                return $q->where([
+                    'Statuses.category <> ' => $doneStatus,
+                    'WorkflowStepsParams.name' => 'institution_owner'
+                ]);
+            })
+            ->where($conditions)
+            ->first();
+
+        if (empty($pendingTransfer)) {
+            return null;
+        }
+
+        $institutionOwner = $pendingTransfer->_matchingData['WorkflowStepsParams']->value;
+        if ($institutionOwner != $StudentTransfersTable::OUTGOING && !$pendingTransfer->all_visible) {
+            return null;
+        }
+
+        return Router::url([
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'StudentTransferOut',
+            'institutionId' => $this->paramsEncode(['id' => $pendingTransfer->previous_institution_id]),
+            'view',
+            $this->paramsEncode([
+                'id' => $pendingTransfer->id,
+                'institution_id' => $pendingTransfer->previous_institution_id
+            ])
+        ]);
     }
 
     public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
