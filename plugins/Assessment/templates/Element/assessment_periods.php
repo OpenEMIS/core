@@ -16,7 +16,7 @@
                     <?php foreach ($data['education_subjects'] as $i => $item) : ?>
                         <tr>
                             <td><?= $item->code . ' - ' . $item->name ?></td>
-                            <td><?= $assessmentGradingTypeOptions[$item->_joinData->assessment_grading_type_id ?? null] ?? ''; ?></td>
+                            <td><?= $assessmentGradingTypeOptions[$item->_joinData->assessment_grading_type_id ?? null] ?? __('Not set'); ?></td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
@@ -43,7 +43,10 @@
                                 <tr>
                                     <td>
                                         <?php
-                                            echo $this->Form->hidden("$fieldPrefix.id", ['value' => $item['education_subject_id']]);
+                                            // POCOR-9937: one source for the subject id. Add rows are arrays carrying education_subject_id;
+                                            // edit rows are EducationSubjects entities, whose own id is the subject id.
+                                            $subjectId = $ControllerAction['action'] == 'add' ? $item['education_subject_id'] : $item['id'];
+                                            echo $this->Form->hidden("$fieldPrefix.id", ['value' => $subjectId]);
 
                                             if ($ControllerAction['action'] == 'add') {
                                                 echo $item['education_subject_name'];
@@ -52,15 +55,10 @@
                                                 echo $item->code . ' - ' . $item->name;
                                                 echo $this->Form->hidden("$fieldPrefix.education_subject_name", ['value' => $item->code . ' - ' . $item->name]);
                                             }
-                                            echo $this->Form->hidden("$joinDataPrefix.education_subject_id", ['value' => $item['education_subject_id']]);
+                                            echo $this->Form->hidden("$joinDataPrefix.education_subject_id", ['value' => $subjectId]);
 
                                             if (isset($item->id)) {
-                                                echo $this->Form->hidden("$joinDataPrefix.id", ['value' => $item['_joinData']['id'] ?? null]);
                                                 echo $this->Form->hidden("$joinDataPrefix.assessment_period_id", ['value' => $data['id']]);
-                                                if($ControllerAction['action'] == 'edit') { //POCOR-8520
-                                                    echo $this->Form->hidden("$joinDataPrefix.education_subject_id", ['value' => $item['_joinData']['education_subject_id'] ?? null]);
-                                                    echo $this->Form->hidden("$joinDataPrefix.assessment_grading_type_id", ['value' => $item['_joinData']['assessment_grading_type_id'] ?? null]);
-                                                }
                                             }
                                         ?>
                                     </td>
@@ -80,7 +78,10 @@
                                                 'type' => 'select',
                                                 'label' => false,
                                                 'options' => $assessmentGradingTypeOptions, //POCOR-8520
-                                                'value' => $item['_joinData']['assessment_grading_type_id'] ?? null, // POCOR-9937: value must be the option key (id), not its label
+                                                // POCOR-9937: value is the option key (id), not its label. A missing or unknown saved id
+                                                // shows "-- Select --" (and the save is rejected) instead of silently becoming the first option.
+                                                'empty' => __('-- Select --'),
+                                                'value' => $item['_joinData']['assessment_grading_type_id'] ?? null,
                                                 //'disabled' => 'disabled' //POCOR-7431
                                             ]);
                                         }
@@ -94,5 +95,9 @@
                 </table>
             </div>
         </div>
+        <?php // POCOR-9937: this custom element must print its own errors (e.g. a subject without a grading type) ?>
+        <?php foreach (($data instanceof \Cake\Datasource\EntityInterface ? $data->getError('education_subjects') : []) as $error) : ?>
+            <div class="error-message"><?= h($error) ?></div>
+        <?php endforeach ?>
     </div>
 <?php endif ?>

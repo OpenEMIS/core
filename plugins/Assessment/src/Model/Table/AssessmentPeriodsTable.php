@@ -535,7 +535,11 @@ class AssessmentPeriodsTable extends ControllerActionTable
                 usort($educationSubjects, function ($a, $b) {
                     return $a['order'] - $b['order'];
                 });
+                $errors = $entity->getError('education_subjects'); // POCOR-9937: re-setting the field clears its errors
                 $entity->education_subjects = $educationSubjects;
+                if (!empty($errors)) {
+                    $entity->setError('education_subjects', $errors);
+                }
             }
         }
 
@@ -575,39 +579,63 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $getAssessment_id = $this->request->getAttribute('params')['pass'][1];
         $entityId = $this->ControllerAction->paramsDecode($getAssessment_id)['id'];
         $checNewSubjecAdded = $this->gradingSubjectAdd($entity, $entityId); //POCOR-7322
-        if (!$entity->isNew()) { //for edit
-            $id = $entityId;
-            $AssessmentItemsGradingTypes = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemsGradingTypes');
-            $AssessmentItemsGradingTypes->deleteAll(['assessment_period_id' => $id]);
 
-            if ($entity->has('education_subjects')) {
-                $educationSubjects = $entity->education_subjects;
-
-                if (!empty($educationSubjects)) {
-                    foreach ($educationSubjects as $educationSubject) {
-                        $query = $AssessmentItemsGradingTypes->find()->where([
-                            $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubject->_joinData->education_subject_id, //POCOR-8520
-                            $AssessmentItemsGradingTypes->aliasField('assessment_id') => $educationSubject->_joinData->assessment_id,
-                            $AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id') => $educationSubject->_joinData->assessment_grading_type_id,
-                            $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $id
-                        ]);
-
-                        if ($query->count() == 0) {
-                            $newEntity = $AssessmentItemsGradingTypes->newEntity([
-                                'assessment_id' => $educationSubject->_joinData->assessment_id,
-                                'education_subject_id' => $educationSubject->_joinData->education_subject_id,
-                                'assessment_grading_type_id' => $educationSubject->_joinData->assessment_grading_type_id,
-                                'assessment_period_id' => $id
-                            ]);
-
-                            $AssessmentItemsGradingTypes->save($newEntity);
-                        }
-                    }
+        // POCOR-9937: the subject grading types are rewritten (delete + re-insert) from the posted
+        // rows. Validate every row first, and write them in the same transaction as the period, only
+        // once the period itself has saved. Previously the rows were rewritten before (and even when)
+        // the period failed validation, outside any transaction, so a bad or empty row lost data.
+        $subjects = $entity->has('education_subjects') ? (array)$entity->education_subjects : null;
+        $rows = [];
+        $invalid = false;
+        if ($subjects !== null) {
+            $gradingTypeIds = $this->getGradingTypeOptions();
+            foreach ($subjects as $subject) {
+                $joinData = $subject->_joinData ?? null;
+                $subjectId = $joinData->education_subject_id ?? null;
+                $gradingTypeId = $joinData->assessment_grading_type_id ?? null;
+                if (empty($subjectId) || empty($gradingTypeId) || !isset($gradingTypeIds[$gradingTypeId])) {
+                    $invalid = true;
+                    continue;
                 }
+                $rows[(int)$subjectId] = [
+                    'assessment_id' => $joinData->assessment_id ?? $entity->assessment_id,
+                    'education_subject_id' => (int)$subjectId,
+                    'assessment_grading_type_id' => (int)$gradingTypeId,
+                    'assessment_period_id' => $entityId,
+                ];
             }
         }
 
-        unset($entity->education_subjects);
+        // ControllerAction runs the returned callable instead of its default $model->save($entity)
+        return function ($model, $entity) use ($subjects, $rows, $invalid, $entityId) {
+            // the rows are saved below, not through the belongsToMany association
+            $entity->unset('education_subjects');
+            $saved = false;
+            if (!$invalid) {
+                $saved = $model->getConnection()->transactional(function () use ($model, $entity, $subjects, $rows, $entityId) {
+                    if (!$model->save($entity)) {
+                        return false;
+                    }
+                    if ($subjects === null) { // no subject rows posted: leave the stored ones alone
+                        return true;
+                    }
+                    $AssessmentItemsGradingTypes = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemsGradingTypes');
+                    $AssessmentItemsGradingTypes->deleteAll(['assessment_period_id' => $entityId]);
+                    $newEntities = $AssessmentItemsGradingTypes->newEntities(array_values($rows));
+
+                    return empty($newEntities) || $AssessmentItemsGradingTypes->saveMany($newEntities, ['atomic' => false]) !== false;
+                });
+            }
+            if (!$saved && $subjects !== null) {
+                // re-render the form with the subjects and the user's choices, not an empty table
+                $entity->set('education_subjects', $subjects);
+                if ($invalid) { // after set(): set() clears the field's errors
+                    $entity->setError('education_subjects', ['gradingType' => __('Please select a grading type for every subject')]);
+                }
+            }
+
+            return $saved ? $entity : false;
+        };
     }
 
 //    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $options) //cant use afterSave because it wont be detected by unit test case.
