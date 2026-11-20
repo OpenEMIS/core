@@ -1826,7 +1826,6 @@ SQL;
             //POCOR-5900 end
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('institution_class_id') => $institutionClassId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
                 //POCOR-5900 condition
                 $InstitutionStudents->aliasField('institution_id') => $institutionId,
@@ -1834,7 +1833,17 @@ SQL;
                 $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
                 $InstitutionStudents->aliasField('student_status_id') => 1, //POCOR-7895
                 //                $Statuses->aliasField('code NOT IN') => ['WITHDRAWN'],
-            ])->group([
+            ]);
+        // POCOR-9881: "All" classes (Attendance By: Subject, Class: All) - every class in the
+        // grade/period, not just one. The subsequent subject join (getAttendanceQueryWithSubjectId)
+        // and the daily detail/marked-record joins further down all key off this table's own
+        // institution_class_id column per row (not a separately-passed scalar), so dropping this
+        // condition is all that's needed for them to keep working correctly per-student.
+        if (!empty($institutionClassId) && $institutionClassId !== 'all') {
+            $query->where([$this->aliasField('institution_class_id') => $institutionClassId]);
+        }
+        $query
+            ->group([
                 $Users->aliasField('id')
             ])
             ->orderAsc(

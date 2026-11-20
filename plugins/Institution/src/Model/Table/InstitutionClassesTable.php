@@ -2235,6 +2235,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 // homeroom/secondary teachers; a subject teacher of the class only takes
                 // attendance by Subject. The Attendance page reads can_mark_period to decide
                 // which "Attendance By" options to offer for the selected class.
+                // POCOR-9881: this is also exactly what point 4b needs for Period mode -
+                // no extra backend logic required on top of what POCOR-7538 already built.
                 $periodClassIds = $this->find()
                     ->select([$this->aliasField('id')])
                     ->where([
@@ -2467,7 +2469,27 @@ class InstitutionClassesTable extends ControllerActionTable
                 $EducationCycles->aliasField('order') => 'ASC',
                 $EducationProgrammes->aliasField('order') => 'ASC',
                 $EducationGrades->aliasField('order') => 'ASC'
-            ]);
+            ])
+            //POCOR-9881: For Teacher Role, Attendance Page -> Education Grade drop down showed multiple rows for Primary 1
+            // Security.InstitutionClass's beforeFind() also appends its own
+            // GROUP BY InstitutionClasses.id to every query on this table (meant to
+            // de-duplicate the Class list), which lands on this grades query too and
+            // stops the grouping above from collapsing multiple classes under the
+            // same grade - de-duplicating the result here instead.
+            ->formatResults(function ($results) {
+                $seenGradeIds = [];
+                $filtered = $results->filter(function ($row) use (&$seenGradeIds) {
+                    if (isset($seenGradeIds[$row['id']])) {
+                        return false;
+                    }
+                    $seenGradeIds[$row['id']] = true;
+                    return true;
+                });
+                // filter() keeps the original (non-sequential) keys, which would
+                // serialize to a JSON object instead of an array - re-index so the
+                // response stays a plain list.
+                return new \Cake\Collection\Collection(array_values($filtered->toArray()));
+            });
 
         return $query;
     }

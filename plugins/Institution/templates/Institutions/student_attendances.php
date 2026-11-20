@@ -456,18 +456,18 @@ $panelHeader = $this->fetch('panelHeader');
                             <option value="" ng-if="$ctrl.academicPeriodOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
-                    <h5><?= __('Week') ?>: </h5>
+
+                    <!-- POCOR-9881: Attendance By moved to the top of the filters, right after
+                         Academic Period, so it governs which of the filters below it apply. -->
+                    <!-- POCOR-8874 starts -->
+                    <h5><?= __('Attendance By') ?>: </h5>
                     <div class="input-select-wrapper">
-                        <select ng-disabled="$ctrl.action=='edit'" name="week" ng-options="week.id as week.name for week in $ctrl.weekListOptions" ng-model="$ctrl.selectedWeek" ng-change="$ctrl.changeWeek();">
-                            <option value="" ng-if="$ctrl.weekListOptions.length == 0"><?= __('No Options') ?></option>
+                        <select name="attendance_by" ng-disabled="$ctrl.action=='edit' || $ctrl.isMarkableAttendance==true" ng-model="$ctrl.selectedAttendanceBy" ng-options="option.id as option.name for option in $ctrl.attendanceByOptions" ng-change="$ctrl.changeAttendanceBy();">
+                            <option value="-1"><?= __('Attendance By') ?></option>
                         </select>
                     </div>
-                    <h5><?= __('Day') ?>: </h5>
-                    <div class="input-select-wrapper">
-                        <select ng-disabled="$ctrl.action=='edit'" name="day" ng-options="day.date as day.name for day in $ctrl.dayListOptions" ng-model="$ctrl.selectedDay" ng-change="$ctrl.changeDay();">
-                            <option value="" ng-if="$ctrl.dayListOptions.length == 0"><?= __('No Options') ?></option>
-                        </select>
-                    </div>
+                    <!-- POCOR-8874 ends -->
+
                     <h5><?= __('Education Grade') ?>: </h5>
                     <!-- POCOR-9856: searchable Education Grade filter, styled to match the native Class/Academic Period selects -->
                     <div class="input-select-wrapper education-grade-select">
@@ -498,33 +498,33 @@ $panelHeader = $this->fetch('panelHeader');
                             </li>
                         </ul>
                     </div>
+
                     <h5><?= __('Class') ?>: </h5>
                     <div class="input-select-wrapper">
-
                         <select ng-disabled="$ctrl.action=='edit'" name="class" ng-options="class.id as class.name for class in $ctrl.classListOptions" ng-model="$ctrl.selectedClass" ng-change="$ctrl.changeClass();">
                             <option value="" ng-if="$ctrl.classListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
-                    <!-- <h5 ng-if="$ctrl.isMarkableSubjectAttendance==true"><?= __('Subjects') ?>: </h5>
-                    <div class="input-select-wrapper" ng-if="$ctrl.isMarkableSubjectAttendance==true">
+
+                    <!-- POCOR-9881: Subjects now sits right after Class (matching the Subject-mode
+                         mockup order), instead of at the bottom of the panel. -->
+                    <h5 ng-if="$ctrl.selectedAttendanceBy=='subject'"><?= __('Subjects') ?>: </h5>
+                    <div class="input-select-wrapper" ng-if="$ctrl.selectedAttendanceBy=='subject'">
                         <select ng-disabled="$ctrl.action=='edit'" name="subject" ng-options="subject.id as subject.name for subject in $ctrl.subjectListOptions" ng-model="$ctrl.selectedSubject" ng-change="$ctrl.changeSubject();">
                             <option value="" ng-if="$ctrl.subjectListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
-                    </div> -->
-                    <!-- <h5 ng-if="$ctrl.isMarkableSubjectAttendance==''"><?= __('Attendance per day') ?>: </h5>
-                    <div class="input" ng-if="$ctrl.isMarkableSubjectAttendance==''">
-                        <div class="input-selection attendance" ng-class="{'disabled': $ctrl.action=='edit' || $ctrl.selectedDay==-1}">
-                            <div class="input" ng-repeat="attendance_period in $ctrl.attendancePeriodOptions">
-                                <input ng-disabled="$ctrl.action=='edit' || $ctrl.selectedDay==-1" kd-checkbox-radio="{{attendance_period.name}}" ng-model="$ctrl.selectedAttendancePeriod" ng-change="$ctrl.changeAttendancePeriod();" value="{{attendance_period.id}}" type="radio" name="attendance_per_day">
-                            </div>
-                        </div>
-                    </div> -->
+                    </div>
 
-                    <!-- POCOR-8874 starts -->
-                    <h5><?= __('Attendance By') ?>: </h5>
+                    <h5><?= __('Week') ?>: </h5>
                     <div class="input-select-wrapper">
-                        <select name="attendance_by" ng-disabled="$ctrl.action=='edit' || $ctrl.isMarkableAttendance==true" ng-model="$ctrl.selectedAttendanceBy" ng-options="option.id as option.name for option in $ctrl.attendanceByOptions" ng-change="$ctrl.changeAttendanceBy();">
-                            <option value="-1"><?= __('Attendance By') ?></option>
+                        <select ng-disabled="$ctrl.action=='edit'" name="week" ng-options="week.id as week.name for week in $ctrl.weekListOptions" ng-model="$ctrl.selectedWeek" ng-change="$ctrl.changeWeek();">
+                            <option value="" ng-if="$ctrl.weekListOptions.length == 0"><?= __('No Options') ?></option>
+                        </select>
+                    </div>
+                    <h5><?= __('Day') ?>: </h5>
+                    <div class="input-select-wrapper">
+                        <select ng-disabled="$ctrl.action=='edit'" name="day" ng-options="day.date as day.name for day in $ctrl.dayListOptions" ng-model="$ctrl.selectedDay" ng-change="$ctrl.changeDay();">
+                            <option value="" ng-if="$ctrl.dayListOptions.length == 0"><?= __('No Options') ?></option>
                         </select>
                     </div>
 
@@ -536,18 +536,6 @@ $panelHeader = $this->fetch('panelHeader');
                             </div>
                         </div>
                     </div>
-
-                    <h5 ng-if="$ctrl.selectedAttendanceBy=='subject'"><?= __('Subjects') ?>: </h5>
-                    <div class="input-select-wrapper" ng-if="$ctrl.selectedAttendanceBy=='subject'">
-                        <select ng-disabled="$ctrl.action=='edit'" name="subject" ng-options="subject.id as subject.name for subject in $ctrl.subjectListOptions" ng-model="$ctrl.selectedSubject" ng-change="$ctrl.changeSubject();">
-                            <option value="" ng-if="$ctrl.subjectListOptions.length == 0"><?= __('No Options') ?></option>
-                        </select>
-                    </div>
-                    <!-- POCOR-8874 ends -->
-
-
-
-
                 </div>
             </bg-pane>
         </bg-splitter>
