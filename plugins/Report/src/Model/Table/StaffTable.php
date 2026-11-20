@@ -346,6 +346,12 @@ class StaffTable extends AppTable  {
         return $validator;
     }
 
+    //POCOR-9875
+    public function validationStaffEmployments(Validator $validator): Validator
+    {
+        return $this->validationStaffQualifications($validator);
+    }
+
     public function validationStaffSalaries(Validator $validator): Validator
     {
         $validator = $this->validationDefault($validator);
@@ -606,6 +612,9 @@ class StaffTable extends AppTable  {
         if ($data[$this->getAlias()]['feature'] == 'Report.StaffQualifications') {
             $options['validate'] = 'StaffQualifications';
         }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffEmployments') { //POCOR-9875
+            $options['validate'] = 'StaffEmployments';
+        }
         if ($data[$this->getAlias()]['feature'] == 'Report.StaffSalaries') {
             $options['validate'] = 'StaffSalaries';
         }
@@ -756,6 +765,7 @@ class StaffTable extends AppTable  {
                 'Report.Staff','Report.StaffPhoto',
                 'Report.StaffIdentities','Report.StaffContacts',
                 'Report.StaffQualifications',
+                'Report.StaffEmployments', //POCOR-9875
                 'Report.StaffEmploymentStatuses',
                 'Report.StaffTrainingReports','Report.StaffPositions','Report.PositionSummary',
                 'Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements','Report.StaffOutOfSchool'])) {   // POCOR-4827
@@ -782,7 +792,7 @@ class StaffTable extends AppTable  {
 
             if ((in_array($feature, ['Report.Staff',
                 'Report.StaffPhoto','Report.StaffIdentities',
-                'Report.StaffContacts','Report.StaffQualifications',
+                'Report.StaffContacts','Report.StaffQualifications','Report.StaffEmployments', //POCOR-9875
                 'Report.StaffLicenses','Report.StaffEmploymentStatuses',
                 'Report.StaffHealthReports','Report.StaffSalaries','Report.StaffTrainingReports',
                 'Report.StaffLeaveReport','Report.StaffPositions','Report.PositionSummary',
@@ -816,7 +826,7 @@ class StaffTable extends AppTable  {
             $areaLevelId = $this->request->getData($this->getAlias())['area_level_id'];//POCOR-6333
             if (in_array($feature, ['Report.Staff'
             ,'Report.StaffPhoto','Report.StaffIdentities',
-                'Report.StaffContacts','Report.StaffQualifications',
+                'Report.StaffContacts','Report.StaffQualifications','Report.StaffEmployments', //POCOR-9875
                 'Report.StaffLicenses','Report.StaffEmploymentStatuses',
                 'Report.StaffHealthReports','Report.StaffSalaries','Report.StaffTrainingReports',
                 'Report.StaffLeaveReport','Report.StaffPositions','Report.PositionSummary',
@@ -1335,7 +1345,7 @@ class StaffTable extends AppTable  {
                 'Report.PositionSummary',
                 'Report.Staff','Report.StaffPhoto',
                 'Report.StaffIdentities','Report.StaffContacts',
-                'Report.StaffQualifications','Report.StaffQualifications',
+                'Report.StaffQualifications','Report.StaffEmployments', //POCOR-9875
                 'Report.StaffLicenses','Report.StaffEmploymentStatuses','Report.StaffSalaries',
                 'Report.StaffTrainingReports','Report.StaffExtracurriculars','Report.InstitutionStaffDetailed','Report.StaffSubjects', 'Report.StaffRequirements'])) {
                 $areaId = $this->request->getData($this->getAlias())['area_education_id'];
@@ -1406,6 +1416,7 @@ class StaffTable extends AppTable  {
                         'Report.StaffIdentities',
                         'Report.StaffContacts',
                         'Report.StaffQualifications',
+                        'Report.StaffEmployments', //POCOR-9875
                         'Report.StaffLicenses',
                         'Report.StaffEmploymentStatuses',
                         'Report.StaffHealthReports',
@@ -1433,7 +1444,7 @@ class StaffTable extends AppTable  {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', 0 => __('All Institutions')]+ $institutionList ;
                     }
 
-                    if(in_array($feature, ['Report.Staff', 'Report.StaffPhoto', 'Report.StaffContacts', 'Report.StaffIdentities', 'Report.InstitutionStaffDetailed', 'Report.StaffDuties', 'Report.StaffEmploymentStatuses', 'Report.StaffLicenses', 'Report.PositionSummary', 'Report.StaffQualifications', 'Report.StaffSalaries', 'Report.StaffExtracurriculars', 'Report.StaffHealthReports', 'Report.StaffLeaveReport', 'Report.StaffPositions', 'Report.StaffSubjects', 'Report.StaffTrainingReports'])) { //POCOR-8417
+                    if(in_array($feature, ['Report.Staff', 'Report.StaffPhoto', 'Report.StaffContacts', 'Report.StaffIdentities', 'Report.InstitutionStaffDetailed', 'Report.StaffDuties', 'Report.StaffEmploymentStatuses', 'Report.StaffLicenses', 'Report.PositionSummary', 'Report.StaffQualifications', 'Report.StaffEmployments', 'Report.StaffSalaries', 'Report.StaffExtracurriculars', 'Report.StaffHealthReports', 'Report.StaffLeaveReport', 'Report.StaffPositions', 'Report.StaffSubjects', 'Report.StaffTrainingReports'])) { //POCOR-8417
                         $attr['attr']['multiple'] = true;
                         unset($institutionOptions['']);
 
