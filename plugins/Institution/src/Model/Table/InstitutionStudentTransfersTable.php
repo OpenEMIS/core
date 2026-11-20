@@ -172,8 +172,46 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                     $previousStudentRecord->student_status_id = $statuses['GRADUATED'];
                     $Students->save($previousStudentRecord);
                 } /*POCOR-6542 ends*/
+
+                // POCOR-9936: a PROMOTED/GRADUATED previous record keeps its status, so the
+                // TRANSFERRED-triggered cleanup (POCOR-9457) never fires. Remove the student
+                // from the previous institution's security group here instead.
+                if (in_array($previousStudentRecord->student_status_id, [$statuses['PROMOTED'], $statuses['GRADUATED']])) {
+                    $this->removeStudentFromPreviousInstitutionGroup(
+                        $entity->student_id,
+                        $entity->previous_institution_id,
+                        $entity->institution_id,
+                        $statuses['CURRENT']
+                    );
+                }
             }
         }
+    }
+
+    /**
+     * POCOR-9936
+     * Removes the student's STUDENT-role membership in the previous institution's
+     * security group, unless the transfer stays within the same institution or the
+     * student is still enrolled there.
+     */
+    private function removeStudentFromPreviousInstitutionGroup($studentId, $previousInstitutionId, $newInstitutionId, $enrolledStatusId)
+    {
+        if (empty($studentId) || empty($previousInstitutionId) || $previousInstitutionId == $newInstitutionId) {
+            return;
+        }
+
+        $Students = TableRegistry::getTableLocator()->get('Institution.Students');
+        $stillEnrolled = $Students->exists([
+            $Students->aliasField('student_id') => $studentId,
+            $Students->aliasField('institution_id') => $previousInstitutionId,
+            $Students->aliasField('student_status_id') => $enrolledStatusId
+        ]);
+        if ($stillEnrolled) {
+            return;
+        }
+
+        TableRegistry::getTableLocator()->get('Institution.StudentTransferOut')
+            ->removeFromOldSecurityGroup($studentId, $previousInstitutionId);
     }
 
     public function onCancel(EventInterface $event, $id, Entity $workflowTransitionEntity)

@@ -169,7 +169,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
      * @param $oldInstitutionId
      * @return void
      */
-    protected function removeFromOldSecurityGroup($studentId, $oldInstitutionId)
+    public function removeFromOldSecurityGroup($studentId, $oldInstitutionId)
     {
         if (empty($studentId) || empty($oldInstitutionId)) {
             Log::warning("Missing student ID or previous institution student ID.");
