@@ -301,19 +301,32 @@ class CheckAndQueueAlerts extends Command
                 return;
             }
 
-            // Get alert rule for this alert
-            $rule = DB::table('alert_rules')
+            //POCOR-9938: run EVERY enabled rule for the feature — ->first() silently ignored all but one rule
+            $rules = DB::table('alert_rules')
                 ->where('feature', $alert->name)
                 ->where('enabled', 1)
-                ->first();
+                ->orderBy('id')
+                ->get();
 
-            if (!$rule) {
-                // Log::info('[POCOR-9509] No active alert rules for alert', [
-                //     'feature' => $alert->name,
-                // ]);
-                return;
+            foreach ($rules as $rule) {
+                $this->dispatchRule($alert, $rule, $commandName, $userId, $sync);
             }
+        } catch (\Throwable $e) {
+            Log::error('[POCOR-9509] Failed to queue alert command', [
+                'feature' => $alert->name,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
 
+    /**
+     * POCOR-9938: create the system_processes row for one rule and run / enqueue its command
+     */
+    private function dispatchRule($alert, $rule, string $commandName, int $userId, bool $sync): void
+    {
+        $processId = null;
+        try {
             // POCOR-9509: Build params for tracking and deduplication
             $triggeredAt = Carbon::now(config('app.timezone'))->format('Y-m-d H:i:s'); //POCOR-9509: use app timezone
             $params = [
@@ -331,6 +344,7 @@ class CheckAndQueueAlerts extends Command
             // POCOR-9509: Generate checksum for deduplication
             $checksumData = [
                 'alert_name' => $alert->name,
+                'rule_id' => $rule->id, //POCOR-9938: one checksum per rule
                 'frequency' => $alert->frequency,
                 'date' => Carbon::now()->format('Y-m-d'), // Same day = same checksum
             ];
@@ -365,8 +379,10 @@ class CheckAndQueueAlerts extends Command
                 //     'process_id' => $processId,
                 // ]);
             } else {
-                // Asynchronous execution (for queue workers)
-                \Illuminate\Support\Facades\Artisan::queue($commandName, $arguments);
+                //POCOR-9938: Artisan::queue() pushed onto the DEFAULT queue, but every worker/drain
+                //(alerts:send, Alerts controller buttons, systemd worker) only works `--queue=alerts`,
+                //so scheduled alerts were never executed. RunAlertJob targets the alerts queue.
+                \App\Jobs\RunAlertJob::dispatch($commandName, $arguments);
                 // Log::info('[POCOR-9509] Queued alert command for background processing', [
                 //     'feature' => $alert->name,
                 //     'command' => $commandName,
@@ -375,8 +391,18 @@ class CheckAndQueueAlerts extends Command
             }
 
         } catch (\Throwable $e) {
-            Log::error('[POCOR-9509] Failed to queue alert command', [
+            //POCOR-9938: a row left at status=1 would block every rule of this feature for a day
+            if (!empty($processId)) {
+                DB::table('system_processes')->where('id', $processId)->whereIn('status', [1, 2])->update([
+                    'status' => -2, // Error
+                    'end_date' => now(),
+                    'modified' => now(),
+                    'modified_user_id' => $userId,
+                ]);
+            }
+            Log::error('[POCOR-9938] Failed to dispatch alert rule', [
                 'feature' => $alert->name,
+                'rule_id' => $rule->id ?? null,
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);

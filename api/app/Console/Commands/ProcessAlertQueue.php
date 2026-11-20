@@ -103,12 +103,13 @@ class ProcessAlertQueue extends Command
             $recipient = $alert->recipient;
             $subject = $alert->subject ?? $alert->message_body;
             $message = $alert->message_body;
-            $checksum = self::generateChecksum($subject . $recipient . $alertType . $channel, $message);
+            $checksum = self::alertLogChecksum($alert); //POCOR-9938: shared with markFailed()
             $existingRecord = DB::table('alert_logs')
                 ->where('feature', $alertType)
                 ->where('method', $channel)
                 ->where('destination', $recipient)
                 ->where('checksum', $checksum)
+                ->where('status', '!=', AlertLogs::STATUS_FAILED) //POCOR-9938: FAILED rows are history — a resend gets its own PENDING row
                 ->first();
 
             //POCOR-9509: start - DEDUPED only fires when an existing alert_logs row is
@@ -229,6 +230,13 @@ class ProcessAlertQueue extends Command
         }
     }
 
+    //POCOR-9938: single source of the alert_logs identity checksum for a queue row
+    private static function alertLogChecksum(object $alert): string
+    {
+        $subject = $alert->subject ?? $alert->message_body;
+        return self::generateChecksum($subject . $alert->recipient . $alert->alert_type . $alert->channel, $alert->message_body);
+    }
+
     private static function generateChecksum(?string $subject, ?string $message): string
     {
         $subject = mb_strtolower($subject);
@@ -253,6 +261,31 @@ class ProcessAlertQueue extends Command
                 'available_at' => now()->addMinutes($retryCount * 5),
                 'modified' => now(),
             ]);
+
+        //POCOR-9938: retries exhausted — flip the paired alert_logs row to FAILED, otherwise it
+        //stays "Pending" in Communications > Logs forever with no further send attempt.
+        if ($status === AlertLogs::STATUS_FAILED) {
+            try {
+                DB::table('alert_logs')
+                    ->where('feature', $alert->alert_type)
+                    ->where('method', $alert->channel)
+                    ->where('destination', $alert->recipient)
+                    ->where('checksum', self::alertLogChecksum($alert))
+                    ->where('status', AlertLogs::STATUS_PENDING)
+                    ->orderBy('id')
+                    ->limit(1) //POCOR-9938: only this queue row's log — leave sibling PENDING rows (e.g. repeat Messaging sends) alone
+                    ->update([
+                        'status' => AlertLogs::STATUS_FAILED,
+                        'processed_date' => Carbon::now(date_default_timezone_get()), //POCOR-9938: same tz as SENT path
+                    ]);
+            } catch (Throwable $logError) {
+                //POCOR-9938: never let log bookkeeping abort the rest of the send batch
+                Log::warning('[POCOR-9938] Failed to mark alert_logs row as FAILED', [
+                    'alert_id' => $alert->id,
+                    'error' => $logError->getMessage(),
+                ]);
+            }
+        }
 
         Log::error('Alert sending failed', [
             'alert_id' => $alert->id,
