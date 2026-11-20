@@ -66,6 +66,7 @@ class ReportCardGenerateTable extends ControllerActionTable
     {
         $this->field('marks', ['visible' => false]);
         $this->field('assessment_grading_option_id', ['visible' => false]);
+        $this->field('applied_weight', ['visible' => false]);// POCOR-9932
         $this->field('academic_period_id');
         $this->field('education_grade_id', ['type' => 'select']);
         $this->field('institution_classes_id');

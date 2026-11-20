@@ -506,6 +506,34 @@ class ReportListBehavior extends Behavior {
 		/*POCOR-6439 start : shorting report name as it is throwing error before save*/
 		if($feature == 'Report.StudentAttendanceSummary') {
 			$academicPeriodData = $AcademicPeriod->get($data['Institutions']['academic_period_id']);
+
+			// POCOR-9920 point 2: include the selected region in the filename, matching
+			// the "Institutions" report's own "{Level Name} - {Area Code} - {Area Name}"
+			// format - omitted entirely when no specific region is selected.
+			// Code review fix: the level name must come from the selected area's own
+			// area_level_id (via Area.AreaLevels, the same table the Area Level dropdown
+			// itself uses - InstitutionsTable.php's area_level_id field options) rather than
+			// trusting the submitted area_level_id form field against Area.AreaAdministrativeLevels,
+			// an entirely different table that only happens to share matching ids on this
+			// demo DB - on any install where the two diverge this would silently resolve to
+			// the wrong name or none at all. Looking it up from the area itself also makes
+			// the submitted area_level_id form field unnecessary here.
+			$areaNameSegment = '';
+			$areaEducationId = $data['Institutions']['area_education_id'] ?? null;
+			if (!empty($areaEducationId) && $areaEducationId > 1) {
+				$Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+				$areaData = $Areas->find()->where(['id' => $areaEducationId])->first();
+				if ($areaData) {
+					$areaLevelName = '';
+					$AreaLevels = TableRegistry::getTableLocator()->get('Area.AreaLevels');
+					$areaLevelData = $AreaLevels->find()->where(['id' => $areaData->area_level_id])->first();
+					if ($areaLevelData) {
+						$areaLevelName = $areaLevelData->name . ' - ';
+					}
+					$areaNameSegment = ' - ' . $areaLevelName . $areaData->code . ' - ' . $areaData->name;
+				}
+			}
+
 			$institutionIdValue = $data['Institutions']['institution_id'] ?? null;
 			//POCOR-9865
 			if (is_array($institutionIdValue)) {
@@ -530,7 +558,7 @@ class ReportListBehavior extends Behavior {
 	        }
 	        $reportStartDate = date("Ymd", strtotime($data[$alias]['report_start_date']));
 	        $reportEndDate = date("Ymd", strtotime($data[$alias]['report_end_date']));
-	        $reportName = $alias .':'. $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionCode .' - '. $gradeName.' - '. $reportStartDate .' - '.$reportEndDate;
+	        $reportName = $alias .':'. $featureList[$feature] .' - '. $academicPeriodData->name . $areaNameSegment .' - '. $institutionCode .' - '. $gradeName.' - '. $reportStartDate .' - '.$reportEndDate;
 	        $name = $reportName;
 		}
 		/*POCOR-6439 ends*/

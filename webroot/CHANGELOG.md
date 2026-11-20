@@ -1,3 +1,12 @@
+### 5.27.0 - 2026-11-20
+- Implemented: Develop Reports > Staff > Staff Employments Report
+- Bug Fixed: Core>Institutions>Students>Promote : On clicking Save to promote a student a 404 error is seen
+- Bug Fixed: Core>Reports>Institutions>Generate Student Attendance Summary Report : Regional filters do not work for Student Attendance Summary Report
+- Bug Fixed: Report > Surveys >  Survey Report : User sees "The provided value is invalid" for institution field when submitting report form
+- Bug Fixed: Data Management > Copy Competencies : Competency Criterias did not get copied over
+- Bug Fixed: Institutions > Performances > Assessment > Reports : Unknown field "Applied Weight" is showing in this page
+- Bug Fixed: Administration > Performance > Assessments > Assessment Periods : User when editing assesment periods the assessment grading type returns to default value when clicking on edit rather than the previously saved values.
+
 ### 5.26.0 - 2026-11-19
 - Implemented: Develop a function and permission to view PDF files
 - Bug Fixed: Core>Personal > Students > Academic > Classes : Excessive Records Displayed Under Student Classes
