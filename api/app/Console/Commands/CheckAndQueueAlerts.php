@@ -31,6 +31,13 @@ class CheckAndQueueAlerts extends Command
     protected $description = 'Check alert frequency and trigger alert commands (POCOR-9509)';
 
     /**
+     * POCOR-9938: scheduled features that dispatch every enabled rule (others dispatch only the first).
+     *
+     * @var string[]
+     */
+    protected array $multiRuleFeatures = ['RetirementWarning'];
+
+    /**
      * Execute the command
      */
     public function handle(): int
@@ -301,12 +308,17 @@ class CheckAndQueueAlerts extends Command
                 return;
             }
 
-            //POCOR-9938: run EVERY enabled rule for the feature — ->first() silently ignored all but one rule
-            $rules = DB::table('alert_rules')
+            //POCOR-9938: features listed in $multiRuleFeatures run EVERY enabled rule; all others keep the
+            //previous single-rule behaviour so sites with several enabled rules don't start fanning out
+            //unexpectedly. Add a feature to the list once its rules have been reviewed per site.
+            $rulesQuery = DB::table('alert_rules')
                 ->where('feature', $alert->name)
                 ->where('enabled', 1)
-                ->orderBy('id')
-                ->get();
+                ->orderBy('id');
+            if (!in_array($alert->name, $this->multiRuleFeatures, true)) {
+                $rulesQuery->limit(1);
+            }
+            $rules = $rulesQuery->get();
 
             foreach ($rules as $rule) {
                 $this->dispatchRule($alert, $rule, $commandName, $userId, $sync);
