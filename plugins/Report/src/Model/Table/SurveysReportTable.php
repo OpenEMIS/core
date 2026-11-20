@@ -45,7 +45,7 @@ class SurveysReportTable extends AppTable
         $condition = [];
         $groupBy = [];
         $requestData = json_decode($settings['process']['params']);
-        $institutionID = $requestData->institution_id;
+        $institutionIds = $this->getSelectedInstitutionIds($requestData->institution_id ?? null); // POCOR-9928
         $academicPeriodId = $requestData->academic_period_id;
         $surveySection = $requestData->survey_section;
         $tableQuestion = $requestData->table_question;
@@ -61,7 +61,7 @@ class SurveysReportTable extends AppTable
         $areaLevels = TableRegistry::getTableLocator()->get('Area.AreaLevels');
 
         //POCOR-8525 starts find record is exist in `institution_repeater_surveys` table for Repeater case
-        if($institutionID <= 0){
+        if(empty($institutionIds)){
             $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $InstitutionsData = $Institutions->find()->toArray();
             if(!empty($InstitutionsData)){
@@ -71,7 +71,7 @@ class SurveysReportTable extends AppTable
                 }
             }
         }else{
-            $instArr[] = $institutionID;
+            $instArr = $institutionIds;
         }
 
         $repeaterListCountResult = $this->checkSurveyExistanceInRepeater($instArr, $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion); // POCOR-9087
@@ -85,8 +85,8 @@ class SurveysReportTable extends AppTable
             $AreaAdministratives = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
             $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
-            if($institutionID > 0){
-                $condition[$institutions->aliasField('id')] = $institutionID;
+            if(!empty($institutionIds)){
+                $condition[$institutions->aliasField('id IN')] = $institutionIds;
             }
             if ($areaId != -1 && $areaId != '' && $areaId != 0) {
                 $areaIds = [];
@@ -302,8 +302,8 @@ class SurveysReportTable extends AppTable
             $AreaAdministratives = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
             $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
-            if($institutionID > 0){
-                $condition[$institutions->aliasField('id')] = $institutionID;
+            if(!empty($institutionIds)){
+                $condition[$institutions->aliasField('id IN')] = $institutionIds;
             }
             if ($areaId != -1 && $areaId != '' && $areaId != 0) {
                 $areaIds = [];
@@ -524,8 +524,8 @@ class SurveysReportTable extends AppTable
             $AreaAdministratives = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
             $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
-            if($institutionID > 0){
-                $condition[$institutions->aliasField('id')] = $institutionID;
+            if(!empty($institutionIds)){
+                $condition[$institutions->aliasField('id IN')] = $institutionIds;
             }
             if ($areaId != -1 && $areaId != '' && $areaId != 0) {
                 $areaIds = [];
@@ -753,8 +753,8 @@ class SurveysReportTable extends AppTable
             $groupBy[] = $SurveyRows->aliasField('id');
             $groupBy[] = $institutions->aliasField('id');
             $groupBy[] = $areas->aliasField('id');
-            if($institutionID > 0){
-                $condition[$institutions->aliasField('id')] = $institutionID;
+            if(!empty($institutionIds)){
+                $condition[$institutions->aliasField('id IN')] = $institutionIds;
             }
             if ($areaId != -1 && $areaId != '' && $areaId != 0) {
                 $areaIds = [];
@@ -890,6 +890,26 @@ class SurveysReportTable extends AppTable
         }
     }
 
+    // POCOR-9928: since POCOR-9742 institution_id is posted as {"_ids": [...]} (multi-select).
+    // Returns the selected institution ids; an empty array means "All Institutions" ('0').
+    private function getSelectedInstitutionIds($institutionId): array
+    {
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $ids = (array)$institutionId->_ids;
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $ids = (array)$institutionId['_ids'];
+        } elseif (is_scalar($institutionId)) {
+            $ids = [$institutionId];
+        } else {
+            $ids = [];
+        }
+        $ids = array_filter($ids, function ($id) {
+            return is_numeric($id) && (int)$id > 0;
+        });
+
+        return array_values(array_map('intval', $ids));
+    }
+
     public function getChildren($id, $idArray) {
         $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
@@ -1012,8 +1032,8 @@ class SurveysReportTable extends AppTable
         $tableQuestion = $requestData->table_question;
         $surveySection = $requestData->survey_section;
         //POCOR-8525 starts find record is exist in `institution_repeater_surveys` table for Repeater case
-        $institutionID = $requestData->institution_id;
-        if($institutionID <= 0){
+        $institutionIds = $this->getSelectedInstitutionIds($requestData->institution_id ?? null); // POCOR-9928
+        if(empty($institutionIds)){
             $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $InstitutionsData = $Institutions->find()->toArray();
             if(!empty($InstitutionsData)){
@@ -1023,7 +1043,7 @@ class SurveysReportTable extends AppTable
                 }
             }
         }else{
-            $instArr[] = $institutionID;
+            $instArr = $institutionIds;
         }
 
         $repeaterListCountResult = $this->checkSurveyExistanceInRepeater($instArr, $requestData->academic_period_id, $requestData->survey_form_id, $surveySection, $tableQuestion);

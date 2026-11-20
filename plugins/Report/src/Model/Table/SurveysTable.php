@@ -103,6 +103,21 @@ class SurveysTable extends AppTable
         return $validator;
     }
 
+    // POCOR-9928: ControllerActionBehavior::buildValidator() adds a message-less 'notBlank'
+    // rule to every NOT NULL column of the 'default' validator. institution_surveys.institution_id
+    // is NOT NULL, and since POCOR-9742 the field posts as ['_ids' => [...]], which notBlank always
+    // rejects ("The provided value is invalid"). A named validator skips that auto-rule, the same
+    // way InstitutionRubrics / Meals already do.
+    public function validationSurveys(Validator $validator): Validator
+    {
+        return $this->validationDefault($validator);
+    }
+
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $options['validate'] = 'Surveys';
+    }
+
     public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
