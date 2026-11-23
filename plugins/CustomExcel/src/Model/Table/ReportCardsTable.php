@@ -810,7 +810,7 @@ class ReportCardsTable extends AppTable
      * POCOR-9934 starts
      * One row per Institution Curricular of category Extracurricular (institution_curriculars.category = 0,
      * Co-Curricular = 1) the student is enrolled in at the report card's institution.
-     * Placeholders: ${InstitutionExtracurriculars.name}, .type, .position, .start_date, .end_date, .hours,
+     * Placeholders: ${InstitutionExtracurriculars.academic_period}, .name, .type, .position, .start_date, .end_date, .hours,
      * .points, .location, .comments, .staff (teachers in charge, comma separated); rows are keyed by .id
      */
     public function onExcelTemplateInitialiseInstitutionExtracurriculars(EventInterface $event, array $params, ArrayObject $extra)
@@ -887,10 +887,23 @@ class ReportCardsTable extends AppTable
                 $staffNames[$staff['institution_curricular_id']][] = trim($staff['first_name'] . ' ' . $staff['last_name']);
             }
 
+            // institution_curriculars has no academic period; rows are limited to the report card date range,
+            // so they belong to the report card's academic period
+            $academicPeriodName = '';
+            if (!empty($params['academic_period_id'])) {
+                $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+                $academicPeriodName = (string)$AcademicPeriods->find()
+                    ->select([$AcademicPeriods->aliasField('name')])
+                    ->where([$AcademicPeriods->aliasField('id') => $params['academic_period_id']])
+                    ->extract('name')
+                    ->first();
+            }
+
             $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
             $dateFormat = $ConfigItems->value('date_format');
             $entity = [];
             foreach ($students as $row) {
+                $row['academic_period'] = $academicPeriodName;
                 $row['start_date'] = !empty($row['start_date']) ? $row['start_date']->format($dateFormat) : '';
                 $row['end_date'] = !empty($row['end_date']) ? $row['end_date']->format($dateFormat) : '';
                 $row['staff'] = implode(', ', $staffNames[$row['institution_curricular_id']] ?? []);
