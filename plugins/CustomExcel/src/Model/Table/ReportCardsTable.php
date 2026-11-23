@@ -51,7 +51,6 @@ class ReportCardsTable extends AppTable
                 'InstitutionStudentsReportCards',
                 'FirstGuardian',
                 'Extracurriculars',
-                'InstitutionExtracurriculars', //POCOR-9934
                 'Awards',
                 'Admissions',
                 'InstitutionStudentsReportCardsComments',
@@ -97,7 +96,8 @@ class ReportCardsTable extends AppTable
                 'CompetencyPeriodsByTemplate',
                 'InstitutionStudentsReportCardGpa',//POCOR-8222
                 'InstitutionStudentGradeGpa',//POCOR-8222
-                'ClassAndLevelRanking'//POCOR-9232
+                'ClassAndLevelRanking',//POCOR-9232
+                'InstitutionExtracurriculars', //POCOR-9934
             ]
         ]);
     }
@@ -111,7 +111,6 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCards'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseFirstGuardian'] = 'onExcelTemplateInitialiseFirstGuardian';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseExtracurriculars'] = 'onExcelTemplateInitialiseExtracurriculars';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionExtracurriculars'] = 'onExcelTemplateInitialiseInstitutionExtracurriculars'; //POCOR-9934
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAwards'] = 'onExcelTemplateInitialiseAwards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAdmissions'] = 'onExcelTemplateInitialiseAdmissions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardsComments'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardsComments';
@@ -161,6 +160,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentGradeGpa'] = 'onExcelTemplateInitialiseInstitutionStudentGradeGpa'; //POCOR-8222
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassAndLevelRanking'] = 'onExcelTemplateInitialiseClassAndLevelRanking';//POCOR-9232
         $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionExtracurriculars'] = 'onExcelTemplateInitialiseInstitutionExtracurriculars'; //POCOR-9934
         return $events;
     }
 
