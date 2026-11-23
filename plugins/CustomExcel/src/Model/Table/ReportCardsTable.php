@@ -51,6 +51,7 @@ class ReportCardsTable extends AppTable
                 'InstitutionStudentsReportCards',
                 'FirstGuardian',
                 'Extracurriculars',
+                'InstitutionExtracurriculars', //POCOR-9934
                 'Awards',
                 'Admissions',
                 'InstitutionStudentsReportCardsComments',
@@ -110,6 +111,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCards'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseFirstGuardian'] = 'onExcelTemplateInitialiseFirstGuardian';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseExtracurriculars'] = 'onExcelTemplateInitialiseExtracurriculars';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionExtracurriculars'] = 'onExcelTemplateInitialiseInstitutionExtracurriculars'; //POCOR-9934
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAwards'] = 'onExcelTemplateInitialiseAwards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAdmissions'] = 'onExcelTemplateInitialiseAdmissions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardsComments'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardsComments';
@@ -802,6 +804,103 @@ class ReportCardsTable extends AppTable
             return $entity;
         }
     }
+
+    
+    /**
+     * POCOR-9934 starts
+     * One row per Institution Curricular of category Extracurricular (institution_curriculars.category = 0,
+     * Co-Curricular = 1) the student is enrolled in at the report card's institution.
+     * Placeholders: ${InstitutionExtracurriculars.name}, .type, .position, .start_date, .end_date, .hours,
+     * .points, .location, .comments, .staff (teachers in charge, comma separated); rows are keyed by .id
+     */
+    public function onExcelTemplateInitialiseInstitutionExtracurriculars(EventInterface $event, array $params, ArrayObject $extra)
+    {
+        if (isset($params['student_id']) && isset($params['institution_id'])
+            && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
+            $CurricularStudents = self::getDynamicTableInstance('Institution.InstitutionCurricularStudents');
+            $InstitutionCurriculars = self::getDynamicTableInstance('Institution.InstitutionCurriculars');
+            $CurricularTypes = self::getDynamicTableInstance('FieldOption.CurricularTypes');
+            $CurricularPositions = self::getDynamicTableInstance('FieldOption.CurricularPositions');
+            $CurricularStaff = self::getDynamicTableInstance('Institution.InstitutionCurricularStaff');
+            $Users = self::getDynamicTableInstance('User.Users');
+
+            $students = $CurricularStudents->find()
+                ->select([
+                    'id' => $CurricularStudents->aliasField('id'),
+                    'institution_curricular_id' => $CurricularStudents->aliasField('institution_curricular_id'),
+                    'name' => $InstitutionCurriculars->aliasField('name'),
+                    'type' => $CurricularTypes->aliasField('name'),
+                    'position' => $CurricularPositions->aliasField('name'),
+                    'start_date' => $CurricularStudents->aliasField('start_date'),
+                    'end_date' => $CurricularStudents->aliasField('end_date'),
+                    'hours' => $CurricularStudents->aliasField('hours'),
+                    'points' => $CurricularStudents->aliasField('points'),
+                    'location' => $CurricularStudents->aliasField('location'),
+                    'comments' => $CurricularStudents->aliasField('comments')
+                ])
+                ->innerJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()], [
+                    $InstitutionCurriculars->aliasField('id = ') . $CurricularStudents->aliasField('institution_curricular_id')
+                ])
+                ->leftJoin([$CurricularTypes->getAlias() => $CurricularTypes->getTable()], [
+                    $CurricularTypes->aliasField('id = ') . $InstitutionCurriculars->aliasField('curricular_type_id')
+                ])
+                ->leftJoin([$CurricularPositions->getAlias() => $CurricularPositions->getTable()], [
+                    $CurricularPositions->aliasField('id = ') . $CurricularStudents->aliasField('curricular_position_id')
+                ])
+                ->where([
+                    $CurricularStudents->aliasField('student_id') => $params['student_id'],
+                    $InstitutionCurriculars->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionCurriculars->aliasField('category') => 0, // Extracurricular
+                    $CurricularStudents->aliasField('start_date <=') => $extra['report_card_end_date']->format('Y-m-d'),
+                    $CurricularStudents->aliasField('end_date >=') => $extra['report_card_start_date']->format('Y-m-d')
+                ])
+                ->order([
+                    $CurricularStudents->aliasField('start_date'),
+                    $InstitutionCurriculars->aliasField('name'),
+                    $CurricularStudents->aliasField('id')
+                ])
+                ->disableHydration()
+                ->toArray();
+
+            if (empty($students)) {
+                return [];
+            }
+
+            // teachers in charge of each curricular, comma separated
+            $staffNames = [];
+            $staffRows = $CurricularStaff->find()
+                ->select([
+                    'institution_curricular_id' => $CurricularStaff->aliasField('institution_curricular_id'),
+                    'first_name' => $Users->aliasField('first_name'),
+                    'last_name' => $Users->aliasField('last_name')
+                ])
+                ->innerJoin([$Users->getAlias() => $Users->getTable()], [
+                    $Users->aliasField('id = ') . $CurricularStaff->aliasField('staff_id')
+                ])
+                ->where([
+                    $CurricularStaff->aliasField('institution_curricular_id IN') => array_unique(array_column($students, 'institution_curricular_id'))
+                ])
+                ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')])
+                ->disableHydration()
+                ->toArray();
+            foreach ($staffRows as $staff) {
+                $staffNames[$staff['institution_curricular_id']][] = trim($staff['first_name'] . ' ' . $staff['last_name']);
+            }
+
+            $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+            $dateFormat = $ConfigItems->value('date_format');
+            $entity = [];
+            foreach ($students as $row) {
+                $row['start_date'] = !empty($row['start_date']) ? $row['start_date']->format($dateFormat) : '';
+                $row['end_date'] = !empty($row['end_date']) ? $row['end_date']->format($dateFormat) : '';
+                $row['staff'] = implode(', ', $staffNames[$row['institution_curricular_id']] ?? []);
+                unset($row['institution_curricular_id']);
+                $entity[] = $row;
+            }
+            return $entity;
+        }
+    }
+    //POCOR-9934 ends
 
     public function onExcelTemplateInitialiseAwards(EventInterface $event, array $params, ArrayObject $extra)
     {

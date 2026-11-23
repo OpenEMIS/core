@@ -75,11 +75,20 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
             'targetForeignKey' => 'education_grade_id',
             'dependent' => true
         ]);
-        $this->addBehavior('Excel', ['pages' => ['index','view','edit']]);
+        $this->addBehavior('Excel', ['pages' => ['index']]); //POCOR-9934 export on listing page only
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['InstitutionCurricularStudents' =>['id']
             ]
         ]);
+    }
+
+    //POCOR-9934 an enrolment must always belong to a student (an empty Student dropdown used to save student_id NULL)
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->requirePresence('student_id', 'create')
+            ->notEmptyString('student_id');
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -332,6 +341,17 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function onUpdateFieldStudentId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
+        //POCOR-9934 the student of an enrolment is not editable: the dropdown below only lists current-period
+        // students, so an older enrolment opened with no student selected and saving it wiped student_id.
+        // A disabled field is not posted, so student_id is left unchanged on save.
+        if ($action == 'edit') {
+            $ids = !empty($this->paramsPass(0)) ? $this->paramsDecode($this->paramsPass(0)) : [];
+            $record = !empty($ids['id']) ? $this->find()->contain(['Users'])->where([$this->aliasField('id') => $ids['id']])->first() : null;
+            $attr['type'] = 'disabled';
+            $attr['attr']['value'] = !empty($record->user) ? $record->user->openemis_no . ' - ' . $record->user->name : '';
+            return $attr;
+        }
+
         $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         //$session = $this->controller->request->session();
@@ -368,7 +388,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
             $attr['select'] = false;
-            $attr['options'] = ['id' => '-- ' . __('Select Student') . ' --'] + $studentList;
+            $attr['options'] = ['' => '-- ' . __('Select Student') . ' --'] + $studentList; //POCOR-9934 placeholder posted the string 'id'
             $attr['onChangeReload'] = false;
         }
         return $attr;
@@ -434,7 +454,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
-        return $entity->user->openemis_no;
+        return !empty($entity->user) ? $entity->user->openemis_no : ''; //POCOR-9934
     }
 
     public function onGetCurricularTypeId(EventInterface $event, Entity $entity)
@@ -456,6 +476,9 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     public function onGetStudentName(EventInterface $event, Entity $entity)
     {
         $StudentId = $entity->student_id;
+        if (empty($StudentId)) { //POCOR-9934 a null student made the query below throw (shown as "record does not exist")
+            return '';
+        }
         $users = TableRegistry::getTableLocator()->get('User.Users');
         $data = $this->find()->select(['first_name'=>$users->aliasField('first_name'),'middle_name'=>$users->aliasField('middle_name'),'third_name'=>$users->aliasField('third_name'),'last_name'=>$users->aliasField('last_name')])
                 ->leftJoin([$users->getAlias() => $users->getTable()],
@@ -475,6 +498,102 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
     }
     //POCOR-8056
+
+    //POCOR-9934 starts
+    /**
+     * Export of the Students tab: one row per student enrolment of the selected curricular in this institution.
+     */
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
+    {
+        $queryString = $this->request->getQuery('queryString');
+        $curricularId = !empty($queryString) ? ($this->paramsDecode($queryString)['id'] ?? 0) : 0;
+
+        $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+        $CurricularTypes = TableRegistry::getTableLocator()->get('FieldOption.CurricularTypes');
+        $CurricularPositions = TableRegistry::getTableLocator()->get('FieldOption.CurricularPositions');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
+
+        $query
+            ->select([
+                'openemis_no' => $Users->aliasField('openemis_no'),
+                'student_first_name' => $Users->aliasField('first_name'),
+                'student_last_name' => $Users->aliasField('last_name'),
+                'curricular_name' => $InstitutionCurriculars->aliasField('name'),
+                'curricular_category' => $InstitutionCurriculars->aliasField('category'),
+                'curricular_type' => $CurricularTypes->aliasField('name'),
+                'curricular_position' => $CurricularPositions->aliasField('name')
+            ])
+            ->innerJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()], [
+                $InstitutionCurriculars->aliasField('id = ') . $this->aliasField('institution_curricular_id')
+            ])
+            ->leftJoin([$Users->getAlias() => $Users->getTable()], [
+                $Users->aliasField('id = ') . $this->aliasField('student_id')
+            ])
+            ->leftJoin([$CurricularTypes->getAlias() => $CurricularTypes->getTable()], [
+                $CurricularTypes->aliasField('id = ') . $InstitutionCurriculars->aliasField('curricular_type_id')
+            ])
+            ->leftJoin([$CurricularPositions->getAlias() => $CurricularPositions->getTable()], [
+                $CurricularPositions->aliasField('id = ') . $this->aliasField('curricular_position_id')
+            ])
+            ->where([
+                $this->aliasField('institution_curricular_id') => $curricularId,
+                $InstitutionCurriculars->aliasField('institution_id') => $this->getInstitutionID()
+            ])
+            ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name'), $this->aliasField('start_date')]);
+    }
+
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
+    {
+        $columns = [
+            'openemis_no' => __('OpenEMIS ID'),
+            'student_name' => __('Student Name'),
+            'curricular_name' => __('Institution Curricular'),
+            'curricular_category' => __('Curricular Category'),
+            'curricular_type' => __('Type'),
+            'curricular_position' => __('Curricular Position'),
+            'start_date' => __('Start Date'),
+            'end_date' => __('End Date'),
+            'hours' => __('Hours'),
+            'points' => __('Points'),
+            'location' => __('Location'),
+            'comments' => __('Comments')
+        ];
+        $newFields = [];
+        foreach ($columns as $field => $label) {
+            $newFields[] = ['key' => $field, 'field' => $field, 'type' => 'string', 'label' => $label];
+        }
+        $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetStudentName(EventInterface $event, Entity $entity)
+    {
+        return trim($entity->student_first_name . ' ' . $entity->student_last_name);
+    }
+
+    public function onExcelGetCurricularCategory(EventInterface $event, Entity $entity)
+    {
+        return $entity->curricular_category ? __('Co-Curricular') : __('Extracurricular');
+    }
+
+    public function onExcelGetStartDate(EventInterface $event, Entity $entity)
+    {
+        return $this->formatExcelDate($entity->start_date);
+    }
+
+    public function onExcelGetEndDate(EventInterface $event, Entity $entity)
+    {
+        return $this->formatExcelDate($entity->end_date);
+    }
+
+    private function formatExcelDate($date)
+    {
+        if (empty($date)) {
+            return '';
+        }
+        [$systemDateFormat] = $this->getSystemDateFormats();
+        return $date instanceof \DateTimeInterface ? $date->format($systemDateFormat) : (new \DateTime($date))->format($systemDateFormat);
+    }
+    //POCOR-9934 ends
 
     public function findByStudentData(Query $query, array $options)
     {

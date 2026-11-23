@@ -33,7 +33,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->belongsTo('CurricularTypes', ['className' => 'FieldOption.CurricularTypes']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->hasMany('InstitutionCurricularStaff', ['className' => 'Institution.InstitutionCurricularStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->addBehavior('Excel', ['pages' => ['index', 'view']]);
+        $this->addBehavior('Excel', ['pages' => ['index']]); //POCOR-9934 export on listing page only
 
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['InstitutionCurriculars' =>['id']
