@@ -241,6 +241,17 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     }
 
+    //POCOR-9934 
+    //InstitutionTab::fixEditBackButton() points Back at view
+    public function editAfterAction(EventInterface $event, $entity, ArrayObject $extra)
+    {
+        $recordParam = $this->paramsPass(0);
+        if (!empty($recordParam) && isset($extra['toolbarButtons']['back']['url'])) {
+            $extra['toolbarButtons']['back']['url'][0] = 'view';
+            $extra['toolbarButtons']['back']['url'][1] = $recordParam;
+        }
+    }
+
    public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //POCOR- 8220 chnage academic period condition
