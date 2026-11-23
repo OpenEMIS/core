@@ -9849,8 +9849,11 @@ class InstitutionsController extends AppController
     function getCurricularsTabElements($options = [])
     {
         $queryString = $this->request->getQuery('queryString');
-        if (empty($queryString)) {
-            $queryString = $this->request->getParam('pass')[1];
+        $pass = $this->request->getParam('pass');
+        //POCOR-9934 on the curricular's own page the record in the URL is the curricular; a leftover ?queryString
+        // (e.g. from a previously opened curricular) made the Students tab open the old curricular's students
+        if (empty($queryString) || ($this->request->getParam('action') == 'InstitutionCurriculars' && !empty($pass[1]))) {
+            $queryString = $pass[1] ?? $queryString;
         }
         $tabElements = [
             'InstitutionCurriculars' => [

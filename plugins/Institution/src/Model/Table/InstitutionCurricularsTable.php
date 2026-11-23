@@ -287,9 +287,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $paramPass = $this->request->getParam('pass');
-        $ids = isset($paramPass[1]['id']) ? $this->paramsDecode($paramPass[1]['id']) : 0;
-        $_SESSION["curricularId"] = $curricularId;
+        $_SESSION["curricularId"] = $entity->id; //POCOR-9934
 
     }
 
