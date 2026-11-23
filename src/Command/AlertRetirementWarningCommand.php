@@ -37,7 +37,7 @@ class AlertRetirementWarningCommand extends AlertCommandBase
             return static::CODE_SUCCESS;
         }
 
-        return $this->runFeatureAlert('StaffLeave');
+        return $this->runFeatureAlert('RetirementWarning'); //POCOR-9938: was copy-pasted 'StaffLeave'
     }
 
     private function getStaffApproachingRetirement(FrozenTime $warningDate): array
