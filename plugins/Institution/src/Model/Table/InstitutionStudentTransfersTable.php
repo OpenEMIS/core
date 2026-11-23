@@ -173,9 +173,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                     $Students->save($previousStudentRecord);
                 } /*POCOR-6542 ends*/
 
-                // POCOR-9936: a PROMOTED/GRADUATED previous record keeps its status, so the
-                // TRANSFERRED-triggered cleanup (POCOR-9457) never fires. Remove the student
-                // from the previous institution's security group here instead.
+                //POCOR-9936
                 if (in_array($previousStudentRecord->student_status_id, [$statuses['PROMOTED'], $statuses['GRADUATED']])) {
                     $this->removeStudentFromPreviousInstitutionGroup(
                         $entity->student_id,
