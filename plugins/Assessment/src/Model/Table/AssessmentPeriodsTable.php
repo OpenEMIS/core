@@ -192,13 +192,28 @@ class AssessmentPeriodsTable extends ControllerActionTable
         // Captured here (not afterSave) because dirty-tracking on `weight` is only
         // reliable before the entity is persisted; the result is stashed on the table
         // instance for afterSave() to pick up and trigger the recalculation.
+        // POCOR-9933: recalculation must be a function of update_existing_marks and weight
+        // together, not of which one happened to be dirty in this particular save - only
+        // requiring isDirty('weight') meant resaving update_existing_marks=Yes on its own
+        // (weight already correct, unchanged in this submission) never resynced existing
+        // assessment_item_results.applied_weight, silently leaving old marks' contribution
+        // frozen at a stale (sometimes 0) weight in the Report while the Assessments page
+        // looked fine (it displays the raw mark, not a weight-multiplied value).
         $this->_recalculatePeriodWeight = null;
-        if (!$entity->isNew() && $entity->isDirty('weight')) {
-            if ($this->isPastAcademicPeriod($entity)) {
-                $this->Alert->error('Assessments.periodWeightPastPeriod', ['reset' => true]);
-                return false;
-            }
-            if ((int)$entity->update_existing_marks === 1) {
+        if (!$entity->isNew() && (int)$entity->update_existing_marks === 1) {
+            if ($entity->isDirty('weight')) {
+                // Unchanged from POCOR-9759: an actual weight change is still blocked outright
+                // for a past academic period, regardless of update_existing_marks.
+                if ($this->isPastAcademicPeriod($entity)) {
+                    $this->Alert->error('Assessments.periodWeightPastPeriod', ['reset' => true]);
+                    return false;
+                }
+                $this->_recalculatePeriodWeight = $entity->weight;
+            } elseif ($entity->isDirty('update_existing_marks')) {
+                // POCOR-9933: weight itself isn't changing here, just syncing existing marks
+                // to whatever weight is already saved - not a past-period weight change, so
+                // the isPastAcademicPeriod block doesn't apply; this is exactly the self-service
+                // fix an admin needs for a closed term's already-stale applied_weight.
                 $this->_recalculatePeriodWeight = $entity->weight;
             }
         }
