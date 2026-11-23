@@ -42,7 +42,7 @@ class CopyPerformanceCompetenciesCommand extends CopyCommandBase
 
             $map['templates'] = $this->copyTemplates($templates);
             $map['items']     = $this->copyItems($items, $map['templates']);
-            $map['criterias'] = $this->copyCriterias($criterias);
+            $map['criterias'] = $this->copyCriterias($criterias, $map['templates'], $map['items']); // POCOR-9931
             $map['periods']   = $this->copyPeriods($periods, $map['templates']);
             $this->copyItemPeriods($itemPeriods, $map);
 
@@ -106,15 +106,27 @@ class CopyPerformanceCompetenciesCommand extends CopyCommandBase
         return $map;
     }
 
-    private function copyCriterias(Table $table): array
+    private function copyCriterias(Table $table, array $templateMap, array $itemMap): array
     {
         $this->logMsg("-> Copying criterias …");
         $map = [];
 
         foreach ($table->find()->where(['academic_period_id' => $this->fromId]) as $c) {
+            // POCOR-9931: criterias are keyed by (item, template, academic period); remap
+            // item/template to the copies, otherwise the new rows point at the old year
+            // and never show under the copied template.
+            $newItemId = $itemMap[$c->competency_item_id] ?? null;
+            $newTemplateId = $templateMap[$c->competency_template_id] ?? null;
+            if (!$newItemId || !$newTemplateId) {
+                $this->logMsg("  ~ Skipped criteria {$c->id}: missing item/template map");
+                continue;
+            }
+
             $clone = $table->newEntity($c->toArray());
             unset($clone->id);
             $clone->academic_period_id = $this->toId;
+            $clone->competency_item_id = $newItemId;
+            $clone->competency_template_id = $newTemplateId;
             $clone->created_user_id = $this->userId;
             $clone->created = date('Y-m-d H:i:s');
 

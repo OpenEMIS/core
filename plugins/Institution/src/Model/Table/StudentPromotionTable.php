@@ -1178,6 +1178,7 @@ class StudentPromotionTable extends AppTable
         }
         if (!empty($fromAcademicPeriod) && !empty($currentGrade)) {
             if (array_key_exists('students', $data[$this->getAlias()])) {
+                $skippedStudentIds = []; // POCOR-9913
                 foreach ($data[$this->getAlias()]['students'] as $key => $studentObj) {
                     if ($studentObj['selected']) {
                         unset($studentObj['selected']);
@@ -1220,9 +1221,59 @@ class StudentPromotionTable extends AppTable
                                     $this->aliasField('education_grade_id') => $currentGrade,
                                     $this->aliasField('student_status_id') => $studentStatuses['CURRENT']
                                 ])->first();
+
+                            // POCOR-9913: no CURRENT row left (e.g. promoted in another tab) - skip
+                            // this student instead of a fatal error that aborted the whole batch.
+                            if (empty($existingStudentEntity)) {
+                                $skippedStudentIds[] = $studentObj['student_id'];
+                                Log::write('error', 'StudentPromotion: no CURRENT institution_students row for student ' . $studentObj['student_id'] . ' (institution ' . $institutionId . ', grade ' . $currentGrade . ', period ' . $fromAcademicPeriod . '); skipped.');
+                                continue;
+                            }
+
                             $existingStudentEntity->student_status_id = $statusToUpdate;
                             if(isset($entity->next_institution_class_id)){
                                 $existingStudentEntity->next_institution_class_id = $entity->next_institution_class_id;
+                            }
+
+                            // POCOR-9913: unique_institution_students = (status, student, grade, period,
+                            // start_date, end_date, institution). A leftover duplicate row (withdraw +
+                            // re-add) makes either save below throw a PDOException, which showed the
+                            // error page and stopped the batch with earlier students already saved.
+                            // Skip such a student and report it instead.
+                            $hasNextRecord = ($nextEducationGradeId != 0 && $nextAcademicPeriodId != 0);
+                            $sourceCollision = $this->find()
+                                ->where([
+                                    $this->aliasField('id <>') => $existingStudentEntity->id,
+                                    $this->aliasField('student_status_id') => $statusToUpdate,
+                                    $this->aliasField('student_id') => $existingStudentEntity->student_id,
+                                    $this->aliasField('education_grade_id') => $existingStudentEntity->education_grade_id,
+                                    $this->aliasField('academic_period_id') => $existingStudentEntity->academic_period_id,
+                                    $this->aliasField('start_date') => $existingStudentEntity->start_date,
+                                    $this->aliasField('end_date') => $existingStudentEntity->end_date,
+                                    $this->aliasField('institution_id') => $existingStudentEntity->institution_id,
+                                ])
+                                ->first();
+                            $targetCollision = null;
+                            if ($hasNextRecord) {
+                                $targetCollision = $this->find()
+                                    ->where([
+                                        $this->aliasField('student_status_id') => $entity->student_status_id,
+                                        $this->aliasField('student_id') => $entity->student_id,
+                                        $this->aliasField('education_grade_id') => $entity->education_grade_id,
+                                        $this->aliasField('academic_period_id') => $entity->academic_period_id,
+                                        $this->aliasField('start_date') => $entity->start_date,
+                                        $this->aliasField('end_date') => $entity->end_date,
+                                        $this->aliasField('institution_id') => $entity->institution_id,
+                                    ])
+                                    ->first();
+                            }
+                            if (!empty($sourceCollision) || !empty($targetCollision)) {
+                                $skippedStudentIds[] = $studentObj['student_id'];
+                                Log::write('error', 'StudentPromotion: duplicate institution_students row '
+                                    . (!empty($sourceCollision) ? $sourceCollision->id . ' (source side)' : $targetCollision->id . ' (target side)')
+                                    . ' for student ' . $studentObj['student_id'] . ' (institution ' . $institutionId . ', grade ' . $currentGrade
+                                    . ', period ' . $fromAcademicPeriod . '); current row ' . $existingStudentEntity->id . ' not updated, skipped.');
+                                continue;
                             }
                             //POCOR-7170 start
                             $nextClassesId = $this->request->getData()['StudentPromotion']['next_class'];
@@ -1235,16 +1286,49 @@ class StudentPromotionTable extends AppTable
 
                            //POCOR-7170 end
 
-                            if ($this->save($existingStudentEntity)) {
-                                if ($nextEducationGradeId != 0 && $nextAcademicPeriodId != 0) {
+                            // POCOR-9913: save the old row and the new row together - if the new row
+                            // fails, roll back so the old row isn't left PROMOTED with no CURRENT row.
+                            // Savepoints: a failed nested save in the afterSave listeners (class/subject
+                            // students - results always ignored) then only undoes its own part instead
+                            // of making commit() throw NestedTransactionRollbackException.
+                            $oldRowSaved = false;
+                            $newRowSaved = false;
+                            $connection = $this->getConnection();
+                            $savePointsWereEnabled = $connection->isSavePointsEnabled();
+                            $connection->enableSavePoints(true);
+                            try {
+                                $connection->transactional(function () use (
+                                    $existingStudentEntity, $entity, $hasNextRecord, &$oldRowSaved, &$newRowSaved
+                                ) {
+                                    if (!$this->save($existingStudentEntity)) {
+                                        return false;
+                                    }
+                                    $oldRowSaved = true;
+                                    if (!$hasNextRecord) {
+                                        return true;
+                                    }
                                     $entity->previous_institution_student_id = $existingStudentEntity->id;
 
                                     //registry the Institution.Students so it will call the afterSave in it.
                                     $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
                                     if ($InstitutionStudents->save($entity)) {
+                                        $newRowSaved = true;
+                                        return true;
+                                    }
+                                    $this->log($entity->getErrors(), 'debug');
+                                    $oldRowSaved = false; // rolled back
+                                    return false;
+                                });
+                            } finally {
+                                if (!$savePointsWereEnabled) {
+                                    $connection->disableSavePoints();
+                                }
+                            }
+
+                            if ($oldRowSaved) {
+                                if ($hasNextRecord) {
+                                    if ($newRowSaved) {
                                         $this->Alert->success($successMessage, ['reset' => true]);
-                                    } else {
-                                        $this->log($entity->getErrors(), 'debug');
                                     }
                                 } else {
                                     //POCOR-6500 starts check student_status_id is graduate and next_education_grade is blank so remove the system will delete the student row in security_group_users table
@@ -1290,6 +1374,21 @@ class StudentPromotionTable extends AppTable
                             }
                         }
                     }
+                }
+
+                // POCOR-9913: tell the user which students were skipped, alongside the
+                // normal success/error alert for the rest of the batch.
+                if (!empty($skippedStudentIds)) {
+                    $skippedOpenemisNos = $this->Users->find()
+                        ->select([$this->Users->aliasField('openemis_no')])
+                        ->where([$this->Users->aliasField('id') . ' IN' => array_unique($skippedStudentIds)])
+                        ->all()
+                        ->extract('openemis_no')
+                        ->toArray();
+                    $this->Alert->warning(
+                        __('The following students were not promoted because they have a duplicate or missing enrolment record. Please contact your administrator') . ': ' . implode(', ', $skippedOpenemisNos),
+                        ['type' => 'string']
+                    );
                 }
             } else {
                 $message = 'students does not exists in data';

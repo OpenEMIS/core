@@ -214,6 +214,7 @@ class ReportsController extends AppController
                 'Report.StaffQualifications' => __('Qualifications'),
                 'Report.StaffSalaries' => __('Salaries'),
                 'Report.Staff' => __('Staff'),
+                'Report.StaffEmployments' => __('Staff Employments'), //POCOR-9875
                 'Report.StaffExtracurriculars' => __('Staff Extracurricular'),
                 'Report.StaffHealthReports' => __('Staff Health Report'),
                 'Report.StaffLeaveReport' => __('Staff Leave'),
