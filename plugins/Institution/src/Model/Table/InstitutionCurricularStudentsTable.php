@@ -399,7 +399,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
             $attr['select'] = false;
-            $attr['options'] = ['' => '-- ' . __('Select Student') . ' --'] + $studentList; //POCOR-9934 placeholder posted the string 'id'
+            $attr['options'] = ['' => '-- ' . __('Select Student') . ' --'] + $studentList; //POCOR-9934
             $attr['onChangeReload'] = false;
         }
         return $attr;
@@ -487,7 +487,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     public function onGetStudentName(EventInterface $event, Entity $entity)
     {
         $StudentId = $entity->student_id;
-        if (empty($StudentId)) { //POCOR-9934 a null student made the query below throw (shown as "record does not exist")
+        if (empty($StudentId)) { //POCOR-9934
             return '';
         }
         $users = TableRegistry::getTableLocator()->get('User.Users');
