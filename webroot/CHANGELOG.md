@@ -1,3 +1,13 @@
+### 5.28.0 - 2026-11-24
+- Implemented: Develop changes to student attendance page filters
+- Implemented: Develop Class Average Placeholder by Subject on Student Report Cards
+- Implemented: Administrations > Performances > Report Cards : Develop Extracurricular Placeholders
+- Implemented: Institutions > Students : Implement link to Pending request
+- Bug Fixed: Institutions > Assessments > Report : T2-MID marks are not showing up even when weight is no longer 0
+- Bug Fixed: Administration > Communications > Alerts > Retirement Warning : Retirement alerts are not triggered for users crossing threshold and value and pendind alerts in logs
+- Bug Fixed: Core>Institution>Student>Add>Transfer : Unable to transfer student via add student
+- Bug Fixed: Institutions > Students > Bulk Transfer : Student when transferred via Bulk Transfer (Student Status : Graduated) is seen to be associated with two security groups, the previous institution and the new institution 
+
 ### 5.27.0 - 2026-11-20
 - Implemented: Develop Reports > Staff > Staff Employments Report
 - Bug Fixed: Core>Institutions>Students>Promote : On clicking Save to promote a student a 404 error is seen
