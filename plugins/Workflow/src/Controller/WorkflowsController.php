@@ -242,6 +242,13 @@ class WorkflowsController extends AppController
         $nextStepId = $this->request->getQuery('next_step_id');
         $autoAssignAssignee = $this->request->getQuery('auto_assign_assignee');
 
+        // POCOR-9935: on Student Transfer pages take the institution from the transfer record
+        // and the owner of the next step, instead of parsing it out of the referer URL
+        // (which fails for several URL shapes, e.g. after creating a transfer or from the list)
+        $studentTransferInstitutionId = $isSchoolBased
+            ? $this->getStudentTransferAssigneeInstitutionId($queryString['path'] ?? '', $nextStepId)
+            : null;
+
         if (!$autoAssignAssignee) {
             $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $params = [
@@ -262,6 +269,10 @@ class WorkflowsController extends AppController
                 }*/
             }
 
+            if (!empty($studentTransferInstitutionId)) { // POCOR-9935
+                $params['institution_id'] = $studentTransferInstitutionId;
+            }
+
             $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
 
 //            Log::write('debug', 'Assignee:');
@@ -273,6 +284,15 @@ class WorkflowsController extends AppController
         } else {
             //POCOR-8642 --START
             $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            if (!empty($studentTransferInstitutionId)) {
+                // POCOR-9935: institution of the next step's owner (sending or receiving),
+                // resolved from the transfer record - see getStudentTransferAssigneeInstitutionId()
+                $params = [
+                    'is_school_based' => $isSchoolBased,
+                    'workflow_step_id' => $nextStepId,
+                    'institution_id' => $studentTransferInstitutionId
+                ];
+            } else {
             $path = $queryString['path'];
             $segments = explode('/', $path);
             //echo "<pre>";print_r($_SESSION);exit;
@@ -310,6 +330,7 @@ class WorkflowsController extends AppController
                     $params['institution_id'] = $receivingInsttutionId;
                 }
             }
+            } // POCOR-9935: end of the non-Student-Transfer path
 
             $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
 
@@ -337,6 +358,73 @@ class WorkflowsController extends AppController
         $this->response = $this->response->withType('json');
 
         return $this->response;
+    }
+
+    /**
+     * POCOR-9935: institution whose staff should be offered as assignees for the next step of a
+     * Student Transfer (Transfer Out / Transfer In view page).
+     * The next step's 'institution_owner' param decides: OUTGOING -> sending institution
+     * (previous_institution_id), INCOMING -> receiving institution (institution_id).
+     * The record id comes from the session primary key the view page writes, so it works
+     * whatever shape the page URL has.
+     * Returns null when not on a Student Transfer page or anything can't be resolved -
+     * the caller then keeps its original behaviour.
+     * @param string $path referer URL path
+     * @param int|string $nextStepId
+     * @return int|null
+     */
+    private function getStudentTransferAssigneeInstitutionId($path, $nextStepId)
+    {
+        if (empty($nextStepId)) {
+            return null;
+        }
+
+        $segments = explode('/', (string) $path);
+        $transferType = null;
+        foreach (['StudentTransferOut', 'StudentTransferIn'] as $transferAction) {
+            if (in_array($transferAction, $segments, true)) {
+                $transferType = $transferAction;
+                break;
+            }
+        }
+        if (is_null($transferType)) {
+            return null;
+        }
+
+        $primaryKey = $this->request->getSession()->read('Institution.' . $transferType . '.primaryKey');
+        $transferId = is_array($primaryKey) && !empty($primaryKey['id']) ? $primaryKey['id'] : null;
+        if (empty($transferId)) {
+            return null;
+        }
+
+        $StudentTransfers = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentTransfers');
+        $transfer = $StudentTransfers->find()
+            ->select([
+                $StudentTransfers->aliasField('previous_institution_id'),
+                $StudentTransfers->aliasField('institution_id')
+            ])
+            ->where([$StudentTransfers->aliasField('id') => $transferId])
+            ->first();
+        if (empty($transfer)) {
+            return null;
+        }
+
+        $WorkflowStepsParams = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsParams');
+        $nextStepOwner = $WorkflowStepsParams->find()
+            ->where([
+                $WorkflowStepsParams->aliasField('workflow_step_id') => $nextStepId,
+                $WorkflowStepsParams->aliasField('name') => 'institution_owner'
+            ])
+            ->extract('value')
+            ->first();
+
+        if ($nextStepOwner == $StudentTransfers::INCOMING) {
+            return $transfer->institution_id;
+        }
+        if ($nextStepOwner == $StudentTransfers::OUTGOING) {
+            return $transfer->previous_institution_id;
+        }
+        return null;
     }
 
     private function getInstitutionIDFromUrl($url)
