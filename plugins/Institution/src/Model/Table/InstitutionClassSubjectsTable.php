@@ -139,23 +139,12 @@ class InstitutionClassSubjectsTable extends ControllerActionTable
                             ]
                         )
                         ->where([
+                            $this->aliasField('institution_class_id') => $institutionClassId,
                             $InstitutionSubjects->aliasField('education_grade_id') => $educationGradeId
                         ])
                         ->order([
                             $InstitutionSubjects->aliasField('name')=>'DESC'
                         ]);
-
-                    // POCOR-9881: "All" classes (Attendance By: Subject, Class: All) - list every
-                    // subject taught anywhere in the grade, not just within one pre-selected
-                    // class. Otherwise (a real class, or the Period-mode caller that doesn't
-                    // use "All" at all) keep the original one-class behaviour unchanged.
-                    if (!empty($institutionClassId) && $institutionClassId !== 'all') {
-                        $query->where([$this->aliasField('institution_class_id') => $institutionClassId]);
-                    } else {
-                        // institution_class_subjects has one row per (class, subject) pair, so
-                        // the same subject taught in several classes would otherwise repeat.
-                        $query->group([$InstitutionSubjects->aliasField('id')]);
-                    }
                    // }
 
 

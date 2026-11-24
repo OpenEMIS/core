@@ -240,7 +240,7 @@ function InstitutionStudentAttendancesController(
                     return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(
                         vm.institutionId,
                         vm.selectedAcademicPeriod,
-                        vm.markabilityClassId(),
+                        vm.selectedClass,
                         vm.selectedDay
                     );
                 }, vm.error)
@@ -283,7 +283,7 @@ function InstitutionStudentAttendancesController(
                     return InstitutionStudentAttendancesSvc.isMarkableAttendance(
                         vm.institutionId,
                         vm.selectedAcademicPeriod,
-                        vm.markabilityClassId(),
+                        vm.selectedClass,
                         vm.selectedDay
                     );
                     //POCOR-8874 end
@@ -354,22 +354,6 @@ function InstitutionStudentAttendancesController(
                 });
         }
     });
-
-    // POCOR-9881: isMarkableSubjectAttendance/isMarkableAttendance check one real class's
-    // configuration - "All" (Attendance By: Subject only) isn't a real class, so fall back to
-    // the first actual class in the current list for this check specifically. vm.selectedClass
-    // itself is left untouched; only these markability checks use this.
-    vm.markabilityClassId = function () {
-        if (vm.selectedClass !== "all") {
-            return vm.selectedClass;
-        }
-        for (var i = 0; i < vm.classListOptions.length; i++) {
-            if (vm.classListOptions[i].id !== "all") {
-                return vm.classListOptions[i].id;
-            }
-        }
-        return vm.selectedClass;
-    };
 
     // error
     vm.error = function (error, test) {
@@ -537,13 +521,6 @@ function InstitutionStudentAttendancesController(
     };
 
     vm.updateClassList = function (classListOptions) {
-        // POCOR-9881: Attendance By: Subject offers an "All" class option (students linked to
-        // the subject across every class in the grade), on top of whatever real classes the
-        // backend returned - never offered under Period mode, which always needs one real
-        // class to mark against.
-        if (vm.selectedAttendanceBy == "subject") {
-            classListOptions = [{ id: "all", name: "All" }].concat(classListOptions);
-        }
         vm.classListOptions = classListOptions;
         if (classListOptions.length > 0) {
             // Keep the current class if it is still in the list (e.g. a multi-grade class
@@ -1115,7 +1092,7 @@ function InstitutionStudentAttendancesController(
                 return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(
                     vm.institutionId,
                     vm.selectedAcademicPeriod,
-                    vm.markabilityClassId(),
+                    vm.selectedClass,
                     vm.selectedDay
                 );
             }, vm.error)
@@ -1185,7 +1162,7 @@ function InstitutionStudentAttendancesController(
                 return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(
                     vm.institutionId,
                     vm.selectedAcademicPeriod,
-                    vm.markabilityClassId(),
+                    vm.selectedClass,
                     vm.selectedDay,
                     vm.selectedEducationGrade
                 );
@@ -1316,7 +1293,7 @@ function InstitutionStudentAttendancesController(
         InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(
             vm.institutionId,
             vm.selectedAcademicPeriod,
-            vm.markabilityClassId(),
+            vm.selectedClass,
             vm.selectedDay
         )
             .then(function (attendanceType) {
@@ -1325,7 +1302,7 @@ function InstitutionStudentAttendancesController(
                 return InstitutionStudentAttendancesSvc.isMarkableAttendance(
                     vm.institutionId,
                     vm.selectedAcademicPeriod,
-                    vm.markabilityClassId(),
+                    vm.selectedClass,
                     vm.selectedDay
                 );
             }, vm.error)
@@ -1554,7 +1531,7 @@ function InstitutionStudentAttendancesController(
                 return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(
                     vm.institutionId,
                     vm.selectedAcademicPeriod,
-                    vm.markabilityClassId(),
+                    vm.selectedClass,
                     vm.selectedDay
                 );
             }, vm.error)
