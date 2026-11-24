@@ -234,9 +234,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 .then(resp => {
                     userCtrl.academicPeriodOptions = resp.data;
                     // console.log(userCtrl.academicPeriodOptions);
+                    //POCOR-9939: a Year and its Term can both be current;
+                    //Prefer the current period at the top level (Year); null level = old first-match behaviour.
+                    const currentPeriods = (resp.data || []).filter(p => p.current === 1);
+                    const levelOf = p => (p.level === null || p.level === undefined) ? Number.MAX_SAFE_INTEGER : Number(p.level);
+                    const preferredCurrent = currentPeriods.reduce((best, p) => (!best || levelOf(p) < levelOf(best)) ? p : best, null);
                     // Iterate over the array to find the current academic period
                     for (const period of resp.data) {
-                        if (period.current === 1) {
+                        if (period === preferredCurrent) {
                             userCtrl.currentAcademicPeriod = period.id;
                             userCtrl.currentAcademicPeriodName = period.name;
                             const academicPeriod = period.id; //POCOR-8411 -- Start
