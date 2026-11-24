@@ -7133,6 +7133,20 @@ class InstitutionsController extends AppController
         }
         //POCOR-9385: end — student creation restriction check
 
+        //POCOR-9939: a transfer moves an EXISTING student - it creates/updates no security_users or
+        //identity row, so the identity-conflict gate below (which exists to stop a duplicate account
+        //being created) must not run: the identity on the payload is the student's own and would
+        //always be reported as "already registered to an existing user".
+        if (!empty($requestData['is_diff_school']) && $requestData['is_diff_school'] == 1) {
+            $userRecordId = (int)($requestData['student_id'] ?? 0);
+            if ($userRecordId <= 0) {
+                return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
+            }
+            $this->handleStudentTransfer($requestData, $userRecordId, $userId);
+            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
+        }
+        //POCOR-9939: end
+
         //POCOR-9867: the POCOR-9766 gate below existed only on the Staff flow. Without it, pressing
         //Back and re-entering an identity that already belongs to someone else created a SECOND
         //account for that person - and handleIdentities() then silently dropped the identity row
@@ -7144,11 +7158,6 @@ class InstitutionsController extends AppController
             return $identityConflict;
         }
         $studentData = $this->extractSecurityUserData($requestData, $userId, true);
-        if ($requestData['is_diff_school'] == 1) {
-            $userRecordId = $requestData['student_id'];
-            $result = $this->handleStudentTransfer($requestData, $userRecordId, $userId);
-            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
-        }
         $securityUserResult = $this->saveSecurityUser($studentData, $selectedUserId); //POCOR-9867
         if ($securityUserResult instanceof \Cake\ORM\Entity || $securityUserResult instanceof EntityInterface) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
