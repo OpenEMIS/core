@@ -234,9 +234,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 .then(resp => {
                     userCtrl.academicPeriodOptions = resp.data;
                     // console.log(userCtrl.academicPeriodOptions);
+                    //POCOR-9939: a Year and its Term can both be current;
+                    //Prefer the current period at the top level (Year); null level = old first-match behaviour.
+                    const currentPeriods = (resp.data || []).filter(p => p.current === 1);
+                    const levelOf = p => (p.level === null || p.level === undefined) ? Number.MAX_SAFE_INTEGER : Number(p.level);
+                    const preferredCurrent = currentPeriods.reduce((best, p) => (!best || levelOf(p) < levelOf(best)) ? p : best, null);
                     // Iterate over the array to find the current academic period
                     for (const period of resp.data) {
-                        if (period.current === 1) {
+                        if (period === preferredCurrent) {
                             userCtrl.currentAcademicPeriod = period.id;
                             userCtrl.currentAcademicPeriodName = period.name;
                             const academicPeriod = period.id; //POCOR-8411 -- Start
@@ -1422,6 +1427,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         birthplaceAreaRef && (userCtrl.selectedUserData.birthplaceArea = birthplaceAreaRef)
         // console.log(userCtrl.userData);
         let previousInstitutionId = userCtrl.userData && userCtrl.userData.current_enrol_institution_id ? userCtrl.userData.current_enrol_institution_id : null;
+        //POCOR-9939: a transfer is only offered for an Internal Search hit, but
+        //nextStepFromStudentExistInTheOtherSchool() clears isInternalSearchSelected on the way to the
+        //Transfer step - so the POCOR-9867 guard below dropped student_id and the backend rejected the
+        //student's own identity as "already registered to an existing user".
+        let isTransfer = !!(userCtrl.userData && userCtrl.userData.is_diff_school > 0);
         var params = {
             called: caller,
             currentAcademicPeriod: userCtrl.currentAcademicPeriod,//POCOR-7733
@@ -1463,7 +1473,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             sync_status: userCtrl.isExternalSearchSelected ? 1 : 0, //POCOR-9590: external search → Synced, manual add → Local
             is_diff_school: userCtrl.userData && userCtrl.userData.is_diff_school ? userCtrl.userData.is_diff_school : 0,
             //POCOR-9867: only an Internal Search hit is a LOCAL user id (see the staff wizard).
-            student_id: userCtrl.isInternalSearchSelected && userCtrl.userData && userCtrl.userData.id ? userCtrl.userData.id : null,
+            student_id: (userCtrl.isInternalSearchSelected || isTransfer) && userCtrl.userData && userCtrl.userData.id ? userCtrl.userData.id : null, //POCOR-9939
             previous_institution_id: previousInstitutionId,
             previous_academic_period_id: userCtrl.userData && userCtrl.userData.current_enrol_academic_period_id ? userCtrl.userData.current_enrol_academic_period_id : null,
             previous_education_grade_id: userCtrl.userData && userCtrl.userData.current_enrol_education_grade_id ? userCtrl.userData.current_enrol_education_grade_id : null,

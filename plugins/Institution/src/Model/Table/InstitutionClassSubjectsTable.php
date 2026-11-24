@@ -141,7 +141,6 @@ class InstitutionClassSubjectsTable extends ControllerActionTable
                         ->where([
                             $this->aliasField('institution_class_id') => $institutionClassId,
                             $InstitutionSubjects->aliasField('education_grade_id') => $educationGradeId
-
                         ])
                         ->order([
                             $InstitutionSubjects->aliasField('name')=>'DESC'
@@ -154,8 +153,13 @@ class InstitutionClassSubjectsTable extends ControllerActionTable
                         if ($options['user']['super_admin'] == 0) { 
                             $allSubjectsPermission = $this->getRolePermissionAccessForAllSubjects($staffId, $institutionId);
                             if (!$allSubjectsPermission) {
-                                // POCOR-7538 points 3.4/3.5: subjects the user teaches, plus every
-                                // subject of a class they are homeroom/secondary teacher of.
+                                // POCOR-7538 points 3.4/3.5: subjects a user can access, regardless of role -
+                                // subjects they teach, plus every subject of a class they are homeroom/secondary
+                                // teacher of.
+                                // POCOR-9881: client confirmed a homeroom teacher should see their class's
+                                // subjects as a whole, not just their own personally-taught subject - the
+                                // narrower condition previously here was based on a misread of the
+                                // requirement; reverted back to 7538's original, correct behaviour.
                                 $query->where(TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')
                                     ->getTeacherSubjectConditions($staffId, $InstitutionSubjects->aliasField('id')));
                             }

@@ -299,9 +299,13 @@ function InstitutionStudentAttendancesSvc(
     }
 
     // Classes of the institution/period, optionally limited to those running the given
-    // education grade (multi-grade classes are returned for each of their grades)
-    function getClassOptions(institutionId, academicPeriodId, educationGradeId) {
-        const key = getCacheKey(institutionId, academicPeriodId, educationGradeId);
+    // education grade (multi-grade classes are returned for each of their grades).
+    // POCOR-9881: attendanceBy is passed through so a subject-only teacher can be given no
+    // classes under Period mode specifically (see findClassesByInstitutionAndAcademicPeriod) -
+    // included in the cache key too, since the two modes can legitimately return different
+    // lists for the same institution/period/grade.
+    function getClassOptions(institutionId, academicPeriodId, educationGradeId, attendanceBy) {
+        const key = getCacheKey(institutionId, academicPeriodId, educationGradeId, attendanceBy);
         if (cache.classes[key]) {
             return $q.resolve(cache.classes[key]);
         }
@@ -323,20 +327,31 @@ function InstitutionStudentAttendancesSvc(
         if (educationGradeId) {
             params.education_grade_id = educationGradeId;
         }
+        if (attendanceBy) {
+            params.attendance_by = attendanceBy;
+        }
         return InstitutionClasses.find("classesByInstitutionAndAcademicPeriod", params)
             .ajax({ success: success, defer: true });
     }
 
-    // All education grades that have classes in the institution for the academic period
-    function getEducationGradeOptions(institutionId, academicPeriodId) {
-        const key = getCacheKey(institutionId, academicPeriodId);
+    // All education grades that have classes in the institution for the academic period.
+    // POCOR-9881: attendanceBy flows through to the reused class finder (see getClassOptions)
+    // so a subject-only teacher's grade list stays consistent with their (possibly empty,
+    // under Period mode) class list - included in the cache key for the same reason.
+    function getEducationGradeOptions(institutionId, academicPeriodId, attendanceBy) {
+        const key = getCacheKey(institutionId, academicPeriodId, attendanceBy);
         if (cache.grades[key]) {
             return $q.resolve(cache.grades[key]);
         }
 
         var success = function (response, deferred) {
             var educationGradeList = response.data.data;
-            if (angular.isObject(educationGradeList) && educationGradeList.length > 0) {
+            // POCOR-9881: a genuinely empty list (eg a subject-only teacher in Period mode,
+            // who legitimately has zero period-markable grades) is not an error - rejecting
+            // here short-circuited the rest of changeAttendanceBy()'s promise chain, leaving
+            // the Grade/Class filters and student grid stuck on stale data from whichever
+            // mode was selected before. Matches getClassOptions' existing isObject-only check.
+            if (angular.isObject(educationGradeList)) {
                 cache.grades[key] = educationGradeList;
                 deferred.resolve(educationGradeList);
             } else {
@@ -344,10 +359,15 @@ function InstitutionStudentAttendancesSvc(
             }
         };
 
-        return InstitutionClasses.find("gradesByInstitutionAndAcademicPeriod", {
+        var params = {
             institution_id: institutionId,
             academic_period_id: academicPeriodId,
-        }).ajax({ success: success, defer: true });
+        };
+        if (attendanceBy) {
+            params.attendance_by = attendanceBy;
+        }
+        return InstitutionClasses.find("gradesByInstitutionAndAcademicPeriod", params)
+            .ajax({ success: success, defer: true });
     }
 
     function getSubjectOptions(institutionId, institutionClassId, academicPeriodId, day_id, educationGradeId) {
@@ -428,9 +448,16 @@ function InstitutionStudentAttendancesSvc(
         }
         //POCOR-8874 end
         // console.log(extra);
+        // POCOR-9881: no class selected (eg a subject-only teacher in Period mode, who
+        // legitimately has zero period-markable classes) means zero students - resolve empty
+        // instead of rejecting, so the rest of the caller's promise chain (updateClassStudentList)
+        // still runs and the grid clears instead of being left showing stale data from before.
+        if (extra.institution_class_id == "") {
+            return $q.resolve([]);
+        }
+
         if (
             extra.attendance_period_id == "" ||
-            extra.institution_class_id == "" ||
             extra.academic_period_id == ""
         ) {
             return $q.reject(
@@ -1651,7 +1678,12 @@ function InstitutionStudentAttendancesSvc(
             if (angular.isDefined(response.data.data[0].code)) {
                 var isMarkableSubjectAttendance = false;
 
-                if (response.data.data[0].code == "SUBJECT") {
+                // POCOR-9881: a grade configured as DAY_AND_SUBJECT allows subject-based
+                // marking too, same as a pure SUBJECT grade - this used to only recognize
+                // the exact "SUBJECT" code, so such a grade was wrongly treated as not
+                // subject-markable at all.
+                var code = response.data.data[0].code;
+                if (code == "SUBJECT" || code == "DAY_AND_SUBJECT") {
                     isMarkableSubjectAttendance = true;
                 } else {
                     isMarkableSubjectAttendance = false;

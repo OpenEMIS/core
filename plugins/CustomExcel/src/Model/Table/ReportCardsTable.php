@@ -96,7 +96,9 @@ class ReportCardsTable extends AppTable
                 'CompetencyPeriodsByTemplate',
                 'InstitutionStudentsReportCardGpa',//POCOR-8222
                 'InstitutionStudentGradeGpa',//POCOR-8222
-                'ClassAndLevelRanking'//POCOR-9232
+                'ClassAndLevelRanking',//POCOR-9232
+                'InstitutionExtracurriculars', //POCOR-9934
+                'ClassAverageBySubject'//POCOR-9902
             ]
         ]);
     }
@@ -158,7 +160,9 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardGpa'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardGpa'; //POCOR-8222
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentGradeGpa'] = 'onExcelTemplateInitialiseInstitutionStudentGradeGpa'; //POCOR-8222
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassAndLevelRanking'] = 'onExcelTemplateInitialiseClassAndLevelRanking';//POCOR-9232
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassAverageBySubject'] = 'onExcelTemplateInitialiseClassAverageBySubject';//POCOR-9902
         $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionExtracurriculars'] = 'onExcelTemplateInitialiseInstitutionExtracurriculars'; //POCOR-9934
         return $events;
     }
 
@@ -802,6 +806,116 @@ class ReportCardsTable extends AppTable
             return $entity;
         }
     }
+
+    
+    /**
+     * POCOR-9934 starts
+     * One row per Institution Curricular of category Extracurricular (institution_curriculars.category = 0,
+     * Co-Curricular = 1) the student is enrolled in at the report card's institution.
+     * Placeholders: ${InstitutionExtracurriculars.academic_period}, .name, .type, .position, .start_date, .end_date, .hours,
+     * .points, .location, .comments, .staff (teachers in charge, comma separated); rows are keyed by .id
+     */
+    public function onExcelTemplateInitialiseInstitutionExtracurriculars(EventInterface $event, array $params, ArrayObject $extra)
+    {
+        if (isset($params['student_id']) && isset($params['institution_id'])
+            && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
+            $CurricularStudents = self::getDynamicTableInstance('Institution.InstitutionCurricularStudents');
+            $InstitutionCurriculars = self::getDynamicTableInstance('Institution.InstitutionCurriculars');
+            $CurricularTypes = self::getDynamicTableInstance('FieldOption.CurricularTypes');
+            $CurricularPositions = self::getDynamicTableInstance('FieldOption.CurricularPositions');
+            $CurricularStaff = self::getDynamicTableInstance('Institution.InstitutionCurricularStaff');
+            $Users = self::getDynamicTableInstance('User.Users');
+
+            $students = $CurricularStudents->find()
+                ->select([
+                    'id' => $CurricularStudents->aliasField('id'),
+                    'institution_curricular_id' => $CurricularStudents->aliasField('institution_curricular_id'),
+                    'name' => $InstitutionCurriculars->aliasField('name'),
+                    'type' => $CurricularTypes->aliasField('name'),
+                    'position' => $CurricularPositions->aliasField('name'),
+                    'start_date' => $CurricularStudents->aliasField('start_date'),
+                    'end_date' => $CurricularStudents->aliasField('end_date'),
+                    'hours' => $CurricularStudents->aliasField('hours'),
+                    'points' => $CurricularStudents->aliasField('points'),
+                    'location' => $CurricularStudents->aliasField('location'),
+                    'comments' => $CurricularStudents->aliasField('comments')
+                ])
+                ->innerJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()], [
+                    $InstitutionCurriculars->aliasField('id = ') . $CurricularStudents->aliasField('institution_curricular_id')
+                ])
+                ->leftJoin([$CurricularTypes->getAlias() => $CurricularTypes->getTable()], [
+                    $CurricularTypes->aliasField('id = ') . $InstitutionCurriculars->aliasField('curricular_type_id')
+                ])
+                ->leftJoin([$CurricularPositions->getAlias() => $CurricularPositions->getTable()], [
+                    $CurricularPositions->aliasField('id = ') . $CurricularStudents->aliasField('curricular_position_id')
+                ])
+                ->where([
+                    $CurricularStudents->aliasField('student_id') => $params['student_id'],
+                    $InstitutionCurriculars->aliasField('institution_id') => $params['institution_id'],
+                    $InstitutionCurriculars->aliasField('category') => 0, // Extracurricular
+                    $CurricularStudents->aliasField('start_date <=') => $extra['report_card_end_date']->format('Y-m-d'),
+                    $CurricularStudents->aliasField('end_date >=') => $extra['report_card_start_date']->format('Y-m-d')
+                ])
+                ->order([
+                    $CurricularStudents->aliasField('start_date'),
+                    $InstitutionCurriculars->aliasField('name'),
+                    $CurricularStudents->aliasField('id')
+                ])
+                ->disableHydration()
+                ->toArray();
+
+            if (empty($students)) {
+                return [];
+            }
+
+            // teachers in charge of each curricular, comma separated
+            $staffNames = [];
+            $staffRows = $CurricularStaff->find()
+                ->select([
+                    'institution_curricular_id' => $CurricularStaff->aliasField('institution_curricular_id'),
+                    'first_name' => $Users->aliasField('first_name'),
+                    'last_name' => $Users->aliasField('last_name')
+                ])
+                ->innerJoin([$Users->getAlias() => $Users->getTable()], [
+                    $Users->aliasField('id = ') . $CurricularStaff->aliasField('staff_id')
+                ])
+                ->where([
+                    $CurricularStaff->aliasField('institution_curricular_id IN') => array_unique(array_column($students, 'institution_curricular_id'))
+                ])
+                ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')])
+                ->disableHydration()
+                ->toArray();
+            foreach ($staffRows as $staff) {
+                $staffNames[$staff['institution_curricular_id']][] = trim($staff['first_name'] . ' ' . $staff['last_name']);
+            }
+
+            // institution_curriculars has no academic period; rows are limited to the report card date range,
+            // so they belong to the report card's academic period
+            $academicPeriodName = '';
+            if (!empty($params['academic_period_id'])) {
+                $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+                $academicPeriodName = (string)$AcademicPeriods->find()
+                    ->select([$AcademicPeriods->aliasField('name')])
+                    ->where([$AcademicPeriods->aliasField('id') => $params['academic_period_id']])
+                    ->extract('name')
+                    ->first();
+            }
+
+            $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
+            $dateFormat = $ConfigItems->value('date_format');
+            $entity = [];
+            foreach ($students as $row) {
+                $row['academic_period'] = $academicPeriodName;
+                $row['start_date'] = !empty($row['start_date']) ? $row['start_date']->format($dateFormat) : '';
+                $row['end_date'] = !empty($row['end_date']) ? $row['end_date']->format($dateFormat) : '';
+                $row['staff'] = implode(', ', $staffNames[$row['institution_curricular_id']] ?? []);
+                unset($row['institution_curricular_id']);
+                $entity[] = $row;
+            }
+            return $entity;
+        }
+    }
+    //POCOR-9934 ends
 
     public function onExcelTemplateInitialiseAwards(EventInterface $event, array $params, ArrayObject $extra)
     {
@@ -3869,4 +3983,101 @@ class ReportCardsTable extends AppTable
         return $entity;
     }
     //POCOR-9232 ends
+
+    //POCOR-9902 starts
+    /**
+     * Class average per subject: SUM(marks * weight) / SUM(weight) per student (same formula
+     * as the student's own Average column above), averaged across the class. Joins
+     * assessment_periods.weight live rather than assessment_item_results.applied_weight, to
+     * match that neighbouring column exactly and avoid NULL applied_weight rows.
+     */
+    public function onExcelTemplateInitialiseClassAverageBySubject(EventInterface $event, array $params, ArrayObject $extra)
+    {
+        if (!isset($params['institution_class_id'])
+            || !isset($params['institution_id'])
+            || !isset($params['academic_period_id'])
+            || !isset($extra['report_card_education_grade_id'])
+            || !isset($extra['report_card_start_date'])
+            || !isset($extra['report_card_end_date'])
+            || !isset($extra['assessment_id'])
+            || empty($extra['assessment_period_ids'])
+        ) {
+            return [];
+        }
+
+        $reportCardStartDate = $extra['report_card_start_date']->format('Y-m-d');
+        $reportCardEndDate = $extra['report_card_end_date']->format('Y-m-d');
+        // array_keys: $extra['assessment_period_ids'] is id => weight - only the ids are
+        // needed here, the weight itself is re-joined live below (assessment_periods.weight)
+        // to match onExcelTemplateInitialiseAssessmentItemResults exactly.
+        $periodIds = implode(',', array_map('intval', array_keys($extra['assessment_period_ids'])));
+
+        $connection = ConnectionManager::get('default');
+        $results = $connection->execute(
+            "SELECT
+                per_student.education_subject_id,
+                es.name AS subject_name,
+                AVG(per_student.student_avg) AS average_mark
+            FROM (
+                SELECT
+                    latest.student_id,
+                    latest.education_subject_id,
+                    SUM(latest.marks * latest.weight) / SUM(latest.weight) AS student_avg
+                FROM (
+                    SELECT
+                        air.student_id, air.education_subject_id, air.marks, ap.weight,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY air.student_id, air.education_subject_id, air.assessment_period_id
+                            ORDER BY air.created DESC
+                        ) AS rn
+                    FROM assessment_item_results air
+                    INNER JOIN assessment_periods ap ON ap.id = air.assessment_period_id
+                    INNER JOIN institution_subject_students iss
+                        ON iss.student_id = air.student_id
+                       AND iss.education_subject_id = air.education_subject_id
+                       AND iss.institution_id = air.institution_id
+                       AND iss.academic_period_id = air.academic_period_id
+                       AND iss.education_grade_id = air.education_grade_id
+                       AND iss.institution_class_id = :institutionClassId
+                    INNER JOIN institution_students ins
+                        ON ins.student_id = air.student_id
+                       AND ins.institution_id = air.institution_id
+                       AND ins.academic_period_id = air.academic_period_id
+                    WHERE air.assessment_id = :assessmentId
+                      AND air.institution_id = :institutionId
+                      AND air.academic_period_id = :academicPeriodId
+                      AND air.education_grade_id = :educationGradeId
+                      AND air.assessment_period_id IN (" . $periodIds . ")
+                      AND ins.start_date <= :reportCardEndDate
+                      AND (ins.end_date IS NULL OR ins.end_date >= :reportCardStartDate)
+                ) latest
+                WHERE latest.rn = 1
+                GROUP BY latest.student_id, latest.education_subject_id
+            ) per_student
+            INNER JOIN education_subjects es ON es.id = per_student.education_subject_id
+            GROUP BY per_student.education_subject_id, es.name",
+            [
+                'institutionClassId' => $params['institution_class_id'],
+                'assessmentId' => $extra['assessment_id'],
+                'institutionId' => $params['institution_id'],
+                'academicPeriodId' => $params['academic_period_id'],
+                'educationGradeId' => $extra['report_card_education_grade_id'],
+                'reportCardEndDate' => $reportCardEndDate,
+                'reportCardStartDate' => $reportCardStartDate,
+            ]
+        )->fetchAll('assoc');
+
+        $entity = [];
+        foreach ($results as $key => $row) {
+            $entity[] = [
+                'id' => $key,
+                'education_subject_id' => $row['education_subject_id'],
+                'subject_name' => $row['subject_name'],
+                'average_mark' => $row['average_mark'] !== null ? number_format((float)$row['average_mark'], 2) : ''
+            ];
+        }
+
+        return $entity;
+    }
+    //POCOR-9902 ends
 }

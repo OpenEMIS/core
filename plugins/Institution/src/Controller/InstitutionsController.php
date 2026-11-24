@@ -5769,10 +5769,16 @@ class InstitutionsController extends AppController
         $academic_periods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academic_periods_result = $academic_periods
             ->find()
-            ->select(['id', 'name', 'current','start_date','end_date', 'start_year', 'end_year'])//POCOR-8434
+            ->select(['id', 'name', 'current','start_date','end_date', 'start_year', 'end_year', 'academic_period_level_id'])//POCOR-8434 //POCOR-9939: + level
             ->where(['code !=' => 'All', 'visible' => 1])
             ->order([$academic_periods->aliasField('id DESC')])
             ->toArray();
+        //POCOR-9939: a Year and one of its Terms can both be flagged current. The Add Student wizard must
+        //pick the Year (students are enrolled per Year), so expose each period's hierarchy level.
+        $periodLevels = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriodLevels')
+            ->find('list', ['keyField' => 'id', 'valueField' => 'level'])
+            ->toArray();
+        $result_array = [];
         foreach ($academic_periods_result as $result) {
             $result_array[] = array("id" => $result['id'],
                 "name" => $result['name'],
@@ -5780,7 +5786,9 @@ class InstitutionsController extends AppController
                 "start_date" => $result['start_date'],//POCOR-8434
                 "end_date" => $result['end_date'],//POCOR-8434
                 "start_year" => $result['start_year'],//POCOR-8434
-                "end_year" => $result['end_year']//POCOR-8434
+                "end_year" => $result['end_year'],//POCOR-8434
+                "academic_period_level_id" => $result['academic_period_level_id'], //POCOR-9939
+                "level" => isset($periodLevels[$result['academic_period_level_id']]) ? (int)$periodLevels[$result['academic_period_level_id']] : null //POCOR-9939
             );
         }
         echo json_encode($result_array);
@@ -7133,6 +7141,20 @@ class InstitutionsController extends AppController
         }
         //POCOR-9385: end — student creation restriction check
 
+        //POCOR-9939: a transfer moves an EXISTING student - it creates/updates no security_users or
+        //identity row, so the identity-conflict  below (which exists to stop a duplicate account
+        //being created) must not run: the identity on the payload is the student's own and would
+        //always be reported as "already registered to an existing user".
+        if (!empty($requestData['is_diff_school']) && $requestData['is_diff_school'] == 1) {
+            $userRecordId = (int)($requestData['student_id'] ?? 0);
+            if ($userRecordId <= 0) {
+                return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
+            }
+            $this->handleStudentTransfer($requestData, $userRecordId, $userId);
+            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
+        }
+        //POCOR-9939: end
+
         //POCOR-9867: the POCOR-9766 gate below existed only on the Staff flow. Without it, pressing
         //Back and re-entering an identity that already belongs to someone else created a SECOND
         //account for that person - and handleIdentities() then silently dropped the identity row
@@ -7144,11 +7166,6 @@ class InstitutionsController extends AppController
             return $identityConflict;
         }
         $studentData = $this->extractSecurityUserData($requestData, $userId, true);
-        if ($requestData['is_diff_school'] == 1) {
-            $userRecordId = $requestData['student_id'];
-            $result = $this->handleStudentTransfer($requestData, $userRecordId, $userId);
-            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
-        }
         $securityUserResult = $this->saveSecurityUser($studentData, $selectedUserId); //POCOR-9867
         if ($securityUserResult instanceof \Cake\ORM\Entity || $securityUserResult instanceof EntityInterface) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
@@ -9849,8 +9866,11 @@ class InstitutionsController extends AppController
     function getCurricularsTabElements($options = [])
     {
         $queryString = $this->request->getQuery('queryString');
-        if (empty($queryString)) {
-            $queryString = $this->request->getParam('pass')[1];
+        $pass = $this->request->getParam('pass');
+        //POCOR-9934 on the curricular's own page the record in the URL is the curricular; a leftover ?queryString
+        // (e.g. from a previously opened curricular) made the Students tab open the old curricular's students
+        if (empty($queryString) || ($this->request->getParam('action') == 'InstitutionCurriculars' && !empty($pass[1]))) {
+            $queryString = $pass[1] ?? $queryString;
         }
         $tabElements = [
             'InstitutionCurriculars' => [

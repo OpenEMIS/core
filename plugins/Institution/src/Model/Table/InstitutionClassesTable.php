@@ -2194,6 +2194,11 @@ class InstitutionClassesTable extends ControllerActionTable
         $staffId = $options['user']['id'];
         $isStaff = $options['user']['is_staff'];
         $educationGradeId = isset($options['education_grade_id']) ? (int)$options['education_grade_id'] : 0;
+        // Code review fix (POCOR-9881 point 2): which "Attendance By" mode the Class filter is
+        // being populated for, so Period mode can be scoped to classes the user can actually
+        // mark Period attendance for - see below. Absent for every other caller, which keeps
+        // their existing (unfiltered-by-mode) behaviour unchanged.
+        $attendanceBy = $options['attendance_by'] ?? null;
 
         $query
             ->select([
@@ -2235,6 +2240,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 // homeroom/secondary teachers; a subject teacher of the class only takes
                 // attendance by Subject. The Attendance page reads can_mark_period to decide
                 // which "Attendance By" options to offer for the selected class.
+                // POCOR-9881: this is also exactly what point 4b needs for Period mode -
+                // no extra backend logic required on top of what POCOR-7538 already built.
                 $periodClassIds = $this->find()
                     ->select([$this->aliasField('id')])
                     ->where([
@@ -2246,6 +2253,20 @@ class InstitutionClassesTable extends ControllerActionTable
                     ->all()
                     ->extract('id')
                     ->toList();
+
+                // Code review fix (POCOR-9881 point 2): can_mark_period above was only ever
+                // metadata on each row - under "Attendance By: Period" a subject-only class
+                // (can_mark_period = 0) stayed in the list, so a teacher who is homeroom of
+                // one class and subject teacher of another could switch to Period mode and
+                // have the class selection fall to that subject-only class, with the Period
+                // grid (and marking) loading for it. Scope the list itself when the caller is
+                // actually asking for Period mode and doesn't have Access All Classes - this
+                // is what point 4b ("no classes will be displayed" for subject-only teachers
+                // under Period) needed all along.
+                if ($attendanceBy === 'period') {
+                    $query->where([$this->aliasField('id') . ' IN' => $periodClassIds ?: [-1]]);
+                }
+
                 $query->formatResults(function ($results) use ($periodClassIds) {
                     return $results->map(function ($row) use ($periodClassIds) {
                         $row['can_mark_period'] = in_array($row['id'], $periodClassIds) ? 1 : 0;
@@ -2467,7 +2488,27 @@ class InstitutionClassesTable extends ControllerActionTable
                 $EducationCycles->aliasField('order') => 'ASC',
                 $EducationProgrammes->aliasField('order') => 'ASC',
                 $EducationGrades->aliasField('order') => 'ASC'
-            ]);
+            ])
+            //POCOR-9881: For Teacher Role, Attendance Page -> Education Grade drop down showed multiple rows for Primary 1
+            // Security.InstitutionClass's beforeFind() also appends its own
+            // GROUP BY InstitutionClasses.id to every query on this table (meant to
+            // de-duplicate the Class list), which lands on this grades query too and
+            // stops the grouping above from collapsing multiple classes under the
+            // same grade - de-duplicating the result here instead.
+            ->formatResults(function ($results) {
+                $seenGradeIds = [];
+                $filtered = $results->filter(function ($row) use (&$seenGradeIds) {
+                    if (isset($seenGradeIds[$row['id']])) {
+                        return false;
+                    }
+                    $seenGradeIds[$row['id']] = true;
+                    return true;
+                });
+                // filter() keeps the original (non-sequential) keys, which would
+                // serialize to a JSON object instead of an array - re-index so the
+                // response stays a plain list.
+                return new \Cake\Collection\Collection(array_values($filtered->toArray()));
+            });
 
         return $query;
     }
