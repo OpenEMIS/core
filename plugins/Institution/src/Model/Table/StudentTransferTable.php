@@ -239,6 +239,13 @@ class StudentTransferTable extends ControllerActionTable
         }
 //        $this->log('addBeforeSaveAfter', 'debug');
 
+        // POCOR-9939: this form only creates transfer requests (above). If we reach here
+        // (no student selected / a transfer request failed to save), skip the default
+        // AddBehavior save, which would insert this form entity into institution_students
+        // without start_date and fail with "Column 'start_year' cannot be null".
+        return function ($model, $entity) {
+            return false;
+        };
     }
 
     /**
