@@ -219,7 +219,8 @@ function InstitutionStudentAttendancesController(
                     // Education Grade is selected first; the Class list is then filtered by that grade
                     return InstitutionStudentAttendancesSvc.getEducationGradeOptions(
                         vm.institutionId,
-                        vm.selectedAcademicPeriod
+                        vm.selectedAcademicPeriod,
+                        vm.selectedAttendanceBy
                     );
                 }, vm.error)
                 .then(function (educationGradeListOptions) {
@@ -227,7 +228,8 @@ function InstitutionStudentAttendancesController(
                     return InstitutionStudentAttendancesSvc.getClassOptions(
                         vm.institutionId,
                         vm.selectedAcademicPeriod,
-                        vm.selectedEducationGrade
+                        vm.selectedEducationGrade,
+                        vm.selectedAttendanceBy
                     );
                 }, vm.error)
                 .then(function (classListOptions) {
@@ -331,7 +333,13 @@ function InstitutionStudentAttendancesController(
                     );
                 }, vm.error)
                 .then(function (classStudents) {
+                    // POCOR-9881: only blank the list when actually in Subject mode with no
+                    // subjects to show - vm.isMarkableSubjectAttendance now also reflects
+                    // DAY_AND_SUBJECT grades (period+subject both allowed), so without this
+                    // the Period-mode student list for such a grade could be wrongly emptied
+                    // whenever no subjects happen to be configured yet.
                     if (
+                        vm.selectedAttendanceBy == "subject" &&
                         vm.isMarkableSubjectAttendance == true &&
                         vm.subjectListOptions.length == 0
                     ) {
@@ -411,14 +419,21 @@ function InstitutionStudentAttendancesController(
         }
 
         // console.log("already selected",vm.selectedAttendanceBy);
+        // POCOR-9881: this runs again every time the class changes (via changeClass()),
+        // not just on initial load - only force a specific mode when the newly selected
+        // class genuinely supports just one method (mirrors the dropdown's own disabled
+        // condition, ng-disabled="... || isMarkableAttendance==true"). Otherwise (free
+        // choice - including DAY_AND_SUBJECT, or no mark-type config at all, which is the
+        // common case for most classes) preserve whatever the user already explicitly
+        // selected, instead of silently resetting it back to Period on every class change.
         if (vm.isMarkableAttendance == true) {
             if (vm.isMarkableSubjectAttendance == true) {
                 vm.selectedAttendanceBy = vm.attendanceByOptions[1].id; // Default selection
             } else {
                 vm.selectedAttendanceBy = vm.attendanceByOptions[2].id; // Default selection
             }
-        } else {
-            vm.selectedAttendanceBy = vm.attendanceByOptions[2].id; // Default selection
+        } else if (vm.selectedAttendanceBy !== "period" && vm.selectedAttendanceBy !== "subject") {
+            vm.selectedAttendanceBy = vm.attendanceByOptions[2].id; // Initial default only
         }
         // console.log("selected attendance by",vm.selectedAttendanceBy);
 
@@ -1056,7 +1071,8 @@ function InstitutionStudentAttendancesController(
                 // Education Grade is selected first; the Class list is then filtered by that grade
                 return InstitutionStudentAttendancesSvc.getEducationGradeOptions(
                     vm.institutionId,
-                    vm.selectedAcademicPeriod
+                    vm.selectedAcademicPeriod,
+                    vm.selectedAttendanceBy
                 );
             }, vm.error)
             .then(function (educationGradeListOptions) {
@@ -1064,7 +1080,8 @@ function InstitutionStudentAttendancesController(
                 return InstitutionStudentAttendancesSvc.getClassOptions(
                     vm.institutionId,
                     vm.selectedAcademicPeriod,
-                    vm.selectedEducationGrade
+                    vm.selectedEducationGrade,
+                    vm.selectedAttendanceBy
                 );
             }, vm.error)
             .then(function (classListOptions) {
@@ -1328,7 +1345,9 @@ function InstitutionStudentAttendancesController(
                 logStep("getClassStudent (Data received)"); // Шаг 7
                 //POCOR-9617: skip updating student list if No Scheduled save owns the grid right now
                 if (vm.noScheduledSaving) return;
-                if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
+                // POCOR-9881: only blank the list when actually in Subject mode (see the
+                // matching comment in the init chain above for why).
+                if (vm.selectedAttendanceBy == "subject" && vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
                     classStudents = [];
                 }
                 vm.updateClassStudentList(classStudents);
@@ -1358,7 +1377,8 @@ function InstitutionStudentAttendancesController(
         InstitutionStudentAttendancesSvc.getClassOptions(
             vm.institutionId,
             vm.selectedAcademicPeriod,
-            vm.selectedEducationGrade
+            vm.selectedEducationGrade,
+            vm.selectedAttendanceBy
         )
             .then(function (classListOptions) {
                 vm.updateClassList(classListOptions);
@@ -1469,10 +1489,45 @@ function InstitutionStudentAttendancesController(
         }
         InstitutionStudentAttendancesSvc.getEducationGradeOptions(
             vm.institutionId,
-            vm.selectedAcademicPeriod
+            vm.selectedAcademicPeriod,
+            vm.selectedAttendanceBy
         )
             .then(function (educationGradeListOptions) {
                 vm.updateEducationGradeList(educationGradeListOptions);
+                // POCOR-9881: Class list (and whether "All" is offered) depends on the mode
+                // just selected - refresh it before anything downstream reads vm.selectedClass.
+                return InstitutionStudentAttendancesSvc.getClassOptions(
+                    vm.institutionId,
+                    vm.selectedAcademicPeriod,
+                    vm.selectedEducationGrade,
+                    vm.selectedAttendanceBy
+                );
+            }, vm.error)
+            .then(function (classListOptions) {
+                vm.updateClassList(classListOptions);
+                if (vm.superAdmin == 0) {
+                    vm.updateClassRoles(vm.selectedClass);
+                }
+                // POCOR-9881: no real classes for this mode (eg a subject-only teacher under
+                // Period mode, who correctly has zero period-markable classes) - nothing to
+                // mark. The per-class lookups below don't all handle an empty class id
+                // gracefully (some reject outright on an empty result), so bail out directly
+                // here instead, the same way changeEducationGrade() already does for its
+                // equivalent "no classes" case, and clear the grid rather than leaving
+                // whatever the previously selected mode had loaded.
+                if (vm.classListOptions.length == 0) {
+                    vm.isMarkableSubjectAttendance = false;
+                    vm.isMarkableAttendance = false;
+                    vm.subjectListOptions = [];
+                    vm.selectedSubject = 0;
+                    vm.gridOptions.context.subject_id = vm.selectedSubject;
+                    vm.attendancePeriodOptions = [];
+                    vm.selectedAttendancePeriod = "";
+                    vm.gridOptions.context.period = vm.selectedAttendancePeriod;
+                    vm.updateIsMarked(false);
+                    vm.updateClassStudentList([]);
+                    return $q.reject("POCOR-9881: no classes available for the selected attendance-by mode");
+                }
                 return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(
                     vm.institutionId,
                     vm.selectedAcademicPeriod,
@@ -1517,7 +1572,10 @@ function InstitutionStudentAttendancesController(
                 );
             }, vm.error)
             .then(function (classStudents) {
+                // POCOR-9881: only blank the list when actually in Subject mode (see the
+                // matching comment in the init chain above for why).
                 if (
+                    vm.selectedAttendanceBy == "subject" &&
                     vm.isMarkableSubjectAttendance == true &&
                     vm.subjectListOptions.length == 0
                 ) {
