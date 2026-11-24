@@ -33,7 +33,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->belongsTo('CurricularTypes', ['className' => 'FieldOption.CurricularTypes']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->hasMany('InstitutionCurricularStaff', ['className' => 'Institution.InstitutionCurricularStaff', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->addBehavior('Excel', ['pages' => ['index', 'view']]);
+        $this->addBehavior('Excel', ['pages' => ['index']]); //POCOR-9934 export on listing page only
 
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['InstitutionCurriculars' =>['id']
@@ -287,9 +287,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $paramPass = $this->request->getParam('pass');
-        $ids = isset($paramPass[1]['id']) ? $this->paramsDecode($paramPass[1]['id']) : 0;
-        $_SESSION["curricularId"] = $curricularId;
+        $_SESSION["curricularId"] = $entity->id; //POCOR-9934
 
     }
 
