@@ -98,6 +98,7 @@ class ReportCardsTable extends AppTable
                 'InstitutionStudentGradeGpa',//POCOR-8222
                 'ClassAndLevelRanking',//POCOR-9232
                 'InstitutionExtracurriculars', //POCOR-9934
+                'ClassAverageBySubject'//POCOR-9902
             ]
         ]);
     }
@@ -159,6 +160,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardGpa'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardGpa'; //POCOR-8222
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentGradeGpa'] = 'onExcelTemplateInitialiseInstitutionStudentGradeGpa'; //POCOR-8222
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassAndLevelRanking'] = 'onExcelTemplateInitialiseClassAndLevelRanking';//POCOR-9232
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassAverageBySubject'] = 'onExcelTemplateInitialiseClassAverageBySubject';//POCOR-9902
         $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionExtracurriculars'] = 'onExcelTemplateInitialiseInstitutionExtracurriculars'; //POCOR-9934
         return $events;
@@ -3981,4 +3983,101 @@ class ReportCardsTable extends AppTable
         return $entity;
     }
     //POCOR-9232 ends
+
+    //POCOR-9902 starts
+    /**
+     * Class average per subject: SUM(marks * weight) / SUM(weight) per student (same formula
+     * as the student's own Average column above), averaged across the class. Joins
+     * assessment_periods.weight live rather than assessment_item_results.applied_weight, to
+     * match that neighbouring column exactly and avoid NULL applied_weight rows.
+     */
+    public function onExcelTemplateInitialiseClassAverageBySubject(EventInterface $event, array $params, ArrayObject $extra)
+    {
+        if (!isset($params['institution_class_id'])
+            || !isset($params['institution_id'])
+            || !isset($params['academic_period_id'])
+            || !isset($extra['report_card_education_grade_id'])
+            || !isset($extra['report_card_start_date'])
+            || !isset($extra['report_card_end_date'])
+            || !isset($extra['assessment_id'])
+            || empty($extra['assessment_period_ids'])
+        ) {
+            return [];
+        }
+
+        $reportCardStartDate = $extra['report_card_start_date']->format('Y-m-d');
+        $reportCardEndDate = $extra['report_card_end_date']->format('Y-m-d');
+        // array_keys: $extra['assessment_period_ids'] is id => weight - only the ids are
+        // needed here, the weight itself is re-joined live below (assessment_periods.weight)
+        // to match onExcelTemplateInitialiseAssessmentItemResults exactly.
+        $periodIds = implode(',', array_map('intval', array_keys($extra['assessment_period_ids'])));
+
+        $connection = ConnectionManager::get('default');
+        $results = $connection->execute(
+            "SELECT
+                per_student.education_subject_id,
+                es.name AS subject_name,
+                AVG(per_student.student_avg) AS average_mark
+            FROM (
+                SELECT
+                    latest.student_id,
+                    latest.education_subject_id,
+                    SUM(latest.marks * latest.weight) / SUM(latest.weight) AS student_avg
+                FROM (
+                    SELECT
+                        air.student_id, air.education_subject_id, air.marks, ap.weight,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY air.student_id, air.education_subject_id, air.assessment_period_id
+                            ORDER BY air.created DESC
+                        ) AS rn
+                    FROM assessment_item_results air
+                    INNER JOIN assessment_periods ap ON ap.id = air.assessment_period_id
+                    INNER JOIN institution_subject_students iss
+                        ON iss.student_id = air.student_id
+                       AND iss.education_subject_id = air.education_subject_id
+                       AND iss.institution_id = air.institution_id
+                       AND iss.academic_period_id = air.academic_period_id
+                       AND iss.education_grade_id = air.education_grade_id
+                       AND iss.institution_class_id = :institutionClassId
+                    INNER JOIN institution_students ins
+                        ON ins.student_id = air.student_id
+                       AND ins.institution_id = air.institution_id
+                       AND ins.academic_period_id = air.academic_period_id
+                    WHERE air.assessment_id = :assessmentId
+                      AND air.institution_id = :institutionId
+                      AND air.academic_period_id = :academicPeriodId
+                      AND air.education_grade_id = :educationGradeId
+                      AND air.assessment_period_id IN (" . $periodIds . ")
+                      AND ins.start_date <= :reportCardEndDate
+                      AND (ins.end_date IS NULL OR ins.end_date >= :reportCardStartDate)
+                ) latest
+                WHERE latest.rn = 1
+                GROUP BY latest.student_id, latest.education_subject_id
+            ) per_student
+            INNER JOIN education_subjects es ON es.id = per_student.education_subject_id
+            GROUP BY per_student.education_subject_id, es.name",
+            [
+                'institutionClassId' => $params['institution_class_id'],
+                'assessmentId' => $extra['assessment_id'],
+                'institutionId' => $params['institution_id'],
+                'academicPeriodId' => $params['academic_period_id'],
+                'educationGradeId' => $extra['report_card_education_grade_id'],
+                'reportCardEndDate' => $reportCardEndDate,
+                'reportCardStartDate' => $reportCardStartDate,
+            ]
+        )->fetchAll('assoc');
+
+        $entity = [];
+        foreach ($results as $key => $row) {
+            $entity[] = [
+                'id' => $key,
+                'education_subject_id' => $row['education_subject_id'],
+                'subject_name' => $row['subject_name'],
+                'average_mark' => $row['average_mark'] !== null ? number_format((float)$row['average_mark'], 2) : ''
+            ];
+        }
+
+        return $entity;
+    }
+    //POCOR-9902 ends
 }
